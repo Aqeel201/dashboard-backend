@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Edit Medicines</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Select a Medicine to Edit or Delete</h3>
+      </div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Manufacturer</th>
+              <th>Expiry Date</th>
+              <th>Price (PKR)</th>
+              <th>Dosage</th>
+              <th>Quantity</th>
+              <th>Edit</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% medicines.forEach(function(medicine) { %>
+              <tr>
+                <td>
+                  <% if (medicine.image) { %>
+                    <img src="<%= medicine.image %>" alt="Medicine Image" style="width:50px; height:50px;" />
+                  <% } else { %>
+                    No Image
+                  <% } %>
+                </td>
+                <td><%= medicine.name %></td>
+                <td><%= medicine.medicineType %></td>
+                <td><%= medicine.manufacturer %></td>
+                <td>
+                  <%= medicine.expiryDate ? new Date(medicine.expiryDate).toLocaleDateString() : 'N/A' %>
+                </td>
+                <td>Rs. <%= medicine.price %></td>
+                <td><%= medicine.dosage %></td>
+                <td><%= medicine.quantity %></td>
+                <td>
+                  <!-- Append token to the edit link -->
+                  <a href="/admin/medicines/<%= medicine._id %>/edit?token=<%= token %>" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                </td>
+                <td>
+                  <!-- Append token to the delete form action -->
+                  <form method="POST" action="/admin/medicines/<%= medicine._id %>/delete?token=<%= token %>" onsubmit="return confirm('Are you sure you want to delete this medicine?');">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                      <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

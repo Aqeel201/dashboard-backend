@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - MediApp</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Overall page background with gradient */
+    body {
+      background: linear-gradient(135deg, #71b7e6, #9b59b6);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    /* Container for the login card */
+    .login-container {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      padding: 40px 30px;
+      max-width: 400px;
+      width: 100%;
+    }
+    /* Logo styling */
+    .login-container .logo {
+      display: block;
+      margin: 0 auto 20px;
+      width: 80px;
+    }
+    /* Card header styling */
+    .card-header {
+      background: transparent;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .card-header h3 {
+      color: #333;
+      font-weight: 700;
+    }
+    /* Input field styling */
+    .form-control {
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    .form-control:focus {
+      box-shadow: none;
+      border-color: #9b59b6;
+    }
+    /* Button styling */
+    .btn-primary {
+      background-color: #9b59b6;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #8e44ad;
+    }
+    /* Error message styling */
+    #errorMessage {
+      font-size: 0.9em;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <!-- Logo Section -->
+    <img src="/assets/LogoBGR.png" alt="MediApp Logo" class="logo">
+    <div class="card border-0">
+      <div class="card-header text-center">
+        <h3>MediApp Login</h3>
+      </div>
+      <div class="card-body">
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" class="form-control" placeholder="Enter email" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Login</button>
+          <div id="errorMessage" class="mt-2 text-danger"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript for handling form submission -->
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          if (data.role === 'admin') {
+            window.location.href = '/admin/dashboard?token=' + data.token;
+          } else {
+            window.location.href = '/';
+          }
+        } else {
+          document.getElementById('errorMessage').textContent = data.message || 'Login failed';
+        }
+      } catch (error) {
+        document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
+      }
+    });
+  </script>
+</body>
+</html>

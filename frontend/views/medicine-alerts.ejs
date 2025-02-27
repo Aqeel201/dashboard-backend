@@ -1,0 +1,132 @@
+<%- include('partials/header') %>
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-4 align-items-center">
+      <div class="col-sm-8">
+        <h1 class="text-primary">Medicine Alerts</h1>
+        <p class="lead text-secondary">Details of medicines that are expiring soon or have low stock.</p>
+      </div>
+      <div class="col-sm-4 text-right">
+        <a href="/admin/dashboard?token=<%= token %>" class="btn btn-primary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <!-- Expiring Medicines Section -->
+    <div class="card card-warning card-outline shadow mb-4">
+      <div class="card-header bg-gradient-warning">
+        <h3 class="card-title text-white">
+          <i class="fas fa-hourglass-half mr-2"></i>Expiring Medicines
+        </h3>
+      </div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-hover table-striped">
+          <thead class="bg-light">
+            <tr>
+              <th class="align-middle">Medicine Name</th>
+              <th class="align-middle">Expiry Date</th>
+              <th class="align-middle">Days Remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (expiryMedicines && expiryMedicines.length > 0) { %>
+              <% expiryMedicines.forEach(medicine => { %>
+                <tr class="transition-transform">
+                  <td class="align-middle"><%= medicine.name %></td>
+                  <td class="align-middle">
+                    <%= medicine.expiryDate ? new Date(medicine.expiryDate).toLocaleDateString() : 'N/A' %>
+                  </td>
+                  <td class="align-middle">
+                    <% 
+                      const today = new Date();
+                      const expDate = new Date(medicine.expiryDate);
+                      const timeDiff = expDate - today;
+                      const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    %>
+                    <%= daysRemaining %> days
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="3" class="text-center py-4">
+                  <div class="empty-state">
+                    <i class="fas fa-check-circle fa-2x text-muted mb-2"></i>
+                    <h6 class="text-muted">No expiring medicines found.</h6>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Low Stock Medicines Section -->
+    <div class="card card-danger card-outline shadow">
+      <div class="card-header bg-gradient-danger">
+        <h3 class="card-title text-white">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Low Stock Medicines
+        </h3>
+      </div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-hover table-striped">
+          <thead class="bg-light">
+            <tr>
+              <th class="align-middle">Medicine Name</th>
+              <th class="align-middle">Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (lowStockMedicines && lowStockMedicines.length > 0) { %>
+              <% lowStockMedicines.forEach(medicine => { %>
+                <tr class="transition-transform">
+                  <td class="align-middle"><%= medicine.name %></td>
+                  <td class="align-middle"><%= medicine.quantity %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="2" class="text-center py-4">
+                  <div class="empty-state">
+                    <i class="fas fa-check-circle fa-2x text-muted mb-2"></i>
+                    <h6 class="text-muted">No low stock medicines found.</h6>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .transition-transform {
+    transition: transform 0.3s ease;
+  }
+  
+  .transition-transform:hover {
+    transform: translateY(-5px);
+  }
+  
+  .empty-state {
+    opacity: 0.7;
+    padding: 2rem 0;
+  }
+  
+  .bg-gradient-warning {
+    background: linear-gradient(45deg, #ffc107, #ffca2c);
+  }
+  
+  .bg-gradient-danger {
+    background: linear-gradient(45deg, #dc3545, #ff6b6b);
+  }
+</style>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Add Category</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <% if (message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">New Category</h3>
+      </div>
+      <form method="POST" action="/admin/add-category?token=<%= token %>">
+        <div class="card-body">
+          <div class="form-group">
+            <label for="categoryName">Category Name:</label>
+            <input type="text" class="form-control" name="categoryName" placeholder="Enter category name" required>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

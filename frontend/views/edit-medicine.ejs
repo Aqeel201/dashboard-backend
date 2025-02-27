@@ -1,0 +1,132 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Edit Medicine</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">Edit Medicine Information</h3>
+      </div>
+      <!-- Append the token as a query parameter -->
+      <form method="POST" action="/admin/medicines/<%= medicine._id %>/edit?token=<%= token %>" enctype="multipart/form-data">
+        <div class="card-body">
+          <div class="form-group">
+            <label for="name">Medicine Name:</label>
+            <input type="text" class="form-control" name="name" value="<%= medicine.name %>" required />
+          </div>
+          <div class="form-group">
+            <label for="manufacturer">Manufacturer:</label>
+            <input type="text" class="form-control" name="manufacturer" value="<%= medicine.manufacturer %>" required />
+          </div>
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date:</label>
+            <input type="date" class="form-control" name="expiryDate" value="<%= medicine.expiryDate ? new Date(medicine.expiryDate).toISOString().split('T')[0] : '' %>" required />
+          </div>
+          <div class="form-group">
+            <label for="dosage">Dosage:</label>
+            <input type="text" class="form-control" name="dosage" value="<%= medicine.dosage || '' %>" />
+          </div>
+          <div class="form-group">
+            <label for="medicineType">Medicine Type:</label>
+            <select class="form-control" name="medicineType" id="medicineTypeSelect" required>
+              <option value="">Select Medicine Type</option>
+              <option value="Tablet" <%= medicine.medicineType === 'Tablet' ? 'selected' : '' %>>Tablet</option>
+              <option value="Capsule" <%= medicine.medicineType === 'Capsule' ? 'selected' : '' %>>Capsule</option>
+              <option value="Syrup" <%= medicine.medicineType === 'Syrup' ? 'selected' : '' %>>Syrup</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dosesPerUnit">Doses Per Unit:</label>
+            <input type="number" class="form-control" name="dosesPerUnit" id="dosesPerUnitInput" value="<%= medicine.dosesPerUnit || 1 %>" min="1" required />
+            <small class="form-text text-muted">For Tablets/Capsules: number of doses per unit; for Syrup: set to 1 (bottles).</small>
+          </div>
+          <div class="form-group">
+            <label for="price">Price (PKR):</label>
+            <input type="number" step="0.01" class="form-control" name="price" value="<%= medicine.price %>" required />
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" class="form-control" name="quantity" value="<%= medicine.quantity %>" required />
+          </div>
+          <div class="form-group">
+            <label for="image">Image:</label><br/>
+            <% if (medicine.image) { %>
+              <img src="<%= medicine.image %>" alt="Medicine Image" style="width:100px; height:100px; margin-bottom:10px;" /><br/>
+            <% } %>
+            <input type="file" class="form-control" name="image" accept="image/*" />
+          </div>
+          <div class="form-group">
+            <label for="category">Category:</label>
+            <select class="form-control" name="category" id="categorySelect" required>
+              <option value="">Select Category</option>
+              <% categories.forEach(function(cat) { %>
+                <option value="<%= cat.name %>" <%= medicine.category === cat.name ? 'selected' : '' %>><%= cat.name %></option>
+              <% }) %>
+              <option value="new">New Category</option>
+            </select>
+          </div>
+          <div class="form-group" id="newCategoryGroup" style="display: none;">
+            <label for="newCategory">New Category Name:</label>
+            <input type="text" class="form-control" name="newCategory" placeholder="Enter new category" />
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">Update Medicine</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Toggle new category input in edit form
+  document.getElementById('categorySelect').addEventListener('change', function() {
+    var newCatGroup = document.getElementById('newCategoryGroup');
+    if (this.value === 'new') {
+      newCatGroup.style.display = 'block';
+    } else {
+      newCatGroup.style.display = 'none';
+    }
+  });
+
+  // Adjust dosesPerUnit input based on medicineType
+  document.getElementById('medicineTypeSelect').addEventListener('change', function() {
+    var dosesInput = document.getElementById('dosesPerUnitInput');
+    if (this.value === 'Syrup') {
+      dosesInput.value = 1;
+      dosesInput.disabled = true;
+    } else {
+      dosesInput.disabled = false;
+    }
+  });
+
+  // Set initial state based on current medicineType
+  window.onload = function() {
+    var medicineTypeSelect = document.getElementById('medicineTypeSelect');
+    var dosesInput = document.getElementById('dosesPerUnitInput');
+    if (medicineTypeSelect.value === 'Syrup') {
+      dosesInput.value = 1;
+      dosesInput.disabled = true;
+    }
+  };
+</script>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,751 @@
+<%- include('partials/header') %>
+
+<style>
+  :root {
+    --primary: #007bff;
+    --secondary: #17a2b8;
+    --accent: #28a745;
+    --light: #f4f7fa;
+    --dark: #2c3e50;
+    --success: #28a745;
+    --warning: #fd7e14;
+    --danger: #dc3545;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;
+    --light-gray: #e9ecef;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
+    line-height: 1.5;
+  }
+
+  .dashboard-container {
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: #fff;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .dashboard-header h1 {
+    font-size: 2rem;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .dashboard-header p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0;
+  }
+
+  .medicine-card {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--light-gray);
+    height: 100%;
+  }
+  .medicine-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  }
+  .medicine-image {
+    height: 140px;
+    width: 100%;
+    object-fit: cover;
+    border-bottom: 1px solid var(--light-gray);
+  }
+  .stock-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .card-body {
+    padding: 1.25rem;
+  }
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--dark);
+  }
+  .card-subtitle {
+    font-size: 0.9rem;
+    color: var(--secondary);
+    margin-bottom: 0.6rem;
+  }
+  .price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .inventory-sidebar {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    position: sticky;
+    top: 20px;
+    border: 1px solid var(--light-gray);
+  }
+  .sidebar-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--light-gray);
+    font-size: 0.95rem;
+    transition: background 0.2s ease;
+  }
+  .cart-item:hover {
+    background: #f8f9fa;
+  }
+  .cart-item:last-child {
+    border-bottom: none;
+  }
+  .cart-item-controls select {
+    padding: 0.3rem;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: 1px solid var(--light-gray);
+  }
+
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: #fff;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--light-gray);
+  }
+  .category-btn {
+    background: var(--light-gray);
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  .category-btn.active,
+  .category-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  }
+  .search-container {
+    flex-grow: 1;
+    max-width: 400px;
+  }
+  .search-input {
+    border-radius: 20px;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid var(--light-gray);
+    width: 100%;
+    font-size: 0.95rem;
+    transition: border-color 0.3s ease;
+  }
+  .search-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+
+  .totals-section {
+    border-top: 2px solid var(--primary);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+  .totals-section .row {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  .totals-section .grand-total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success);
+  }
+
+  .btn-custom {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+  .btn-primary-custom {
+    background: var(--primary);
+    border: none;
+  }
+  .btn-primary-custom:hover {
+    background: #0056b3;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  }
+  .btn-secondary-custom {
+    background: var(--secondary);
+    border: none;
+  }
+  .btn-secondary-custom:hover {
+    background: #117a8b;
+    box-shadow: 0 4px 10px rgba(23, 162, 184, 0.3);
+  }
+  .btn-success-custom {
+    background: var(--success);
+    border: none;
+  }
+  .btn-success-custom:hover {
+    background: #218838;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+  }
+
+  .receipt-modal .modal-content {
+    border-radius: var(--border-radius);
+    border: 2px solid var(--primary);
+    box-shadow: var(--shadow);
+    background: #fff;
+  }
+  .receipt-slip {
+    background: #fff;
+    padding: 1.5rem;
+    border: 2px dashed var(--dark);
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    margin: 1rem 0;
+  }
+  .modal-header {
+    background: var(--primary);
+    color: #fff;
+    border-bottom: none;
+  }
+  .modal-footer {
+    border-top: none;
+    padding: 1rem;
+  }
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  .form-control {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--light-gray);
+    font-size: 0.95rem;
+  }
+  .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+  }
+  .form-label {
+    font-weight: 500;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 991px) {
+    .inventory-sidebar {
+      position: static;
+      margin-top: 2rem;
+    }
+    .medicine-card {
+      margin-bottom: 1.5rem;
+    }
+  }
+</style>
+
+<div class="dashboard-container">
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <h1>In-Person Sales Dashboard</h1>
+    <p>Fast & Efficient Sales for Shakeel Pharmacy</p>
+  </div>
+
+  <div class="row gx-4">
+    <!-- Main Inventory Section -->
+    <div class="col-lg-9">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <button class="category-btn active" data-category="all">All</button>
+        <% categories.forEach(cat => { %>
+          <button class="category-btn" data-category="<%= cat.name.toLowerCase() %>"><%= cat.name %></button>
+        <% }); %>
+        <div class="search-container">
+          <input type="text" class="search-input" placeholder="Quick search..." id="searchInput">
+        </div>
+      </div>
+
+      <!-- Medicine Grid -->
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="medicineGrid">
+        <% medicines.forEach(medicine => { %>
+          <div class="col">
+            <div class="medicine-card" data-category="<%= medicine.category.toLowerCase() %>" data-name="<%= medicine.name.toLowerCase() %>">
+              <span class="stock-status" style="background: <%= medicine.quantity > 20 ? 'var(--success)' : medicine.quantity > 5 ? 'var(--warning)' : 'var(--danger)' %>;">
+                <%= medicine.quantity %> in stock
+              </span>
+              <% if (medicine.image) { %>
+                <img src="<%= medicine.image %>" alt="<%= medicine.name %>" class="medicine-image">
+              <% } else { %>
+                <img src="/assets/default-medicine.png" alt="Default" class="medicine-image">
+              <% } %>
+              <div class="card-body">
+                <h5 class="card-title"><%= medicine.name %></h5>
+                <p class="card-subtitle"><%= medicine.category %></p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="price">Rs <%= medicine.price.toFixed(2) %></span>
+                  <button class="btn btn-primary-custom add-to-cart" 
+                          data-id="<%= medicine._id %>"
+                          data-name="<%= medicine.name %>"
+                          data-price="<%= medicine.price %>"
+                          data-max="<%= medicine.quantity %>"
+                          data-type="<%= medicine.medicineType || 'Tablet' %>"
+                          data-doses="<%= medicine.dosesPerUnit || 1 %>"
+                          data-remaining="<%= medicine.remainingDoses || 0 %>">
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Inventory Sidebar -->
+    <div class="col-lg-3">
+      <div class="inventory-sidebar">
+        <h5 class="sidebar-title">Quick Sale</h5>
+        <div class="form-group">
+          <label for="customerNameInput" class="form-label">Customer Name</label>
+          <input type="text" class="form-control" id="customerNameInput" placeholder="Enter customer name">
+        </div>
+        <div class="form-group">
+          <label for="customerContactInput" class="form-label">Customer Contact</label>
+          <input type="text" class="form-control" id="customerContactInput" placeholder="Enter contact number">
+        </div>
+        <div class="d-grid mb-3">
+          <button class="btn btn-success-custom btn-custom" id="saveCustomerBtn">
+            <i class="fas fa-save me-1"></i>Save
+          </button>
+        </div>
+        <div id="cartContainer">
+          <div class="text-center text-muted my-3" id="emptyCart">
+            <i class="fas fa-cart-arrow-down fa-2x mb-2"></i>
+            <p>No items added</p>
+          </div>
+        </div>
+        <div class="totals-section">
+          <div class="row">
+            <div class="col-6 fw-bold">Total:</div>
+            <div class="col-6 text-end grand-total" id="grandTotal">Rs 0.00</div>
+          </div>
+          <div class="d-grid gap-2 mt-3">
+            <button class="btn btn-primary-custom btn-custom" id="finalizeBtn">
+              <i class="fas fa-check-circle me-1"></i>Finalize
+            </button>
+            <button class="btn btn-secondary-custom btn-custom" id="clearCartBtn">
+              <i class="fas fa-trash-alt me-1"></i>Clear
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content receipt-modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="receiptModalLabel">Sales Receipt</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="receiptContent" class="receipt-slip"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary-custom w-100" onclick="submitOrder()">
+          <i class="fas fa-print me-1"></i>Confirm & Print
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  class MediAppDashboard {
+    constructor() {
+      this.cart = JSON.parse(localStorage.getItem('mediAppCart')) || [];
+      this.token = '<%= token %>';
+      this.adminId = '<%= user.id %>';
+      this.customerDetails = { name: 'In-Person Customer', contact: 'N/A' };
+      this.init();
+    }
+
+    init() {
+      console.log('Initializing MediAppDashboard');
+      this.setupEventListeners();
+      this.renderCart();
+    }
+
+    setupEventListeners() {
+      console.log('Setting up event listeners');
+      
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          this.filterMedicines();
+        });
+      });
+
+      document.getElementById('searchInput')?.addEventListener('input', () => this.filterMedicines());
+
+      document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = e.currentTarget;
+          const id = target.dataset.id;
+          const name = target.dataset.name;
+          const price = parseFloat(target.dataset.price);
+          const max = parseInt(target.dataset.max) || 0;
+          const type = target.dataset.type || 'Tablet';
+          const dosesPerUnit = parseInt(target.dataset.doses) || 1;
+          const remainingDoses = parseInt(target.dataset.remaining) || 0;
+          const qty = 1;
+
+          const availableUnits = max + Math.floor(remainingDoses / dosesPerUnit);
+          if (availableUnits <= 0) {
+            alert(`Cannot add ${name} to cart. No stock available.`);
+            return;
+          }
+
+          const existing = this.cart.find(item => item.id === id);
+          if (existing && existing.quantity + qty > availableUnits) {
+            alert(`Stock limit reached for ${name}. Only ${availableUnits} units available.`);
+            return;
+          }
+
+          this.addToCart(id, name, price, qty, type, dosesPerUnit, remainingDoses, max);
+        });
+      });
+
+      document.getElementById('finalizeBtn')?.addEventListener('click', () => this.finalizeOrder());
+      document.getElementById('clearCartBtn')?.addEventListener('click', () => this.clearCart());
+      document.getElementById('saveCustomerBtn')?.addEventListener('click', () => this.saveCustomerDetails());
+    }
+
+    filterMedicines() {
+      const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      const activeCategory = document.querySelector('.category-btn.active')?.dataset.category || 'all';
+
+      document.querySelectorAll('.medicine-card').forEach(card => {
+        const name = card.dataset.name;
+        const category = card.dataset.category;
+        const matchesSearch = name.includes(searchTerm);
+        const matchesCategory = activeCategory === 'all' || category === activeCategory;
+        card.parentElement.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+      });
+    }
+
+    addToCart(id, name, price, quantity, type, dosesPerUnit, remainingDoses, initialMax) {
+      const existing = this.cart.find(item => item.id === id);
+      if (existing) {
+        existing.quantity += quantity;
+      } else {
+        this.cart.push({ 
+          id, 
+          name, 
+          price, 
+          quantity, 
+          medicineType: type, 
+          dosesPerUnit, 
+          remainingDoses, 
+          unitType: type === 'Syrup' ? 'Bottle' : 'Full',
+          max: initialMax
+        });
+      }
+      this.renderCart();
+    }
+
+    removeFromCart(id) {
+      this.cart = this.cart.filter(item => item.id !== id);
+      this.renderCart();
+    }
+
+    updateQuantity(id, delta) {
+      const item = this.cart.find(item => item.id === id);
+      if (item) {
+        const availableUnits = item.max + Math.floor(item.remainingDoses / item.dosesPerUnit);
+        const newQuantity = item.quantity + delta;
+        if (newQuantity > availableUnits) {
+          alert(`Cannot increase quantity beyond available stock (${availableUnits} units) for ${item.name}.`);
+          return;
+        }
+        if (newQuantity <= 0) {
+          this.removeFromCart(id);
+        } else {
+          item.quantity = newQuantity;
+          this.renderCart();
+        }
+      }
+    }
+
+    updateUnitType(id, unitType) {
+      const item = this.cart.find(item => item.id === id);
+      if (item) {
+        item.unitType = unitType;
+        this.renderCart();
+      }
+    }
+
+    calculateItemPrice(item) {
+      if (item.medicineType === 'Syrup') {
+        return item.price * item.quantity;
+      } else {
+        return item.unitType === 'Full' 
+          ? item.price * item.quantity 
+          : (item.price / item.dosesPerUnit) * item.quantity;
+      }
+    }
+
+    calculateTotal() {
+      return this.cart.reduce((sum, item) => sum + this.calculateItemPrice(item), 0);
+    }
+
+    renderCart() {
+      const container = document.getElementById('cartContainer');
+      if (!container) return;
+      container.innerHTML = this.cart.length === 0
+        ? '<div class="text-center text-muted my-3" id="emptyCart"><i class="fas fa-cart-arrow-down fa-2x mb-2"></i><p>No items added</p></div>'
+        : this.cart.map(item => `
+            <div class="cart-item">
+              <div>${item.name}</div>
+              <div class="cart-item-controls">
+                <button class="btn btn-sm btn-outline-dark" onclick="dashboard.updateQuantity('${item.id}', -1)">-</button>
+                <span>${item.quantity}</span>
+                <button class="btn btn-sm btn-outline-dark" onclick="dashboard.updateQuantity('${item.id}', 1)">+</button>
+                ${item.medicineType === 'Syrup' 
+                  ? `<span>Bottle</span>` 
+                  : `<select onchange="dashboard.updateUnitType('${item.id}', this.value)">
+                      <option value="Full" ${item.unitType === 'Full' ? 'selected' : ''}>Full ${item.medicineType}</option>
+                      <option value="Dose" ${item.unitType === 'Dose' ? 'selected' : ''}>Single Dose</option>
+                    </select>`}
+                <span>Rs ${this.calculateItemPrice(item).toFixed(2)}</span>
+                <button class="btn btn-sm btn-link text-danger" onclick="dashboard.removeFromCart('${item.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `).join('');
+
+      const total = this.calculateTotal();
+      document.getElementById('grandTotal').textContent = `Rs ${total.toFixed(2)}`;
+      localStorage.setItem('mediAppCart', JSON.stringify(this.cart));
+    }
+
+    saveCustomerDetails() {
+      const name = document.getElementById('customerNameInput')?.value.trim() || 'In-Person Customer';
+      const contact = document.getElementById('customerContactInput')?.value.trim() || 'N/A';
+      this.customerDetails = { name, contact };
+      console.log('Customer details saved:', this.customerDetails);
+      alert('Customer details saved successfully!');
+    }
+
+    finalizeOrder() {
+      if (!this.cart.length) {
+        alert('Cart is empty!');
+        return;
+      }
+      const total = this.calculateTotal();
+      const { name: customerName, contact: customerContact } = this.customerDetails;
+      
+      const receiptHTML = `
+        <div class="receipt-slip">
+          <div class="text-center mb-2">
+            <h2>Shakeel Pharmacy</h2>
+            <p>Clifton Pull, Skardu, Gilgit-Baltistan</p>
+            <p>Contact: +923129900181</p>
+            <hr>
+          </div>
+          <div class="mb-2">
+            <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Customer Name:</strong> ${customerName}</p>
+            <p><strong>Customer Contact:</strong> ${customerContact}</p>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Medicine</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.cart.map(item => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.medicineType === 'Syrup' ? 'Bottle' : item.unitType === 'Full' ? 'Full ' + item.medicineType : 'Dose'}</td>
+                    <td>Rs ${(item.medicineType === 'Syrup' || item.unitType === 'Full' ? item.price : item.price / item.dosesPerUnit).toFixed(2)}</td>
+                    <td>Rs ${this.calculateItemPrice(item).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="text-end">
+            <p><strong>Total: Rs ${total.toFixed(2)}</strong></p>
+          </div>
+        </div>
+      `;
+      document.getElementById('receiptContent').innerHTML = receiptHTML;
+      new bootstrap.Modal(document.getElementById('receiptModal')).show();
+    }
+
+    async updateStock() {
+      const items = this.cart.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        unitType: item.medicineType === 'Syrup' ? 'Bottle' : item.unitType
+      }));
+      try {
+        const response = await axios.post('/admin/update-stock', { items }, {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.data.success) {
+          items.forEach(item => {
+            const cartItem = this.cart.find(ci => ci.id === item.id);
+            const card = document.querySelector(`.medicine-card[data-id="${item.id}"]`);
+            if (cartItem && card) {
+              const dosesPerUnit = parseInt(card.dataset.doses);
+              let newQty = parseInt(card.dataset.max);
+              let newRemaining = parseInt(card.dataset.remaining);
+
+              if (item.unitType === 'Full' || item.medicineType === 'Syrup') {
+                newQty -= item.quantity;
+                cartItem.max = newQty;
+              } else if (item.unitType === 'Dose') {
+                const totalDoses = newRemaining + item.quantity;
+                const unitsToDeduct = Math.floor(totalDoses / dosesPerUnit);
+                newRemaining = totalDoses % dosesPerUnit;
+                newQty -= unitsToDeduct;
+                cartItem.max = newQty;
+                cartItem.remainingDoses = newRemaining;
+              }
+
+              const stockSpan = card.querySelector('.stock-status');
+              stockSpan.textContent = `${newQty} in stock`;
+              stockSpan.style.background = newQty > 20 ? 'var(--success)' : newQty > 5 ? 'var(--warning)' : 'var(--danger)';
+              card.dataset.max = newQty;
+              card.dataset.remaining = newRemaining;
+            }
+          });
+          return true;
+        } else {
+          throw new Error(response.data.error || 'Unknown error during stock update');
+        }
+      } catch (err) {
+        alert('Failed to update stock: ' + (err.response?.data?.error || err.message));
+        return false;
+      }
+    }
+
+    async recordSales() {
+      const { name: customerName, contact: customerContact } = this.customerDetails;
+      const items = this.cart.map(item => ({
+        medicineId: item.id,
+        medicineName: item.name,
+        quantitySold: item.quantity,
+        unitType: item.medicineType === 'Syrup' ? 'Bottle' : item.unitType,
+        totalAmount: this.calculateItemPrice(item),
+        adminId: this.adminId,
+        customerName,
+        customerContact
+      }));
+      try {
+        const response = await axios.post('/admin/inperson-sales-record', { items }, {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (response.data.success) {
+          console.log('Sales recorded successfully:', response.data);
+          return true;
+        } else {
+          throw new Error(response.data.error || 'Unknown error during sales recording');
+        }
+      } catch (err) {
+        console.error('Error recording sales:', err.response ? err.response.data : err.message);
+        alert('Failed to record sales: ' + (err.response?.data?.error || err.message));
+        return false;
+      }
+    }
+
+    clearCart() {
+      this.cart = [];
+      this.customerDetails = { name: 'In-Person Customer', contact: 'N/A' };
+      document.getElementById('customerNameInput').value = '';
+      document.getElementById('customerContactInput').value = '';
+      this.renderCart();
+      localStorage.removeItem('mediAppCart');
+    }
+  }
+
+  const dashboard = new MediAppDashboard();
+
+  async function submitOrder() {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>MediApp Receipt</title>');
+    printWindow.document.write('<style>body { font-family: "Courier New", monospace; padding: 15px; font-size: 14px; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #2c3e50; padding: 6px; } .receipt-slip { border: 2px dashed #2c3e50; padding: 15px; }</style>');
+    printWindow.document.write('</head><body>' + document.getElementById('receiptContent').innerHTML + '</body></html>');
+    printWindow.document.close();
+    printWindow.print();
+
+    const stockUpdated = await dashboard.updateStock();
+    const salesRecorded = await dashboard.recordSales();
+    
+    if (stockUpdated && salesRecorded) {
+      dashboard.clearCart();
+      bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

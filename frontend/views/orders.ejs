@@ -1,0 +1,421 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Order Management</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <div class="input-group" style="max-width: 300px;">
+          <input type="text" class="form-control" id="searchInput" placeholder="Search orders...">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" id="searchButton">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Filter Buttons and Export -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <div class="btn-group">
+          <button type="button" class="btn btn-outline-primary filter-btn active" data-status="all">All</button>
+          <button type="button" class="btn btn-outline-primary filter-btn" data-status="pending">Pending</button>
+          <button type="button" class="btn btn-outline-primary filter-btn" data-status="accepted">Accepted</button>
+          <button type="button" class="btn btn-outline-primary filter-btn" data-status="rejected">Rejected</button>
+        </div>
+        <button class="btn btn-info float-right" id="exportBtn">
+          <i class="fas fa-file-export mr-2"></i>Export PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Order List</h3>
+            <div class="card-tools">
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <select class="form-control" id="sortSelect">
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="total_asc">Total (Low-High)</option>
+                  <option value="total_desc">Total (High-Low)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <% if (orders && orders.length > 0) { %>
+              <div class="table-responsive">
+                <table class="table table-hover table-striped" id="ordersTable">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th style="width: 20px">
+                        <input type="checkbox" id="selectAll">
+                      </th>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Total</th>
+                      <th>Payment</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% orders.forEach(order => { %>
+                      <tr data-id="<%= order._id %>" class="order-row <%= order.status %>">
+                        <td>
+                          <input type="checkbox" class="order-checkbox">
+                        </td>
+                        <td>
+                          <div class="font-weight-bold">#<%= order._id.toString().substring(18, 24) %></div>
+                          <div class="text-muted small"><%= order.paymentMethod %></div>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <% if(order.user && order.user.profileImage) { %>
+                              <img src="/uploads/<%= order.user.profileImage %>" 
+                                   class="img-circle mr-2" 
+                                   style="width: 40px; height: 40px; object-fit: cover">
+                            <% } %>
+                            <div>
+                              <div class="font-weight-bold">
+                                <%= order.shippingAddress?.firstName %> <%= order.shippingAddress?.lastName %>
+                              </div>
+                              <div class="text-muted small"><%= order.shippingEmail %></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div class="font-weight-bold">Rs. <%= order.orderTotal?.toFixed(2) || '0.00' %></div>
+                          <div class="text-muted small"><%= order.cartItems?.length || 0 %> items</div>
+                        </td>
+                        <td>
+                          <span class="badge <%= order.paymentStatus === 'paid' ? 'badge-success' : 'badge-danger' %>">
+                            <%= order.paymentStatus || 'unpaid' %>
+                          </span>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <div class="status-indicator <%= order.status %> mr-2"></div>
+                            <span class="badge <%= 
+                              order.status === 'accepted' ? 'badge-success' : 
+                              order.status === 'rejected' ? 'badge-danger' : 'badge-warning' 
+                            %>">
+                              <%= order.status %>
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <%= new Date(order.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) %>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <% if(order.status === "pending") { %>
+                              <div class="btn-group">
+                                <button class="btn btn-sm btn-success accept-btn" 
+                                        data-id="<%= order._id %>"
+                                        data-transaction-id="<%= order.transactionId || '' %>"
+                                        data-toggle="tooltip" 
+                                        title="Accept Order">
+                                  <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger reject-btn" 
+                                        data-id="<%= order._id %>"
+                                        data-toggle="tooltip"
+                                        title="Reject Order">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            <% } %>
+                            <button class="btn btn-sm btn-info ml-2 details-btn" 
+                                    data-toggle="collapse" 
+                                    data-target="#details-<%= order._id %>"
+                                    title="View Details">
+                              <i class="fas <%= order.status === 'pending' ? 'fa-chevron-down' : 'fa-file-invoice' %>"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr class="collapse" id="details-<%= order._id %>">
+                        <td colspan="8">
+                          <div class="p-3 bg-light">
+                            <div class="row">
+                              <div class="col-md-3">
+                                <h6><i class="fas fa-truck mr-2"></i>Shipping Details</h6>
+                                <ul class="list-unstyled">
+                                  <% if(order.shippingAddress) { %>
+                                    <li><strong>Address:</strong> <%= order.shippingAddress.streetAddress %></li>
+                                    <li><strong>Phone:</strong> <%= order.shippingAddress.phoneNumber %></li>
+                                    <li><strong>City:</strong> Skardu</li>
+                                  <% } %>
+                                </ul>
+                              </div>
+                              <div class="col-md-3">
+                                <h6><i class="fas fa-credit-card mr-2"></i>Payment Info</h6>
+                                <ul class="list-unstyled">
+                                  <li><strong>Method:</strong> <%= order.paymentMethod %></li>
+                                  <li><strong>Shipping Fee:</strong> Rs. <%= order.shippingFee?.toFixed(2) || '0.00' %></li>
+                                  <li><strong>Total Items:</strong> <%= order.cartItems?.length || 0 %></li>
+                                  <% if (order.transactionId) { %>
+                                    <li><strong>Transaction ID:</strong> <%= order.transactionId %></li>
+                                  <% } %>
+                                </ul>
+                              </div>
+                              <div class="col-md-4">
+                                <h6><i class="fas fa-box-open mr-2"></i>Order Items</h6>
+                                <div class="row">
+                                  <% order.cartItems?.forEach(item => { %>
+                                    <div class="col-6 mb-2">
+                                      <div class="media">
+                                        <% if(item.image) { %>
+                                          <img src="/uploads/<%= item.image %>" 
+                                               class="mr-3" 
+                                               style="width: 50px; height: 50px; object-fit: cover">
+                                        <% } %>
+                                        <div class="media-body">
+                                          <h6 class="mt-0"><%= item.name %></h6>
+                                          <div class="text-muted">
+                                            x<%= item.cartQuantity %> @ Rs.<%= (item.price * item.cartQuantity).toFixed(2) %>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  <% }) %>
+                                </div>
+                              </div>
+                              <div class="col-md-2">
+                                <h6><i class="fas fa-history mr-2"></i>Order Timeline</h6>
+                                <ul class="list-unstyled timeline">
+                                  <li class="text-success">
+                                    <i class="fas fa-check"></i> Created
+                                    <div class="small text-muted"><%= new Date(order.date).toLocaleTimeString() %></div>
+                                  </li>
+                                  <% if(order.statusUpdateHistory) { %>
+                                    <% order.statusUpdateHistory.forEach(update => { %>
+                                      <li class="<%= update.status === 'accepted' ? 'text-success' : 'text-danger' %>">
+                                        <i class="fas <%= update.status === 'accepted' ? 'fa-check-circle' : 'fa-times-circle' %>"></i>
+                                        <%= update.status %>
+                                        <div class="small text-muted">
+                                          <%= new Date(update.timestamp).toLocaleString() %>
+                                        </div>
+                                      </li>
+                                    <% }) %>
+                                  <% } %>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle mr-2"></i> No orders found in the system.
+              </div>
+            <% } %>
+          </div>
+          <div class="card-footer clearfix">
+            <div class="float-left">
+              <button class="btn btn-danger" id="bulkActionBtn" disabled>
+                <i class="fas fa-tasks mr-2"></i>Bulk Actions
+              </button>
+            </div>
+            <div class="float-right">
+              <ul class="pagination mb-0">
+                <!-- Pagination would be dynamically generated here -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Additional Styles -->
+<style>
+  .order-row { transition: all 0.3s ease; }
+  .order-row:hover { transform: translateX(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .status-indicator { width: 10px; height: 10px; border-radius: 50%; }
+  .status-indicator.pending { background-color: #ffc107; }
+  .status-indicator.accepted { background-color: #28a745; }
+  .status-indicator.rejected { background-color: #dc3545; }
+  .timeline { border-left: 2px solid #dee2e6; margin-left: 10px; padding-left: 20px; }
+  .timeline li { margin-bottom: 1rem; position: relative; }
+  .timeline li::before {
+    content: ''; position: absolute; left: -25px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
+    background: #fff; border: 2px solid #007bff;
+  }
+</style>
+
+<!-- JavaScript Functions -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof $ === 'undefined') {
+    console.error('jQuery is required for tooltips and modals.');
+  } else {
+    $('[data-toggle="tooltip"]').tooltip();
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const ordersTable = document.getElementById('ordersTable');
+  let orderRows = Array.from(ordersTable.querySelectorAll('tr.order-row'));
+
+  function filterOrders() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const activeFilter = Array.from(filterButtons).find(btn => btn.classList.contains('active'))?.dataset.status || 'all';
+    
+    orderRows.forEach(row => {
+      const orderId = row.getAttribute('data-id').toLowerCase();
+      const orderStatus = row.classList.contains('pending') ? 'pending' : row.classList.contains('accepted') ? 'accepted' : row.classList.contains('rejected') ? 'rejected' : '';
+      const matchesSearch = orderId.includes(searchTerm);
+      const matchesFilter = activeFilter === 'all' || orderStatus === activeFilter;
+      row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+    });
+  }
+
+  searchInput.addEventListener('input', filterOrders);
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterOrders();
+    });
+  });
+
+  document.getElementById('sortSelect').addEventListener('change', (e) => {
+    const sortValue = e.target.value;
+    let sortedRows = Array.from(orderRows);
+
+    function getDate(row) {
+      const dateText = row.querySelector('td:nth-child(7)').textContent;
+      return new Date(dateText);
+    }
+
+    function getTotal(row) {
+      const totalText = row.querySelector('td:nth-child(4)').textContent.replace('Rs.', '').trim();
+      return parseFloat(totalText) || 0;
+    }
+
+    if (sortValue === 'newest') {
+      sortedRows.sort((a, b) => getDate(b) - getDate(a));
+    } else if (sortValue === 'oldest') {
+      sortedRows.sort((a, b) => getDate(a) - getDate(b));
+    } else if (sortValue === 'total_asc') {
+      sortedRows.sort((a, b) => getTotal(a) - getTotal(b));
+    } else if (sortValue === 'total_desc') {
+      sortedRows.sort((a, b) => getTotal(b) - getTotal(a));
+    }
+
+    const tbody = ordersTable.querySelector('tbody');
+    sortedRows.forEach(row => tbody.appendChild(row));
+    orderRows = sortedRows;
+  });
+
+  const selectAllCheckbox = document.getElementById('selectAll');
+  selectAllCheckbox.addEventListener('change', (e) => {
+    document.querySelectorAll('.order-checkbox').forEach(checkbox => {
+      checkbox.checked = e.target.checked;
+    });
+    toggleBulkActionButton();
+  });
+
+  document.querySelectorAll('.order-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', toggleBulkActionButton);
+  });
+
+  function toggleBulkActionButton() {
+    const checked = document.querySelectorAll('.order-checkbox:checked');
+    document.getElementById('bulkActionBtn').disabled = checked.length === 0;
+  }
+
+  document.querySelectorAll('.accept-btn, .reject-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const orderId = btn.dataset.id;
+      const transactionId = btn.dataset.transactionId;
+      const action = btn.classList.contains('accept-btn') ? 'accept' : 'reject';
+
+      if (action === 'reject' && !confirm('Are you sure you want to reject this order?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/orders/${orderId}/${action}`, {
+          method: 'POST',
+          headers: { 
+            'Authorization': `Bearer <%= token %>`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ transactionId })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const row = btn.closest('tr');
+          const badge = row.querySelector('td:nth-child(6) .badge');
+          const paymentBadge = row.querySelector('td:nth-child(5) .badge');
+          const btnGroup = row.querySelector('.btn-group');
+
+          row.classList.remove('pending');
+          row.classList.add(data.order.status);
+          badge.textContent = data.order.status;
+          badge.className = `badge badge-pill badge-${data.order.status === 'accepted' ? 'success' : 'danger'}`;
+          paymentBadge.textContent = data.order.paymentStatus;
+          paymentBadge.className = `badge badge-pill badge-${data.order.paymentStatus === 'paid' ? 'success' : 'danger'}`;
+
+          if (btnGroup) {
+            btnGroup.innerHTML = `<span class="text-muted small">Action completed</span>`;
+          }
+          alert(`Order ${action}ed successfully!`);
+        } else {
+          const errorData = await response.json();
+          alert(`Action failed: ${errorData.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Action failed. Please try again.');
+      }
+    });
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    try {
+      const response = await fetch('/admin/orders/export', {
+        headers: { 'Authorization': `Bearer <%= token %>` }
+      });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'orders_export.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Export failed. Please try again.');
+    }
+  });
+});
+</script>
+
+<%- include('partials/footer') %>

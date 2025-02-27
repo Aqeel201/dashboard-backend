@@ -1,0 +1,261 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Transaction Management Dashboard</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <div class="branding">
+          <img src="/assets/LogoBGR.png" alt="MediApp Logo" class="logo mr-2" style="width: 50px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">
+          <img src="/assets/easypaisa_logo.png" alt="EasyPaisa Logo" class="logo" style="width: 50px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Messages -->
+    <% if (message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <!-- Tabs -->
+    <div class="tabs mb-4">
+      <button class="tab-btn <%= activeTab === 'daily' ? 'active' : '' %>" onclick="changeTab('daily')">Daily Report</button>
+      <button class="tab-btn <%= activeTab === 'weekly' ? 'active' : '' %>" onclick="changeTab('weekly')">Last 7 Days</button>
+      <button class="tab-btn <%= activeTab === 'monthly' ? 'active' : '' %>" onclick="changeTab('monthly')">Monthly Report</button>
+    </div>
+
+    <!-- Transaction Table and Totals -->
+    <div class="card card-primary card-outline">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-history mr-2"></i> Transaction List
+        </h3>
+        <div class="card-tools">
+          <div class="totals">
+            <p class="total-amount mb-1">
+              <%= activeTab === 'daily' ? "Today's" : activeTab === 'weekly' ? 'Last 7 Days' : "This Month's" %> Total Accepted Amount: PKR <%= totalAcceptedAmount %>
+            </p>
+            <p class="total-transactions mb-0">
+              <%= activeTab === 'daily' ? "Today's" : activeTab === 'weekly' ? 'Last 7 Days' : "This Month's" %> Total Transactions: <%= totalTransactions %>
+            </p>
+          </div>
+          <button class="btn btn-tool btn-success refresh-btn" onclick="refreshTransactions()" <%= isLoading ? 'disabled' : '' %>>
+            <i class="fas fa-sync-alt <%= isLoading ? 'fa-spin' : '' %>"></i> <%= isLoading ? ' Loading...' : ' Refresh' %>
+          </button>
+          <button class="btn btn-tool btn-info print-btn" onclick="window.print()">🖨️ Print</button>
+        </div>
+      </div>
+      <div class="card-body p-0 table-responsive">
+        <% if (filteredTransactions.length === 0) { %>
+          <div class="no-transactions text-center py-5">
+            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+            <p class="text-muted">
+              No transactions available for <%= activeTab === 'daily' ? 'today' : activeTab === 'weekly' ? 'the last 7 days' : 'this month' %>.
+            </p>
+          </div>
+        <% } else { %>
+          <table class="table table-hover table-striped table-borderless">
+            <thead class="bg-light text-dark">
+              <tr>
+                <th class="py-3">User ID</th>
+                <th class="py-3">Wallet Number</th>
+                <th class="py-3">Wallet Name</th>
+                <th class="py-3">Transaction ID</th>
+                <th class="py-3 text-center">Amount</th>
+                <th class="py-3 text-center">Status</th>
+                <th class="py-3 text-center">Date/Time</th>
+                <th class="py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% filteredTransactions.forEach(txn => { %>
+                <tr class="transition-transform">
+                  <td class="align-middle py-3"><%= txn.userId %></td>
+                  <td class="align-middle py-3"><%= txn.walletNumber %></td>
+                  <td class="align-middle py-3"><%= txn.walletName %></td>
+                  <td class="align-middle py-3 transaction-id"><%= txn.transactionID %></td>
+                  <td class="align-middle text-center py-3 font-weight-bold text-primary">PKR <%= txn.depositAmount.toFixed(2) %></td>
+                  <td class="align-middle text-center py-3">
+                    <span class="badge <%= getStatusBadgeClass(txn.status) %> py-2 px-3"><%= txn.status %></span>
+                  </td>
+                  <td class="align-middle text-center py-3 text-muted"><%= new Date(txn.createdAt).toLocaleString() %></td>
+                  <td class="align-middle text-center py-3 actions no-print">
+                    <% if (txn.status === 'Pending') { %>
+                      <div class="action-buttons">
+                        <button class="btn btn-sm btn-success accept-btn" onclick="updateStatus('<%= txn._id %>', 'Accepted')">✅ Approve</button>
+                        <button class="btn btn-sm btn-danger reject-btn" onclick="updateStatus('<%= txn._id %>', 'Rejected')">❌ Reject</button>
+                      </div>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="total-transactions-section mt-4">
+      <h2 class="text-primary">
+        <%= activeTab === 'daily' ? "Today's" : activeTab === 'weekly' ? 'Last 7 Days' : "This Month's" %> Summary
+      </h2>
+      <p>Total Transactions: <%= totalTransactions %></p>
+      <p>Total Accepted Amount: PKR <%= totalAcceptedAmount %></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* General Styles */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #e9ecef;
+    color: #212529;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .tab-btn:hover {
+    background: #d1d5db;
+  }
+  .tab-btn.active {
+    background: #007bff;
+    color: #fff;
+  }
+
+  .card-tools {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  .totals p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  .refresh-btn, .print-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  .refresh-btn i.fa-spin {
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .table tbody tr:hover {
+    background: rgba(0, 123, 255, 0.05);
+    transform: translateX(5px);
+  }
+  .badge {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+  }
+  .badge:hover {
+    transform: scale(1.1);
+  }
+  .badge-accepted { background: #28a745; }
+  .badge-rejected { background: #dc3545; }
+  .badge-pending { background: #ffc107; color: #212529; }
+
+  .no-transactions {
+    opacity: 0.8;
+  }
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .accept-btn, .reject-btn {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .total-transactions-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  .total-transactions-section h2 {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+  .total-transactions-section p {
+    font-size: 1.1rem;
+    margin: 5px 0;
+  }
+
+  @media print {
+    .no-print {
+      display: none;
+    }
+    .card-header .btn-tool {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Change tab and reload transactions
+  function changeTab(tab) {
+    window.location.href = `/admin/transactions?token=<%= token %>&tab=${tab}`;
+  }
+
+  // Refresh transactions
+  async function refreshTransactions() {
+    document.querySelector('.refresh-btn').disabled = true;
+    window.location.reload();
+  }
+
+  // Update transaction status
+  async function updateStatus(id, status) {
+    if (!confirm(`Are you sure you want to ${status.toLowerCase()} this transaction? This may affect related orders.`)) return;
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer <%= token %>`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Transaction ${status.toLowerCase()}ed successfully! Related orders may have been updated.`);
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update transaction: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Error updating transaction:', err);
+      alert('Error updating transaction. Please try again.');
+    }
+  }
+</script>
+
+<%- include('partials/footer') %>

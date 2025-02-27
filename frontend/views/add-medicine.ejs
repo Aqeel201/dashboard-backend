@@ -1,0 +1,150 @@
+<%- include('partials/header') %>
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Add Medicine</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <!-- Display Success or Error Messages -->
+    <% if(message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <% if(error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <!-- Add Medicine Form -->
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">Medicine Information</h3>
+      </div>
+      <form method="POST" action="/admin/add-medicine?token=<%= token %>" enctype="multipart/form-data">
+        <div class="card-body">
+          <div class="form-group">
+            <label for="name">Medicine Name:</label>
+            <input type="text" class="form-control" name="name" placeholder="Enter medicine name" required />
+          </div>
+          <div class="form-group">
+            <label for="manufacturer">Manufacturer:</label>
+            <input type="text" class="form-control" name="manufacturer" placeholder="Enter manufacturer" required />
+          </div>
+          <div class="form-group">
+            <label for="expiryDate">Expiry Date:</label>
+            <input type="date" class="form-control" name="expiryDate" min="<%= new Date().toISOString().split('T')[0] %>" required />
+          </div>
+          <div class="form-group">
+            <label for="dosage">Dosage:</label>
+            <input type="text" class="form-control" name="dosage" placeholder="Enter dosage" />
+          </div>
+          <div class="form-group">
+            <label for="medicineType">Medicine Type:</label>
+            <select class="form-control" name="medicineType" id="medicineTypeSelect" required>
+              <option value="">Select Medicine Type</option>
+              <option value="Tablet">Tablet</option>
+              <option value="Capsule">Capsule</option>
+              <option value="Syrup">Syrup</option>
+            </select>
+          </div>
+          <div class="form-group" id="dosesPerUnitGroup">
+            <label for="dosesPerUnit">Doses Per Unit:</label>
+            <input type="number" class="form-control" name="dosesPerUnit" id="dosesPerUnitInput" placeholder="Enter doses per unit" min="1" value="1" required />
+            <small class="form-text text-muted">For Tablets/Capsules: number of doses per unit; for Syrup: set to 1 (bottles).</small>
+          </div>
+          <div class="form-group">
+            <label for="price">Price (PKR):</label>
+            <input type="number" step="0.01" class="form-control" name="price" placeholder="Enter price in PKR" required />
+          </div>
+          <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input type="number" class="form-control" name="quantity" placeholder="Enter quantity" required />
+          </div>
+          <div class="form-group">
+            <label for="image">Image:</label>
+            <input type="file" class="form-control" name="image" accept="image/*" />
+          </div>
+          <div class="form-group">
+            <label for="category">Category:</label>
+            <div class="input-group">
+              <select class="form-control" name="category" id="categorySelect" required>
+                <option value="">Select Category</option>
+                <% categories.forEach(cat => { %>
+                  <option value="<%= cat._id %>" data-name="<%= cat.name %>"><%= cat.name %></option>
+                <% }) %>
+                <option value="new">New Category</option>
+              </select>
+              <div class="input-group-append">
+                <button type="button" id="deleteCategoryBtn" class="btn btn-danger" disabled>Delete Selected</button>
+                <button type="button" id="createCategoryBtn" class="btn btn-success ml-1">Create Category</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" id="newCategoryGroup" style="display: none;">
+            <label for="newCategory">New Category Name:</label>
+            <input type="text" class="form-control" name="newCategory" placeholder="Enter new category" />
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">Add Medicine</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Hidden Form for Deleting a Category -->
+<form id="deleteCategoryForm" method="POST" action="/admin/categories/delete?token=<%= token %>" style="display:none;">
+  <input type="hidden" name="categoryId" id="deleteCategoryId" value="">
+</form>
+
+<script>
+  // Category dropdown logic
+  document.getElementById('categorySelect').addEventListener('change', function() {
+    var newCatGroup = document.getElementById('newCategoryGroup');
+    var deleteBtn = document.getElementById('deleteCategoryBtn');
+    if (this.value === 'new') {
+      newCatGroup.style.display = 'block';
+      deleteBtn.disabled = true;
+    } else {
+      newCatGroup.style.display = 'none';
+      deleteBtn.disabled = (this.value === '');
+    }
+  });
+
+  // Delete category button
+  document.getElementById('deleteCategoryBtn').addEventListener('click', function() {
+    var select = document.getElementById('categorySelect');
+    var selectedValue = select.value;
+    var selectedText = select.options[select.selectedIndex].getAttribute('data-name');
+    if (selectedValue && selectedValue !== "new") {
+      if (confirm("Are you sure you want to delete the category '" + selectedText + "'?")) {
+        document.getElementById('deleteCategoryId').value = selectedValue;
+        document.getElementById('deleteCategoryForm').submit();
+      }
+    }
+  });
+
+  // Create category button
+  document.getElementById('createCategoryBtn').addEventListener('click', function() {
+    window.location.href = '/admin/add-category?token=<%= token %>';
+  });
+
+  // Adjust dosesPerUnit input based on medicineType
+  document.getElementById('medicineTypeSelect').addEventListener('change', function() {
+    var dosesInput = document.getElementById('dosesPerUnitInput');
+    if (this.value === 'Syrup') {
+      dosesInput.value = 1;
+      dosesInput.disabled = true;
+    } else {
+      dosesInput.disabled = false;
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>
