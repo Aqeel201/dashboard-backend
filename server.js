@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 
 const app = express();
-const PORT = 2000; // Unified port
+const PORT = 2000;
 const SECRET_KEY = 'your_secure_secret_key_here'; // Replace with a strong secret in production
 
 // Middleware Setup
@@ -41,7 +41,7 @@ const storage1 = multer.diskStorage({
 });
 const upload1 = multer({ storage: storage1 });
 
-// Multer setup for profile image uploads (specific path)
+// Multer setup for profile image uploads
 const storage2 = multer.diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
@@ -52,11 +52,25 @@ const upload2 = multer({ storage: storage2 });
 mongoose
   .connect('mongodb://localhost:27017/MediApp', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch((err) => console.error('MongoDB connection error:', err));
 
 // Schemas and Models
 
-// User Schema (from all servers, merged)
+// Settings Schema
+const SettingsSchema = new mongoose.Schema({
+  lowStockThreshold: { type: Number, default: 10 },
+  expiryAlertDays: { type: Number, default: 30 },
+  emailNotifications: { type: Boolean, default: true },
+  inAppNotifications: { type: Boolean, default: true },
+  defaultUserRole: { type: String, default: 'user' },
+  currency: { type: String, default: 'PKR' },
+  dateFormat: { type: String, default: 'DD/MM/YYYY' },
+  apiKey: { type: String, default: '' },
+  darkMode: { type: Boolean, default: false },
+});
+const Settings = mongoose.model('Settings', SettingsSchema);
+
+// User Schema
 const userSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, default: uuidv4 },
   firstName: { type: String, required: true },
@@ -69,13 +83,13 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
-  dob: { type: String, default: '' }
+  dob: { type: String, default: '' },
 });
 const User = mongoose.model('User', userSchema);
 
 // Category Schema
 const CategorySchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true }
+  name: { type: String, required: true, unique: true },
 });
 const Category = mongoose.model('Category', CategorySchema);
 
@@ -92,7 +106,8 @@ const MedicineSchema = new mongoose.Schema({
   medicineType: { type: String, enum: ['Tablet', 'Capsule', 'Syrup'], required: true },
   dosesPerUnit: { type: Number, default: 1 },
   remainingDoses: { type: Number, default: 0 },
-  likes: { type: [String], default: [] }
+  likes: { type: [String], default: [] },
+  description: { type: String, default: '' }, // New field for description
 });
 const Medicine = mongoose.model('Medicine', MedicineSchema);
 
@@ -105,22 +120,22 @@ const OrderSchema = new mongoose.Schema({
   billingAddress: { firstName: String, lastName: String, streetAddress: String, phoneNumber: String },
   shippingMethod: { type: Number, required: true },
   paymentMethod: { type: String, required: true },
-  cartItems: { type: Array, default: [] }, // Assuming cartItems contains embedded medicine objects
+  cartItems: { type: Array, default: [] },
   shippingFee: { type: Number, required: true },
   orderTotal: { type: Number, required: true },
   location: { latitude: Number, longitude: Number },
-  status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
+  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
   date: { type: Date, default: Date.now },
   transactionId: { type: String, default: null },
-  paymentStatus: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
-  statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }]
+  paymentStatus: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
+  statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }],
 });
 const Order = mongoose.model('Order', OrderSchema);
 
 // Cart Schema
 const CartSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
-  cart: { type: Array, default: [] }
+  cart: { type: Array, default: [] },
 });
 const Cart = mongoose.model('Cart', CartSchema);
 
@@ -134,7 +149,7 @@ const InPersonSaleSchema = new mongoose.Schema({
   customerName: { type: String },
   customerContact: { type: String },
   adminId: { type: String, required: true },
-  totalAmount: { type: Number, required: true }
+  totalAmount: { type: Number, required: true },
 });
 const InPersonSale = mongoose.model('InPersonSale', InPersonSaleSchema);
 
@@ -146,9 +161,35 @@ const transactionSchema = new mongoose.Schema({
   transactionID: { type: String, required: true },
   depositAmount: { type: Number, required: true },
   status: { type: String, enum: ['Accepted', 'Rejected', 'Pending'], default: 'Pending' },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 const Transaction = mongoose.model('Transaction', transactionSchema);
+
+// Middleware to Fetch Settings
+app.use(async (req, res, next) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings();
+      await settings.save();
+    }
+    res.locals.settings = settings.toObject();
+  } catch (err) {
+    console.error('Error fetching settings:', err);
+    res.locals.settings = {
+      lowStockThreshold: 10,
+      expiryAlertDays: 30,
+      emailNotifications: true,
+      inAppNotifications: true,
+      defaultUserRole: 'user',
+      currency: 'PKR',
+      dateFormat: 'DD/MM/YYYY',
+      apiKey: '',
+      darkMode: false,
+    };
+  }
+  next();
+});
 
 // Authentication Middleware
 const authMiddleware = async (req, res, next) => {
@@ -186,14 +227,8 @@ const authAdminPage = (req, res, next) => {
   });
 };
 
-const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-  next();
-};
+// Routes
 
-// Routes from First Server
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
@@ -215,7 +250,7 @@ app.post('/api/auth/signup', upload1.single('profileImage'), async (req, res) =>
       password: hashedPassword,
       profileImage,
       role: 'user',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     });
     await newUser.save();
     const token = jwt.sign({ email, role: 'user' }, SECRET_KEY);
@@ -299,7 +334,7 @@ app.get('/admin/users', authAdminPage, async (req, res) => {
       token: req.query.token,
       currentPath: req.path,
       message: req.query.message || null,
-      error: req.query.error || null
+      error: req.query.error || null,
     });
   } catch (err) {
     console.error(err);
@@ -309,7 +344,7 @@ app.get('/admin/users', authAdminPage, async (req, res) => {
       token: req.query.token,
       currentPath: req.path,
       message: null,
-      error: 'Server error'
+      error: 'Server error',
     });
   }
 });
@@ -332,7 +367,13 @@ app.get('/admin/users/:id/change-password', authAdminPage, async (req, res) => {
   try {
     const userToChange = await User.findOne({ id: req.params.id });
     if (!userToChange) return res.redirect('/admin/users?error=User not found&token=' + req.query.token);
-    res.render('change-password', { user: req.user, userToChange, token: req.query.token, message: req.query.message || null, error: req.query.error || null });
+    res.render('change-password', {
+      user: req.user,
+      userToChange,
+      token: req.query.token,
+      message: req.query.message || null,
+      error: req.query.error || null,
+    });
   } catch (err) {
     console.error(err);
     res.redirect('/admin/users?error=Server error&token=' + req.query.token);
@@ -401,7 +442,7 @@ app.post('/medicines/:medicineId/like', authMiddleware, async (req, res) => {
     const liked = medicine.likes.includes(userId);
     res.json({ liked, likesCount: medicine.likes.length });
   } catch (err) {
-    console.error("Error toggling like:", err);
+    console.error('Error toggling like:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -409,12 +450,12 @@ app.post('/medicines/:medicineId/like', authMiddleware, async (req, res) => {
 app.get('/api/cart', async (req, res) => {
   try {
     const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
     const cart = await Cart.findOne({ userId });
     res.json({ cartItems: cart ? cart.cart : [] });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -440,12 +481,12 @@ app.post('/api/cart', async (req, res) => {
 app.get('/api/order', async (req, res) => {
   try {
     const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
     const orders = await Order.find({ userId }).sort({ date: -1 });
     res.json({ orders });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -464,20 +505,20 @@ app.post('/api/order', async (req, res) => {
       shippingFee,
       orderTotal,
       location,
-      status: "pending"
+      status: 'pending',
     });
     await newOrder.save();
-    res.json({ message: "Order placed successfully", order: newOrder });
+    res.json({ message: 'Order placed successfully', order: newOrder });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to place order" });
+    res.status(500).json({ error: 'Failed to place order' });
   }
 });
 
 app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
 
     if (order.transactionId && order.paymentMethod.toLowerCase() === 'easypaisa') {
       const transaction = await Transaction.findById(order.transactionId);
@@ -506,23 +547,23 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
     }
 
     await order.save();
-    res.json({ message: "Order accepted", order });
+    res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to accept order" });
+    res.status(500).json({ error: 'Failed to accept order' });
   }
 });
 
 app.post('/admin/orders/:id/reject', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: "Order not found" });
-    order.status = "rejected";
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    order.status = 'rejected';
     await order.save();
-    res.json({ message: "Order rejected", order });
+    res.json({ message: 'Order rejected', order });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to reject order" });
+    res.status(500).json({ error: 'Failed to reject order' });
   }
 });
 
@@ -536,39 +577,41 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
     const expiryThresholdDate = new Date(now);
     expiryThresholdDate.setDate(now.getDate() + expiryThresholdDays);
     const expiryMedicines = await Medicine.find({ expiryDate: { $lte: expiryThresholdDate, $gte: now } });
-    const defaultThreshold = 10;
-    const lowStockMedicines = await Medicine.find({ quantity: { $lte: defaultThreshold } });
+    const lowStockMedicines = await Medicine.find({ quantity: { $lte: res.locals.settings.lowStockThreshold } });
 
-    // Fetch purchase history data (from /admin/purchase-history)
     const onlineOrders = await Order.find().sort({ date: -1 });
     const inPersonSales = await InPersonSale.find()
       .sort({ saleDate: -1 })
       .populate('medicineId', 'name price medicineType dosesPerUnit')
       .populate('adminId', 'firstName lastName profileImage');
 
-    const formattedOnlineOrders = onlineOrders.map(order => {
-      const orderTotal = order.cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.cartQuantity || 0)), 0);
-      return {
-        _id: order._id,
-        shippingEmail: order.shippingEmail || 'N/A',
-        shippingAddress: order.shippingAddress || { firstName: 'Unknown', lastName: '', streetAddress: 'N/A', phoneNumber: 'N/A' },
-        orderTotal: orderTotal || order.orderTotal || 0,
-        paymentMethod: order.paymentMethod || 'N/A',
-        paymentStatus: order.paymentStatus || 'unpaid',
-        status: order.status || 'pending',
-        date: order.date,
-        cartItems: order.cartItems || [],
-        statusUpdateHistory: order.statusUpdateHistory || [],
-        transactionId: order.transactionId || '',
-        shippingFee: order.shippingFee || 0
-      };
-    }).filter(order => order.orderTotal > 0);
+    const formattedOnlineOrders = onlineOrders
+      .map((order) => {
+        const orderTotal = order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.cartQuantity || 0), 0);
+        return {
+          _id: order._id,
+          shippingEmail: order.shippingEmail || 'N/A',
+          shippingAddress: order.shippingAddress || { firstName: 'Unknown', lastName: '', streetAddress: 'N/A', phoneNumber: 'N/A' },
+          orderTotal: orderTotal || order.orderTotal || 0,
+          paymentMethod: order.paymentMethod || 'N/A',
+          paymentStatus: order.paymentStatus || 'unpaid',
+          status: order.status || 'pending',
+          date: order.date,
+          cartItems: order.cartItems || [],
+          statusUpdateHistory: order.statusUpdateHistory || [],
+          transactionId: order.transactionId || '',
+          shippingFee: order.shippingFee || 0,
+        };
+      })
+      .filter((order) => order.orderTotal > 0);
 
-    const filteredInPersonSales = inPersonSales.filter(sale => 
-      sale.medicineId && typeof sale.medicineId.price === 'number' && 
-      typeof sale.quantitySold === 'number' && 
-      typeof sale.totalAmount === 'number' && 
-      sale.quantitySold > 0
+    const filteredInPersonSales = inPersonSales.filter(
+      (sale) =>
+        sale.medicineId &&
+        typeof sale.medicineId.price === 'number' &&
+        typeof sale.quantitySold === 'number' &&
+        typeof sale.totalAmount === 'number' &&
+        sale.quantitySold > 0
     );
 
     const calculatePeriodTotals = (period) => {
@@ -594,8 +637,7 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
 
       const filteredOrders = formattedOnlineOrders.filter(filterDate);
       const filteredSales = filteredInPersonSales.filter(filterDate);
-      const totalSales = filteredOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + 
-                        filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+      const totalSales = filteredOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
       const totalProfit = totalSales * 0.3;
       const totalOrders = filteredOrders.length + filteredSales.length;
       return { totalSales, totalProfit, totalOrders };
@@ -607,19 +649,18 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
     const monthlyTotals = calculatePeriodTotals('monthly');
     const yearlyTotals = calculatePeriodTotals('yearly');
 
-    const totalSales = formattedOnlineOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + 
-                      filteredInPersonSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+    const totalSales = formattedOnlineOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + filteredInPersonSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
     const totalProfit = totalSales * 0.3;
 
-    res.render('dashboard', { 
-      medicineCount, 
-      userCount, 
-      orders, 
+    res.render('dashboard', {
+      medicineCount,
+      userCount,
+      orders,
       expiryMedicines,
       lowStockMedicines,
       onlineOrders: formattedOnlineOrders,
       inPersonSales: filteredInPersonSales,
-      user: req.user, 
+      user: req.user,
       token: req.query.token,
       currentPath: '/admin/dashboard',
       dailyTotals: { sales: dailyTotals.totalSales.toFixed(2), profit: dailyTotals.totalProfit.toFixed(2), orders: dailyTotals.totalOrders },
@@ -628,20 +669,19 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
       monthlyTotals: { sales: monthlyTotals.totalSales.toFixed(2), profit: monthlyTotals.totalProfit.toFixed(2), orders: monthlyTotals.totalOrders },
       yearlyTotals: { sales: yearlyTotals.totalSales.toFixed(2), profit: yearlyTotals.totalProfit.toFixed(2), orders: yearlyTotals.totalOrders },
       totalSales: totalSales.toFixed(2),
-      totalProfit: totalProfit.toFixed(2)
+      totalProfit: totalProfit.toFixed(2),
     });
   } catch (err) {
     console.error(err);
-    res.render('dashboard', { 
-      medicineCount: 0, 
-      userCount: 0, 
-      orders: [], 
+    res.render('dashboard', {
+      medicineCount: 0,
+      userCount: 0,
+      orders: [],
       expiryMedicines: [],
       lowStockMedicines: [],
       onlineOrders: [],
       inPersonSales: [],
-      prescriptions: [],
-      user: req.user, 
+      user: req.user,
       token: req.query.token,
       currentPath: '/admin/dashboard',
       dailyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
@@ -650,121 +690,142 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
       monthlyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
       yearlyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
       totalSales: '0.00',
-      totalProfit: '0.00'
+      totalProfit: '0.00',
     });
   }
 });
 
 app.get('/admin/medicine-alerts', authAdminPage, async (req, res) => {
   try {
-    const expiryThresholdDays = 30;
-    const now = new Date();
-    const expiryThresholdDate = new Date(now);
-    expiryThresholdDate.setDate(now.getDate() + expiryThresholdDays);
-    const expiryMedicines = await Medicine.find({ expiryDate: { $lte: expiryThresholdDate, $gte: now } });
-    const defaultThreshold = 10;
-    const lowStockMedicines = await Medicine.find({ quantity: { $lte: defaultThreshold } });
-    res.render('medicine-alerts', { 
-      user: req.user, 
+    const expiryThresholdDate = new Date();
+    expiryThresholdDate.setDate(expiryThresholdDate.getDate() + res.locals.settings.expiryAlertDays);
+    const expiryMedicines = await Medicine.find({ expiryDate: { $lte: expiryThresholdDate, $gte: new Date() } });
+    const lowStockMedicines = await Medicine.find({ quantity: { $lte: res.locals.settings.lowStockThreshold } });
+    res.render('medicine-alerts', {
+      user: req.user,
       token: req.query.token,
       expiryMedicines,
       lowStockMedicines,
-      defaultThreshold,
-      currentPath: '/admin/medicine-alerts'
+      defaultThreshold: res.locals.settings.lowStockThreshold,
+      currentPath: '/admin/medicine-alerts',
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).send('Server error');
   }
 });
 
 app.get('/admin/orders', authAdminPage, async (req, res) => {
   try {
     const orders = await Order.find().sort({ date: -1 });
-    const pendingOrders = await Order.find({ status: "pending" });
+    const pendingOrders = await Order.find({ status: 'pending' });
     res.render('orders', { orders, pendingOrders, user: req.user, token: req.query.token, currentPath: '/admin/orders' });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Server error");
+    res.status(500).send('Server error');
   }
 });
 
 app.get('/admin/add-medicine', authAdminPage, async (req, res) => {
   try {
     const categories = await Category.find();
-    res.render('add-medicine', { 
-      message: req.query.message || null, 
-      error: req.query.error || null, 
+    res.render('add-medicine', {
+      message: req.query.message || null,
+      error: req.query.error || null,
       categories,
       user: req.user,
       token: req.query.token,
-      currentPath: '/admin/add-medicine'
+      currentPath: '/admin/add-medicine',
     });
   } catch (err) {
     console.error(err);
-    res.render('add-medicine', { 
-      message: null, 
-      error: 'Failed to load categories', 
-      categories: [], 
-      user: req.user, 
+    res.render('add-medicine', {
+      message: null,
+      error: 'Failed to load categories',
+      categories: [],
+      user: req.user,
       token: req.query.token,
-      currentPath: '/admin/add-medicine'
+      currentPath: '/admin/add-medicine',
     });
   }
 });
 
 app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (req, res) => {
   try {
-    let { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit } = req.body;
+    let { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit, description } = req.body;
     const parsedQuantity = parseInt(quantity, 10);
     const parsedPrice = parseFloat(price);
     const parsedDosesPerUnit = parseInt(dosesPerUnit, 10) || 1;
     const expDate = new Date(expiryDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
     if (expDate < today) {
-      return res.render('add-medicine', { 
-        message: 'Expiry date cannot be in the past.', 
-        error: null, 
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Expiry date cannot be in the past.',
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
       });
     }
-    const image = req.file ? '/uploads/' + req.file.filename : null;
 
-    if (!['Tablet', 'Capsule', 'Syrup'].includes(medicineType)) {
-      return res.render('add-medicine', { 
-        message: 'Invalid medicine type selected.', 
-        error: null, 
+    if (!/^\d+$/.test(quantity) || isNaN(parsedQuantity) || parsedQuantity < 1) {
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Quantity must be a positive integer (e.g., 1 or greater).',
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
+      });
+    }
+
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Price must be a positive number (e.g., greater than 0).',
+        categories: await Category.find(),
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/add-medicine',
       });
     }
 
     if (parsedDosesPerUnit < 1) {
-      return res.render('add-medicine', { 
-        message: 'Doses per unit must be at least 1.', 
-        error: null, 
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Doses per unit must be at least 1.',
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
+      });
+    }
+
+    const image = req.file ? '/uploads/' + req.file.filename : null;
+
+    if (!['Tablet', 'Capsule', 'Syrup'].includes(medicineType)) {
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Invalid medicine type selected.',
+        categories: await Category.find(),
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/add-medicine',
       });
     }
 
     if (category === 'new') {
       if (!newCategory) {
-        return res.render('add-medicine', { 
-          message: 'Please provide a new category name.', 
-          error: null, 
+        return res.render('add-medicine', {
+          message: null,
+          error: 'Please provide a new category name.',
           categories: await Category.find(),
           user: req.user,
           token: req.query.token,
-          currentPath: '/admin/add-medicine'
+          currentPath: '/admin/add-medicine',
         });
       }
       let existingCat = await Category.findOne({ name: newCategory.trim() });
@@ -776,24 +837,24 @@ app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (r
     } else if (category) {
       const catDoc = await Category.findById(category);
       if (!catDoc) {
-        return res.render('add-medicine', { 
-          message: 'Invalid category selected.', 
-          error: null, 
+        return res.render('add-medicine', {
+          message: null,
+          error: 'Invalid category selected.',
           categories: await Category.find(),
           user: req.user,
           token: req.query.token,
-          currentPath: '/admin/add-medicine'
+          currentPath: '/admin/add-medicine',
         });
       }
       category = catDoc.name;
     } else {
-      return res.render('add-medicine', { 
-        message: 'Please select a category.', 
-        error: null, 
+      return res.render('add-medicine', {
+        message: null,
+        error: 'Please select a category.',
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
       });
     }
 
@@ -808,14 +869,15 @@ app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (r
       existingMedicine.dosesPerUnit = parsedDosesPerUnit;
       if (image) existingMedicine.image = image;
       existingMedicine.category = category;
+      existingMedicine.description = description || existingMedicine.description;
       await existingMedicine.save();
-      return res.render('add-medicine', { 
-        message: 'Medicine exists. Updated quantity successfully!', 
-        error: null, 
+      return res.render('add-medicine', {
+        message: 'Medicine already exists. Quantity and details updated successfully!',
+        error: null,
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
       });
     } else {
       const newMedicine = new Medicine({
@@ -828,27 +890,28 @@ app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (r
         image,
         category,
         medicineType,
-        dosesPerUnit: parsedDosesPerUnit
+        dosesPerUnit: parsedDosesPerUnit,
+        description,
       });
       await newMedicine.save();
-      return res.render('add-medicine', { 
-        message: 'Medicine added successfully!', 
-        error: null, 
+      return res.render('add-medicine', {
+        message: 'Medicine added successfully!',
+        error: null,
         categories: await Category.find(),
         user: req.user,
         token: req.query.token,
-        currentPath: '/admin/add-medicine'
+        currentPath: '/admin/add-medicine',
       });
     }
   } catch (err) {
     console.error(err);
-    return res.render('add-medicine', { 
-      message: null, 
-      error: 'Failed to add medicine: ' + err.message, 
+    return res.render('add-medicine', {
+      message: null,
+      error: 'Failed to add medicine: ' + err.message,
       categories: await Category.find(),
       user: req.user,
       token: req.query.token,
-      currentPath: '/admin/add-medicine'
+      currentPath: '/admin/add-medicine',
     });
   }
 });
@@ -862,20 +925,13 @@ app.get('/admin/transactions', authAdminPage, async (req, res) => {
     const filteredTransactions = transactions.filter((txn) => {
       const txnDate = new Date(txn.createdAt);
       if (activeTab === 'daily') {
-        return (
-          txnDate.getDate() === today.getDate() &&
-          txnDate.getMonth() === today.getMonth() &&
-          txnDate.getFullYear() === today.getFullYear()
-        );
+        return txnDate.getDate() === today.getDate() && txnDate.getMonth() === today.getMonth() && txnDate.getFullYear() === today.getFullYear();
       } else if (activeTab === 'weekly') {
         const weekAgo = new Date();
         weekAgo.setDate(today.getDate() - 7);
         return txnDate >= weekAgo && txnDate <= today;
       } else if (activeTab === 'monthly') {
-        return (
-          txnDate.getMonth() === today.getMonth() &&
-          txnDate.getFullYear() === today.getFullYear()
-        );
+        return txnDate.getMonth() === today.getMonth() && txnDate.getFullYear() === today.getFullYear();
       }
       return false;
     });
@@ -886,7 +942,7 @@ app.get('/admin/transactions', authAdminPage, async (req, res) => {
       .toFixed(2);
     const totalTransactions = filteredTransactions.length;
 
-    res.render('transaction', { 
+    res.render('transaction', {
       filteredTransactions,
       activeTab,
       lastUpdated: new Date().toLocaleTimeString(),
@@ -898,18 +954,22 @@ app.get('/admin/transactions', authAdminPage, async (req, res) => {
       currentPath: '/admin/transactions',
       message: req.query.message || null,
       error: req.query.error || null,
-      getStatusBadgeClass: function(status) {
+      getStatusBadgeClass: function (status) {
         switch (status.toLowerCase()) {
-          case 'accepted': return 'badge-accepted';
-          case 'rejected': return 'badge-rejected';
-          case 'pending': return 'badge-pending';
-          default: return 'badge-secondary';
+          case 'accepted':
+            return 'badge-accepted';
+          case 'rejected':
+            return 'badge-rejected';
+          case 'pending':
+            return 'badge-pending';
+          default:
+            return 'badge-secondary';
         }
-      }
+      },
     });
   } catch (err) {
     console.error('Error fetching transactions:', err);
-    res.render('transaction', { 
+    res.render('transaction', {
       filteredTransactions: [],
       activeTab: req.query.tab || 'daily',
       lastUpdated: new Date().toLocaleTimeString(),
@@ -921,14 +981,18 @@ app.get('/admin/transactions', authAdminPage, async (req, res) => {
       currentPath: '/admin/transactions',
       message: null,
       error: 'Server error: Unable to fetch transactions',
-      getStatusBadgeClass: function(status) {
+      getStatusBadgeClass: function (status) {
         switch (status.toLowerCase()) {
-          case 'accepted': return 'badge-accepted';
-          case 'rejected': return 'badge-rejected';
-          case 'pending': return 'badge-pending';
-          default: return 'badge-secondary';
+          case 'accepted':
+            return 'badge-accepted';
+          case 'rejected':
+            return 'badge-rejected';
+          case 'pending':
+            return 'badge-pending';
+          default:
+            return 'badge-secondary';
         }
-      }
+      },
     });
   }
 });
@@ -945,35 +1009,34 @@ app.get('/admin/medicines', authAdminPage, async (req, res) => {
     const selectedCategory = category || 'all';
     const selectedMedicineType = medicineType || null;
 
-    res.render('list-medicines', { 
-      medicines, 
-      categories, 
-      selectedCategory, 
+    res.render('list-medicines', {
+      medicines,
+      categories,
+      selectedCategory,
       medicineType: selectedMedicineType,
-      user: req.user, 
+      user: req.user,
       token: req.query.token,
       message: req.query.message || null,
       error: req.query.error || null,
-      currentPath: '/admin/medicines'
+      currentPath: '/admin/medicines',
     });
   } catch (err) {
     console.error('Error fetching medicines:', err);
-    res.render('list-medicines', { 
-      medicines: [], 
-      categories: [], 
-      selectedCategory: 'all', 
+    res.render('list-medicines', {
+      medicines: [],
+      categories: [],
+      selectedCategory: 'all',
       medicineType: null,
-      user: req.user, 
-      token: req.query.token, 
-      message: null, 
+      user: req.user,
+      token: req.query.token,
+      message: null,
       error: 'Error fetching medicines.',
-      currentPath: '/admin/medicines'
+      currentPath: '/admin/medicines',
     });
   }
 });
 
 app.post('/admin/update-stock', authAdminPage, async (req, res) => {
-  console.log('Request body:', req.body);
   try {
     const { items } = req.body;
     if (!Array.isArray(items) || !items.length) {
@@ -1020,7 +1083,6 @@ app.post('/admin/update-stock', authAdminPage, async (req, res) => {
           medicine.quantity -= unitsToDeduct;
         }
         medicine.remainingDoses = newRemainingDoses;
-        console.log(`Updated ${medicine.name}: remainingDoses = ${medicine.remainingDoses}, quantity = ${medicine.quantity}`);
       }
 
       await medicine.save({ validateBeforeSave: true });
@@ -1048,7 +1110,15 @@ app.get('/admin/medicines/:id/edit', authAdminPage, async (req, res) => {
     const medicine = await Medicine.findById(req.params.id);
     const categories = await Category.find();
     if (!medicine) return res.status(404).send('Medicine not found');
-    res.render('edit-medicine', { medicine, message: req.query.message || '', error: req.query.error || null, categories, user: req.user, token: req.query.token, currentPath: '/admin/medicines/:id/edit' });
+    res.render('edit-medicine', {
+      medicine,
+      message: req.query.message || '',
+      error: req.query.error || null,
+      categories,
+      user: req.user,
+      token: req.query.token,
+      currentPath: '/admin/medicines/:id/edit',
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
@@ -1057,24 +1127,76 @@ app.get('/admin/medicines/:id/edit', authAdminPage, async (req, res) => {
 
 app.post('/admin/medicines/:id/edit', authAdminPage, upload1.single('image'), async (req, res) => {
   try {
-    const { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit } = req.body;
+    const { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit, description } = req.body;
     const medicine = await Medicine.findById(req.params.id);
     if (!medicine) return res.status(404).send('Medicine not found');
 
+    const parsedQuantity = parseInt(quantity, 10);
+    const parsedPrice = parseFloat(price);
+    const parsedDosesPerUnit = parseInt(dosesPerUnit, 10) || 1;
+
+    if (!/^\d+$/.test(quantity) || isNaN(parsedQuantity) || parsedQuantity < 0) {
+      const categories = await Category.find();
+      return res.render('edit-medicine', {
+        medicine,
+        message: null,
+        error: 'Quantity must be a non-negative integer (e.g., 0 or greater).',
+        categories,
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/medicines/:id/edit',
+      });
+    }
+
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      const categories = await Category.find();
+      return res.render('edit-medicine', {
+        medicine,
+        message: null,
+        error: 'Price must be a positive number (e.g., greater than 0).',
+        categories,
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/medicines/:id/edit',
+      });
+    }
+
+    if (parsedDosesPerUnit < 1) {
+      const categories = await Category.find();
+      return res.render('edit-medicine', {
+        medicine,
+        message: null,
+        error: 'Doses per unit must be at least 1.',
+        categories,
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/medicines/:id/edit',
+      });
+    }
+
     if (!['Tablet', 'Capsule', 'Syrup'].includes(medicineType)) {
       const categories = await Category.find();
-      return res.render('edit-medicine', { medicine, message: null, error: 'Invalid medicine type selected.', categories, user: req.user, token: req.query.token, currentPath: '/admin/medicines/:id/edit' });
+      return res.render('edit-medicine', {
+        medicine,
+        message: null,
+        error: 'Invalid medicine type selected.',
+        categories,
+        user: req.user,
+        token: req.query.token,
+        currentPath: '/admin/medicines/:id/edit',
+      });
     }
 
     medicine.name = name;
     medicine.manufacturer = manufacturer;
     medicine.expiryDate = new Date(expiryDate);
-    medicine.price = parseFloat(price);
+    medicine.price = parsedPrice;
     medicine.dosage = dosage;
-    medicine.quantity = parseInt(quantity, 10);
+    medicine.quantity = parsedQuantity;
     medicine.medicineType = medicineType;
-    medicine.dosesPerUnit = parseInt(dosesPerUnit, 10) || 1;
+    medicine.dosesPerUnit = parsedDosesPerUnit;
     if (req.file) medicine.image = '/uploads/' + req.file.filename;
+    medicine.description = description;
 
     let finalCategory = category;
     if (!category || category === 'new') {
@@ -1091,11 +1213,27 @@ app.post('/admin/medicines/:id/edit', authAdminPage, upload1.single('image'), as
 
     await medicine.save();
     const categories = await Category.find();
-    res.render('edit-medicine', { medicine, message: 'Medicine updated successfully!', error: null, categories, user: req.user, token: req.query.token, currentPath: '/admin/medicines/:id/edit' });
+    res.render('edit-medicine', {
+      medicine,
+      message: 'Medicine updated successfully!',
+      error: null,
+      categories,
+      user: req.user,
+      token: req.query.token,
+      currentPath: '/admin/medicines/:id/edit',
+    });
   } catch (err) {
     console.error(err);
     const categories = await Category.find();
-    res.render('edit-medicine', { medicine: req.body, message: null, error: 'Failed to update medicine: ' + err.message, categories, user: req.user, token: req.query.token, currentPath: '/admin/medicines/:id/edit' });
+    res.render('edit-medicine', {
+      medicine: await Medicine.findById(req.params.id),
+      message: null,
+      error: 'Failed to update medicine: ' + err.message,
+      categories,
+      user: req.user,
+      token: req.query.token,
+      currentPath: '/admin/medicines/:id/edit',
+    });
   }
 });
 
@@ -1142,6 +1280,101 @@ app.post('/admin/categories/:id/delete', authAdminPage, async (req, res) => {
   }
 });
 
+// Feedback Schema
+const FeedbackSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  userName: { type: String, required: true },
+  userProfileImage: { type: String, default: '' }, // Store profile image URL
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+const Feedback = mongoose.model('Feedback', FeedbackSchema);
+
+// (Duplicate authMiddleware removed. The original definition above remains in use.)
+
+// Feedback Routes
+app.post('/api/feedback', authMiddleware, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    if (!rating || !comment || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating (1-5) and comment are required' });
+    }
+    const userName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.email.split('@')[0];
+    const feedback = new Feedback({
+      userId: req.user.id,
+      userName,
+      userProfileImage: req.user.profileImage || '',
+      rating,
+      comment,
+      createdAt: new Date(),
+    });
+    await feedback.save();
+    console.log('Feedback submitted:', { 
+      userId: req.user.id, 
+      userName, 
+      userProfileImage: req.user.profileImage, 
+      rating, 
+      comment 
+    });
+    res.status(201).json({ message: 'Feedback submitted successfully', feedback });
+  } catch (err) {
+    console.error('Error submitting feedback:', err);
+    res.status(500).json({ error: 'Failed to submit feedback', details: err.message });
+  }
+});
+
+app.get('/api/feedback', authMiddleware, async (req, res) => {
+  try {
+    const feedbackList = await Feedback.find().sort({ createdAt: -1 });
+    console.log('Feedback fetched for user:', req.user.id, 'Count:', feedbackList.length);
+    res.json(feedbackList);
+  } catch (err) {
+    console.error('Error fetching feedback:', err);
+    res.status(500).json({ error: 'Failed to fetch feedback', details: err.message });
+  }
+});
+
+app.get('/admin/feedback', authAdminPage, async (req, res) => {
+  try {
+    const expiryThresholdDate = new Date();
+    expiryThresholdDate.setDate(expiryThresholdDate.getDate() + res.locals.settings.expiryAlertDays);
+    const expiryMedicines = await Medicine.find({ expiryDate: { $lte: expiryThresholdDate, $gte: new Date() } });
+    const lowStockMedicines = await Medicine.find({ quantity: { $lte: res.locals.settings.lowStockThreshold } });
+    const pendingOrders = await Order.find({ status: 'pending' });
+    const feedbackList = await Feedback.find().sort({ createdAt: -1 });
+    console.log('Feedback fetched for admin:', req.user.id, 'Count:', feedbackList.length);
+    res.render('userfeedback', {
+      token: req.query.token || '',
+      user: req.user,
+      settings: res.locals.settings || { darkMode: false },
+      currentPath: '/admin/feedback',
+      feedbackList,
+      expiryMedicines,
+      lowStockMedicines,
+      pendingOrders,
+      message: req.query.message || null,
+      error: req.query.error || null,
+    });
+  } catch (err) {
+    console.error('Error fetching feedback for admin:', err);
+    res.render('userfeedback', {
+      token: req.query.token || '',
+      user: req.user,
+      settings: res.locals.settings || { darkMode: false },
+      currentPath: '/admin/feedback',
+      feedbackList: [],
+      expiryMedicines: [],
+      lowStockMedicines: [],
+      pendingOrders: [],
+      message: null,
+      error: 'Failed to load feedback: ' + err.message,
+    });
+  }
+});
+
+// Ensure other routes (e.g., /api/auth/login, /api/cart) and app.listen are defined elsewhere
+
 app.get('/admin/add-category', authAdminPage, (req, res) => {
   res.render('add-category', { message: req.query.message || null, error: req.query.error || null, user: req.user, token: req.query.token, currentPath: '/admin/add-category' });
 });
@@ -1164,47 +1397,41 @@ app.post('/admin/add-category', authAdminPage, async (req, res) => {
 
 app.get('/admin/purchase-history', authAdminPage, async (req, res) => {
   try {
-    // Fetch online orders without populating cartItems._id (assuming embedded data)
     const onlineOrders = await Order.find().sort({ date: -1 });
-
-    // Fetch in-person sales
     const inPersonSales = await InPersonSale.find()
       .sort({ saleDate: -1 })
       .populate('medicineId', 'name price medicineType dosesPerUnit')
       .populate('adminId', 'firstName lastName profileImage');
 
-    // Debug: Log raw online orders
-    console.log('Raw Online Orders:', JSON.stringify(onlineOrders, null, 2));
+    const formattedOnlineOrders = onlineOrders
+      .map((order) => {
+        const orderTotal = order.cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.cartQuantity || 0), 0);
+        return {
+          _id: order._id,
+          shippingEmail: order.shippingEmail || 'N/A',
+          shippingAddress: order.shippingAddress || { firstName: 'Unknown', lastName: '', streetAddress: 'N/A', phoneNumber: 'N/A' },
+          orderTotal: orderTotal || order.orderTotal || 0,
+          paymentMethod: order.paymentMethod || 'N/A',
+          paymentStatus: order.paymentStatus || 'unpaid',
+          status: order.status || 'pending',
+          date: order.date,
+          cartItems: order.cartItems || [],
+          statusUpdateHistory: order.statusUpdateHistory || [],
+          transactionId: order.transactionId || '',
+          shippingFee: order.shippingFee || 0,
+        };
+      })
+      .filter((order) => order.orderTotal > 0);
 
-    // Format online orders to match /admin/orders style
-    const formattedOnlineOrders = onlineOrders.map(order => {
-      console.log('Processing order:', JSON.stringify(order, null, 2));
-      const orderTotal = order.cartItems.reduce((sum, item) => sum + ((item.price || 0) * (item.cartQuantity || 0)), 0);
-      return {
-        _id: order._id,
-        shippingEmail: order.shippingEmail || 'N/A',
-        shippingAddress: order.shippingAddress || { firstName: 'Unknown', lastName: '', streetAddress: 'N/A', phoneNumber: 'N/A' },
-        orderTotal: orderTotal || order.orderTotal || 0,
-        paymentMethod: order.paymentMethod || 'N/A',
-        paymentStatus: order.paymentStatus || 'unpaid',
-        status: order.status || 'pending',
-        date: order.date,
-        cartItems: order.cartItems || [],
-        statusUpdateHistory: order.statusUpdateHistory || [],
-        transactionId: order.transactionId || '',
-        shippingFee: order.shippingFee || 0
-      };
-    }).filter(order => order.orderTotal > 0);
-
-    // Filter in-person sales
-    const filteredInPersonSales = inPersonSales.filter(sale => 
-      sale.medicineId && typeof sale.medicineId.price === 'number' && 
-      typeof sale.quantitySold === 'number' && 
-      typeof sale.totalAmount === 'number' && 
-      sale.quantitySold > 0
+    const filteredInPersonSales = inPersonSales.filter(
+      (sale) =>
+        sale.medicineId &&
+        typeof sale.medicineId.price === 'number' &&
+        typeof sale.quantitySold === 'number' &&
+        typeof sale.totalAmount === 'number' &&
+        sale.quantitySold > 0
     );
 
-    // Calculate totals for various periods
     const now = new Date();
     const calculatePeriodTotals = (period) => {
       const filterDate = (item) => {
@@ -1229,9 +1456,8 @@ app.get('/admin/purchase-history', authAdminPage, async (req, res) => {
 
       const filteredOrders = formattedOnlineOrders.filter(filterDate);
       const filteredSales = filteredInPersonSales.filter(filterDate);
-      const totalSales = filteredOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + 
-                        filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
-      const totalProfit = totalSales * 0.3; // 30% profit margin
+      const totalSales = filteredOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + filteredSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+      const totalProfit = totalSales * 0.3;
       const totalOrders = filteredOrders.length + filteredSales.length;
       return { totalSales, totalProfit, totalOrders };
     };
@@ -1242,83 +1468,71 @@ app.get('/admin/purchase-history', authAdminPage, async (req, res) => {
     const monthlyTotals = calculatePeriodTotals('monthly');
     const yearlyTotals = calculatePeriodTotals('yearly');
 
-    // Calculate overall totals
-    const totalSales = formattedOnlineOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + 
-                      filteredInPersonSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
+    const totalSales = formattedOnlineOrders.reduce((sum, order) => sum + (order.orderTotal || 0), 0) + filteredInPersonSales.reduce((sum, sale) => sum + (sale.totalAmount || 0), 0);
     const totalProfit = totalSales * 0.3;
 
-    // Define getStatusBadgeClass function
-    const getStatusBadgeClass = function(status) {
+    const getStatusBadgeClass = function (status) {
       switch (status) {
-        case 'Success': return 'badge-success';
-        case 'Pending': return 'badge-warning';
-        case 'Cancelled': return 'badge-danger';
-        case 'Processing': return 'badge-info';
-        case 'accepted': return 'badge-success';
-        case 'rejected': return 'badge-danger';
-        default: return 'badge-secondary';
+        case 'Success':
+          return 'badge-success';
+        case 'Pending':
+          return 'badge-warning';
+        case 'Cancelled':
+          return 'badge-danger';
+        case 'Processing':
+          return 'badge-info';
+        case 'accepted':
+          return 'badge-success';
+        case 'rejected':
+          return 'badge-danger';
+        default:
+          return 'badge-secondary';
       }
     };
 
-    console.log('Formatted Online Orders:', JSON.stringify(formattedOnlineOrders, null, 2));
-    console.log('Filtered In-Person Sales:', JSON.stringify(filteredInPersonSales, null, 2));
-
-    res.render('purchase-history', { 
+    res.render('purchase-history', {
       onlineOrders: formattedOnlineOrders,
-      inPersonSales: filteredInPersonSales, 
-      user: req.user, 
-      token: req.query.token, 
+      inPersonSales: filteredInPersonSales,
+      user: req.user,
+      token: req.query.token,
       currentPath: '/admin/purchase-history',
-      message: req.query.message || null, 
+      message: req.query.message || null,
       error: req.query.error || null,
       getStatusBadgeClass,
-      dailyTotals: { 
-        sales: dailyTotals.totalSales.toFixed(2), 
-        profit: dailyTotals.totalProfit.toFixed(2), 
-        orders: dailyTotals.totalOrders 
-      },
-      weeklyTotals: { 
-        sales: weeklyTotals.totalSales.toFixed(2), 
-        profit: weeklyTotals.totalProfit.toFixed(2), 
-        orders: weeklyTotals.totalOrders 
-      },
-      fortnightlyTotals: { 
-        sales: fortnightlyTotals.totalSales.toFixed(2), 
-        profit: fortnightlyTotals.totalProfit.toFixed(2), 
-        orders: fortnightlyTotals.totalOrders 
-      },
-      monthlyTotals: { 
-        sales: monthlyTotals.totalSales.toFixed(2), 
-        profit: monthlyTotals.totalProfit.toFixed(2), 
-        orders: monthlyTotals.totalOrders 
-      },
-      yearlyTotals: { 
-        sales: yearlyTotals.totalSales.toFixed(2), 
-        profit: yearlyTotals.totalProfit.toFixed(2), 
-        orders: yearlyTotals.totalOrders 
-      },
+      dailyTotals: { sales: dailyTotals.totalSales.toFixed(2), profit: dailyTotals.totalProfit.toFixed(2), orders: dailyTotals.totalOrders },
+      weeklyTotals: { sales: weeklyTotals.totalSales.toFixed(2), profit: weeklyTotals.totalProfit.toFixed(2), orders: weeklyTotals.totalOrders },
+      fortnightlyTotals: { sales: fortnightlyTotals.totalSales.toFixed(2), profit: fortnightlyTotals.totalProfit.toFixed(2), orders: fortnightlyTotals.totalOrders },
+      monthlyTotals: { sales: monthlyTotals.totalSales.toFixed(2), profit: monthlyTotals.totalProfit.toFixed(2), orders: monthlyTotals.totalOrders },
+      yearlyTotals: { sales: yearlyTotals.totalSales.toFixed(2), profit: yearlyTotals.totalProfit.toFixed(2), orders: yearlyTotals.totalOrders },
       totalSales: totalSales.toFixed(2),
-      totalProfit: totalProfit.toFixed(2)
+      totalProfit: totalProfit.toFixed(2),
     });
   } catch (err) {
     console.error('Error fetching purchase history:', err);
-    res.render('purchase-history', { 
-      onlineOrders: [], 
-      inPersonSales: [], 
-      user: req.user, 
-      token: req.query.token, 
+    res.render('purchase-history', {
+      onlineOrders: [],
+      inPersonSales: [],
+      user: req.user,
+      token: req.query.token,
       currentPath: '/admin/purchase-history',
-      message: null, 
+      message: null,
       error: 'Server error: Unable to fetch purchase history',
-      getStatusBadgeClass: function(status) {
+      getStatusBadgeClass: function (status) {
         switch (status) {
-          case 'Success': return 'badge-success';
-          case 'Pending': return 'badge-warning';
-          case 'Cancelled': return 'badge-danger';
-          case 'Processing': return 'badge-info';
-          case 'accepted': return 'badge-success';
-          case 'rejected': return 'badge-danger';
-          default: return 'badge-secondary';
+          case 'Success':
+            return 'badge-success';
+          case 'Pending':
+            return 'badge-warning';
+          case 'Cancelled':
+            return 'badge-danger';
+          case 'Processing':
+            return 'badge-info';
+          case 'accepted':
+            return 'badge-success';
+          case 'rejected':
+            return 'badge-danger';
+          default:
+            return 'badge-secondary';
         }
       },
       dailyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
@@ -1327,7 +1541,7 @@ app.get('/admin/purchase-history', authAdminPage, async (req, res) => {
       monthlyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
       yearlyTotals: { sales: '0.00', profit: '0.00', orders: 0 },
       totalSales: '0.00',
-      totalProfit: '0.00'
+      totalProfit: '0.00',
     });
   }
 });
@@ -1336,25 +1550,25 @@ app.get('/admin/inperson-sales', authAdminPage, async (req, res) => {
   try {
     const medicines = await Medicine.find().sort({ name: 1 });
     const categories = await Category.find();
-    res.render('inperson-sales', { 
-      medicines, 
-      categories, 
-      user: req.user, 
-      token: req.query.token, 
+    res.render('inperson-sales', {
+      medicines,
+      categories,
+      user: req.user,
+      token: req.query.token,
       currentPath: '/admin/inperson-sales',
-      message: req.query.message || null, 
-      error: req.query.error || null 
+      message: req.query.message || null,
+      error: req.query.error || null,
     });
   } catch (err) {
     console.error(err);
-    res.render('inperson-sales', { 
-      medicines: [], 
-      categories: [], 
-      user: req.user, 
-      token: req.query.token, 
+    res.render('inperson-sales', {
+      medicines: [],
+      categories: [],
+      user: req.user,
+      token: req.query.token,
       currentPath: '/admin/inperson-sales',
-      message: null, 
-      error: 'Server error' 
+      message: null,
+      error: 'Server error',
     });
   }
 });
@@ -1391,7 +1605,7 @@ app.post('/admin/inperson-sales', authAdminPage, async (req, res) => {
       customerName,
       customerContact,
       adminId,
-      totalAmount
+      totalAmount,
     });
     await newSale.save();
 
@@ -1410,7 +1624,7 @@ app.post('/admin/inperson-sales-record', authAdminPage, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid items format', details: 'Items must be a non-empty array' });
     }
 
-    const sales = items.map(item => ({
+    const sales = items.map((item) => ({
       medicineId: item.medicineId,
       medicineName: item.medicineName,
       quantitySold: item.quantitySold,
@@ -1418,12 +1632,10 @@ app.post('/admin/inperson-sales-record', authAdminPage, async (req, res) => {
       customerName: item.customerName || 'In-Person Customer',
       customerContact: item.customerContact || 'N/A',
       adminId: item.adminId,
-      totalAmount: item.totalAmount
+      totalAmount: item.totalAmount,
     }));
 
     await InPersonSale.insertMany(sales);
-    console.log('Sales recorded successfully:', sales);
-
     res.json({ success: true, message: 'Sales recorded successfully' });
   } catch (err) {
     console.error('Error recording sales:', err);
@@ -1437,13 +1649,82 @@ app.get('/admin/sales-history', authAdminPage, async (req, res) => {
     res.render('sales-history', { sales, user: req.user, token: req.query.token, message: req.query.message || null, error: req.query.error || null, currentPath: '/admin/sales-history' });
   } catch (err) {
     console.error(err);
-    res.render('sales-history', { sales: [], user: req.user, token: req.query.token, message: null, error: 'Server error', currentPath: '/admin/sales-history' });
+    res.render('sales-history', {
+      sales: [],
+      user: req.user,
+      token: req.query.token,
+      message: null,
+      error: 'Server error',
+      currentPath: '/admin/sales-history',
+    });
+  }
+});
+
+// Settings Routes
+app.get('/admin/settings', authAdminPage, (req, res) => {
+  res.render('settings', {
+    user: req.user,
+    token: req.query.token,
+    currentPath: '/admin/settings',
+    message: req.query.message || null,
+    error: req.query.error || null,
+  });
+});
+
+app.post('/admin/settings', authAdminPage, async (req, res) => {
+  try {
+    const { lowStockThreshold, expiryAlertDays, emailNotifications, inAppNotifications, defaultUserRole, currency, dateFormat, apiKey, darkMode } = req.body;
+
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings();
+    }
+
+    settings.lowStockThreshold = parseInt(lowStockThreshold, 10) || 10;
+    settings.expiryAlertDays = parseInt(expiryAlertDays, 10) || 30;
+    settings.emailNotifications = emailNotifications === 'on';
+    settings.inAppNotifications = inAppNotifications === 'on';
+    settings.defaultUserRole = defaultUserRole || 'user';
+    settings.currency = currency || 'PKR';
+    settings.dateFormat = dateFormat || 'DD/MM/YYYY';
+    settings.apiKey = apiKey || '';
+    settings.darkMode = darkMode === 'on';
+
+    await settings.save();
+
+    res.redirect('/admin/settings?message=Settings updated successfully&token=' + req.query.token);
+  } catch (err) {
+    console.error(err);
+    res.redirect('/admin/settings?error=Failed to update settings&token=' + req.query.token);
+  }
+});
+
+app.get('/admin/backup', authAdminPage, async (req, res) => {
+  try {
+    const backupData = {
+      users: await User.find().lean(),
+      medicines: await Medicine.find().lean(),
+      orders: await Order.find().lean(),
+      carts: await Cart.find().lean(),
+      inPersonSales: await InPersonSale.find().lean(),
+      transactions: await Transaction.find().lean(),
+      categories: await Category.find().lean(),
+      settings: await Settings.find().lean(),
+    };
+    const backupDir = path.join(__dirname, 'backups');
+    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir);
+    const backupFile = path.join(backupDir, `backup-${Date.now()}.json`);
+    fs.writeFileSync(backupFile, JSON.stringify(backupData, null, 2));
+    res.download(backupFile);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Backup failed');
   }
 });
 
 app.get('/', (req, res) => res.send('Welcome to MediApp'));
 
-// Routes from Second Server (Transactions)
+// Transaction Routes
 app.post('/api/transactions', async (req, res) => {
   try {
     const { userId, walletNumber, walletName, transactionID, depositAmount } = req.body;
@@ -1487,11 +1768,7 @@ app.put('/api/transactions/:id', async (req, res) => {
     if (!['Accepted', 'Rejected', 'Pending'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
     }
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const updatedTransaction = await Transaction.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!updatedTransaction) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
@@ -1506,11 +1783,11 @@ setInterval(async () => {
   const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
   try {
     const pendingTransactions = await Transaction.find({
-      status: "Pending",
-      createdAt: { $lt: twentyMinutesAgo }
+      status: 'Pending',
+      createdAt: { $lt: twentyMinutesAgo },
     });
     for (const txn of pendingTransactions) {
-      txn.status = "Rejected";
+      txn.status = 'Rejected';
       await txn.save();
       console.log(`Transaction ${txn._id} automatically rejected due to timeout.`);
     }
@@ -1519,35 +1796,7 @@ setInterval(async () => {
   }
 }, 60 * 1000);
 
-// Routes from Third Server
-app.put('/api/auth/update', authMiddleware, upload2.single('profileImage'), async (req, res) => {
-  try {
-    const user = req.user;
-    const { firstName, lastName, CNICNo, phone, address, dob } = req.body;
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
-    if (CNICNo) user.CNICNo = CNICNo;
-    if (phone) user.phone = phone;
-    if (address) user.address = address;
-    if (dob) user.dob = dob;
-    if (req.file) {
-      console.log('Received file:', req.file);
-      user.profileImage = req.file.filename;
-      const sourcePath = path.join(__dirname, 'uploads', req.file.filename);
-      const destPath = path.join(profileUploadsDir, req.file.filename);
-      fs.copyFile(sourcePath, destPath, (err) => {
-        if (err) console.error('Error copying file:', err);
-        else console.log('File copied to profile uploads directory.');
-      });
-    }
-    await user.save();
-    const { password, ...userWithoutPassword } = user.toObject();
-    res.json({ message: 'Profile updated successfully', user: userWithoutPassword });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
-
+// Additional Routes
 app.put('/api/auth/change-password', authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -1601,7 +1850,7 @@ app.listen(PORT, '0.0.0.0', async () => {
         email: adminEmail1,
         password: hashedPassword1,
         role: 'admin',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
       await adminUser1.save();
       console.log('New admin user created successfully (MediApp default).');
@@ -1618,35 +1867,25 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.error('Error setting up admin users:', err.message);
   }
 
-  // Data Migration to Fix Missing Fields
   try {
     const medicinesWithoutType = await Medicine.find({ medicineType: { $exists: false } });
     if (medicinesWithoutType.length > 0) {
       console.log(`Found ${medicinesWithoutType.length} medicines without medicineType. Setting default to 'Tablet'.`);
-      await Medicine.updateMany(
-        { medicineType: { $exists: false } },
-        { $set: { medicineType: 'Tablet', dosesPerUnit: 1, remainingDoses: 0 } }
-      );
+      await Medicine.updateMany({ medicineType: { $exists: false } }, { $set: { medicineType: 'Tablet', dosesPerUnit: 1, remainingDoses: 0 } });
       console.log('Medicine types updated successfully.');
     }
 
     const medicinesWithoutDoses = await Medicine.find({ dosesPerUnit: { $exists: false } });
     if (medicinesWithoutDoses.length > 0) {
       console.log(`Found ${medicinesWithoutDoses.length} medicines without dosesPerUnit. Setting default to 1.`);
-      await Medicine.updateMany(
-        { dosesPerUnit: { $exists: false } },
-        { $set: { dosesPerUnit: 1, remainingDoses: 0 } }
-      );
+      await Medicine.updateMany({ dosesPerUnit: { $exists: false } }, { $set: { dosesPerUnit: 1, remainingDoses: 0 } });
       console.log('Doses per unit updated successfully.');
     }
 
     const medicinesWithoutRemaining = await Medicine.find({ remainingDoses: { $exists: false } });
     if (medicinesWithoutRemaining.length > 0) {
       console.log(`Found ${medicinesWithoutRemaining.length} medicines without remainingDoses. Setting default to 0.`);
-      await Medicine.updateMany(
-        { remainingDoses: { $exists: false } },
-        { $set: { remainingDoses: 0 } }
-      );
+      await Medicine.updateMany({ remainingDoses: { $exists: false } }, { $set: { remainingDoses: 0 } });
       console.log('Remaining doses updated successfully.');
     }
   } catch (err) {

@@ -1,0 +1,90 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>User Feedback</h1>
+      </div>
+      <div class="col-sm-6 text-right">
+        <a href="/admin/feedback?token=<%= token %>" class="btn btn-primary">
+          <i class="fas fa-sync"></i> Refresh
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <% if (message) { %>
+      <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <%= message %>
+      </div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <%= error %>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">User Feedback List</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width: 10%">Profile</th>
+              <th>User</th>
+              <th>Rating</th>
+              <th>Comment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (feedbackList && feedbackList.length > 0) { %>
+              <% feedbackList.forEach(function(feedback) { %>
+                <tr>
+                  <td>
+                    <% if (feedback.userProfileImage && feedback.userProfileImage.trim() !== '') { %>
+                      <img src="/Uploads/Profile/<%= feedback.userProfileImage %>" alt="User Image" class="img-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
+                    <% } else { %>
+                      <div class="img-circle text-center" style="width: 40px; height: 40px; background: #ccc; line-height: 40px;">
+                        <i class="fas fa-user"></i>
+                      </div>
+                    <% } %>
+                  </td>
+                  <td><%= feedback.userName %></td>
+                  <td>
+                    <span class="text-warning">
+                      <% for (let i = 0; i < feedback.rating; i++) { %>
+                        ★
+                      <% } %>
+                      <% for (let i = feedback.rating; i < 5; i++) { %>
+                        ☆
+                      <% } %>
+                    </span>
+                  </td>
+                  <td><%= feedback.comment %></td>
+                  <td><%= new Date(feedback.createdAt).toLocaleDateString() %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="text-center">No feedback found</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

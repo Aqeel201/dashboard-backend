@@ -23,8 +23,8 @@
 %>
 
 <!-- Main Dashboard Container -->
-<div class="container-fluid mt-4 p-0" style="max-width: 1450px;">
-  <!-- Header Section (Styled like Add Medicine) -->
+<div class="container-fluid mt-4 p-0" style="max-width: 1500px;">
+  <!-- Header Section -->
   <section class="content-header mb-4">
     <div class="container-fluid">
       <div class="row mb-2">
@@ -43,11 +43,11 @@
       <div class="card shadow-md hover-card bg-white rounded-lg border-light">
         <div class="card-body d-flex flex-column align-items-center text-center p-4">
           <div class="metric-icon mb-3">
-            <i class="fas fa-prescription-bottle fa-3x text-info"></i>
+            <i class="fas fa-prescription-bottle fa-3x text-primary"></i>
           </div>
           <h5 class="card-title text-muted mb-1">Total Medicines</h5>
-          <h3 class="card-text font-weight-bold text-info mb-2"><%= medicineCount %></h3>
-          <a href="/admin/medicines?token=<%= token %>" class="btn btn-link text-info p-0 mt-auto">View <i class="fas fa-arrow-right"></i></a>
+          <h3 class="card-text font-weight-bold text-primary mb-2"><%= medicineCount %></h3>
+          <a href="/admin/medicines?token=<%= token %>" class="btn btn-link text-primary p-0 mt-auto">View <i class="fas fa-arrow-right"></i></a>
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@
             <i class="fas fa-minus"></i>
           </button>
         </div>
-        <div class="card-body collapse show p-4" id="salesProfitChartCollapse" style="background: #fff; border-radius: 0 0 12px 12px;">
+        <div class="card-body collapse show p-4" id="salesProfitChartCollapse">
           <canvas id="salesProfitChart" height="250"></canvas>
         </div>
       </div>
@@ -111,7 +111,7 @@
             <i class="fas fa-minus"></i>
           </button>
         </div>
-        <div class="card-body collapse show p-4" id="purchaseHistoryChartCollapse" style="background: #fff; border-radius: 0 0 12px 12px;">
+        <div class="card-body collapse show p-4" id="purchaseHistoryChartCollapse">
           <canvas id="purchaseHistoryChart" height="250"></canvas>
         </div>
       </div>
@@ -135,101 +135,128 @@
     </div>
   </div>
 
-  <!-- Combined Purchase History Table -->
-  <div class="card shadow-lg bg-white rounded-lg">
-    <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Recent Purchase History</h5>
-      <div class="card-tools">
-        <button type="button" class="btn btn-tool text-white" data-toggle="collapse" data-target="#purchaseHistoryTableCollapse">
-          <i class="fas fa-minus"></i>
-        </button>
-        <button type="button" class="btn btn-tool text-white" data-card-widget="remove">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-    </div>
-    <div class="card-body p-0 table-responsive collapse show" id="purchaseHistoryTableCollapse">
-      <table class="table table-hover table-striped">
-        <thead class="bg-light-blue">
-          <tr>
-            <th>Type</th>
-            <th>Customer/Details</th>
-            <th>Total (Rs.)</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% 
-            const combinedHistory = [
-              ...localOnlineOrders.map(order => ({ type: 'Online', data: order })),
-              ...localInPersonSales.map(sale => ({ type: 'In-Person', data: sale }))
-            ].sort((a, b) => new Date(b.data.date || b.data.saleDate) - new Date(a.data.date || a.data.saleDate)).slice(0, 5);
-          %>
-          <% if (combinedHistory.length > 0) { %>
-            <% combinedHistory.forEach(entry => { %>
-              <% if (entry.type === 'Online') { %>
-                <tr class="transition-transform">
-                  <td>Online Order</td>
-                  <td><%= entry.data.shippingAddress.firstName %> <%= entry.data.shippingAddress.lastName %> (<%= entry.data.shippingEmail %>)</td>
-                  <td class="font-weight-bold text-center">Rs. <%= entry.data.orderTotal ? entry.data.orderTotal.toFixed(2) : '0.00' %></td>
-                  <td class="text-center">
-                    <span class="badge <%= getStatusBadgeClass(entry.data.status) %>"><%= entry.data.status %></span>
-                  </td>
-                  <td class="text-center"><%= new Date(entry.data.date).toLocaleString() %></td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-info btn-action" data-toggle="collapse" data-target="#onlineDetails-<%= entry.data._id %>" aria-expanded="false" aria-controls="onlineDetails-<%= entry.data._id %>">
-                      <i class="fas fa-eye"></i> View
-                    </button>
-                  </td>
-                </tr>
-                <tr class="collapse" id="onlineDetails-<%= entry.data._id %>">
-                  <td colspan="6">
-                    <div class="p-3 bg-light rounded shadow-sm">
-                      <h6 class="text-primary mb-2">Order Items:</h6>
-                      <% if (entry.data.cartItems && entry.data.cartItems.length > 0) { %>
-                        <% entry.data.cartItems.forEach(item => { %>
-                          <p class="mb-1"><%= item.name || 'Unknown Medicine' %> - x<%= item.cartQuantity || 0 %> @ Rs.<%= item.price ? (item.price * (item.cartQuantity || 0)).toFixed(2) : '0.00' %></p>
-                        <% }) %>
-                      <% } else { %>
-                        <p class="text-muted">No items available.</p>
-                      <% } %>
-                    </div>
-                  </td>
-                </tr>
-              <% } else { %>
-                <tr class="transition-transform">
-                  <td>In-Person Sale</td>
-                  <td><%= entry.data.customerName || 'N/A' %> (<%= entry.data.customerContact || 'N/A' %>)</td>
-                  <td class="font-weight-bold text-center">Rs. <%= entry.data.totalAmount ? entry.data.totalAmount.toFixed(2) : '0.00' %></td>
-                  <td class="text-center">
-                    <span class="badge badge-success">Completed</span>
-                  </td>
-                  <td class="text-center"><%= new Date(entry.data.saleDate).toLocaleString() %></td>
-                  <td class="text-center">
-                    <button class="btn btn-sm btn-info btn-action" data-toggle="modal" data-target="#summaryModal-<%= entry.data._id %>" onclick="showSaleSummary('<%- JSON.stringify(entry.data) %>')">
-                      <i class="fas fa-eye"></i> View
-                    </button>
-                  </td>
-                </tr>
-              <% } %>
-            <% }) %>
-          <% } else { %>
-            <tr>
-              <td colspan="6" class="text-center py-4">
-                <div class="empty-state">
-                  <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                  <h4 class="text-muted">No purchase history found</h4>
-                </div>
-              </td>
-            </tr>
-          <% } %>
-        </tbody>
-      </table>
+ 
+<!-- Combined Purchase History Table -->
+<div class="card shadow-lg bg-white rounded-lg">
+  <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Recent Purchase History</h5>
+    <div class="card-tools">
+      <button type="button" class="btn btn-tool text-white" data-toggle="collapse" data-target="#purchaseHistoryTableCollapse" aria-expanded="true" aria-controls="purchaseHistoryTableCollapse">
+        <i class="fas fa-minus"></i>
+      </button>
+      <button type="button" class="btn btn-tool text-white" data-card-widget="remove">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
+  <div class="card-body p-0 table-responsive collapse show" id="purchaseHistoryTableCollapse">
+    <table class="table table-hover table-striped">
+      <thead class="bg-light-blue">
+        <tr>
+          <th>Type</th>
+          <th>Customer/Details</th>
+          <th>Total (Rs.)</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% 
+          const combinedHistory = [
+            ...localOnlineOrders.map(order => ({ type: 'Online', data: order })),
+            ...localInPersonSales.map(sale => ({ type: 'In-Person', data: sale }))
+          ].sort((a, b) => new Date(b.data.date || b.data.saleDate) - new Date(a.data.date || a.data.saleDate)).slice(0, 5);
+        %>
+        <% if (combinedHistory.length > 0) { %>
+          <% combinedHistory.forEach(entry => { %>
+            <% if (entry.type === 'Online') { %>
+              <tr class="transition-transform">
+                <td>Online Order</td>
+                <td><%= entry.data.shippingAddress.firstName %> <%= entry.data.shippingAddress.lastName %> (<%= entry.data.shippingEmail %>)</td>
+                <td class="font-weight-bold text-center">Rs. <%= entry.data.orderTotal ? entry.data.orderTotal.toFixed(2) : '0.00' %></td>
+                <td class="text-center">
+                  <span class="badge <%= getStatusBadgeClass(entry.data.status) %>"><%= entry.data.status %></span>
+                </td>
+                <td class="text-center"><%= new Date(entry.data.date).toLocaleString() %></td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info btn-action toggle-details-btn" data-target="#onlineDetails-<%= entry.data._id %>">
+                    <i class="fas fa-eye"></i> <span class="btn-text">View</span>
+                  </button>
+                </td>
+              </tr>
+              <tr class="collapse" id="onlineDetails-<%= entry.data._id %>">
+                <td colspan="6">
+                  <div class="p-3 bg-light rounded shadow-sm">
+                    <h6 class="text-primary mb-2">Order Items:</h6>
+                    <% if (entry.data.cartItems && entry.data.cartItems.length > 0) { %>
+                      <% entry.data.cartItems.forEach(item => { %>
+                        <p class="mb-1"><%= item.name || 'Unknown Medicine' %> - x<%= item.cartQuantity || 0 %> @ Rs.<%= item.price ? (item.price * (item.cartQuantity || 0)).toFixed(2) : '0.00' %></p>
+                      <% }) %>
+                    <% } else { %>
+                      <p class="text-muted">No items available.</p>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% } else { %>
+              <tr class="transition-transform">
+                <td>In-Person Sale</td>
+                <td><%= entry.data.customerName || 'N/A' %> (<%= entry.data.customerContact || 'N/A' %>)</td>
+                <td class="font-weight-bold text-center">Rs. <%= entry.data.totalAmount ? entry.data.totalAmount.toFixed(2) : '0.00' %></td>
+                <td class="text-center">
+                  <span class="badge badge-success">Completed</span>
+                </td>
+                <td class="text-center"><%= new Date(entry.data.saleDate).toLocaleString() %></td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-info btn-action" data-toggle="modal" data-target="#summaryModal-<%= entry.data._id %>" onclick="showSaleSummary('<%- JSON.stringify(entry.data) %>')">
+                    <i class="fas fa-eye"></i> View
+                  </button>
+                </td>
+              </tr>
+            <% } %>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="6" class="text-center py-4">
+              <div class="empty-state">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No purchase history found</h4>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<!-- Toggle Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.toggle-details-btn').forEach(button => {
+      button.addEventListener('click', function () {
+        const targetId = this.getAttribute('data-target');
+        const targetRow = document.querySelector(targetId);
+        const btnText = this.querySelector('.btn-text');
+        const icon = this.querySelector('i');
+
+        if (targetRow.classList.contains('show')) {
+          $(targetRow).collapse('hide');
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-eye');
+          btnText.textContent = 'View';
+        } else {
+          $(targetRow).collapse('show');
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-times');
+          btnText.textContent = 'Close';
+        }
+      });
+    });
+  });
+</script>
+
 
 <!-- Modal for Sale Summary (Dynamic per entry) -->
 <% combinedHistory.forEach(entry => { %>
@@ -268,212 +295,184 @@
 <!-- Custom Styles -->
 <style>
   body {
-    font-family: 'Poppins', sans-serif;
-    background: #f5f7fa;
-    color: #2c3e50;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+    color: #1a1a2e;
     overflow-x: hidden;
   }
 
-  .navbar {
-    background: linear-gradient(45deg, #1e88e5, #42a5f5);
-    padding: 1rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .navbar-brand {
-    font-size: 1.8rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: #fff !important;
-    transition: transform 0.3s ease;
-  }
-
-  .navbar-brand:hover {
-    transform: scale(1.05);
-  }
-
-  .nav-link {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #e3f2fd !important;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-  }
-
-  .nav-link:hover {
-    color: #fff !important;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-  }
-
   .container-fluid {
-    max-width: 1450px;
-    padding-left: 15px;
-    padding-right: 15px;
+    max-width: 1500px;
+    padding: 0 20px;
   }
 
   .content-header {
     background: #ffffff;
-    padding: 1rem 0;
-    border-bottom: 1px solid #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 0;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e5e7eb;
   }
 
   .card {
     border: none;
-    border-radius: 12px;
+    border-radius: 15px;
     background: #fff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: all 0.3s ease;
     overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   }
 
   .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
   }
 
   .card-header {
-    border-radius: 12px 12px 0 0;
-    padding: 1.5rem;
-    background: linear-gradient(45deg, #1e88e5, #42a5f5);
+    border-radius: 15px 15px 0 0;
+    padding: 1.8rem;
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
     border-bottom: none;
+    color: #fff;
   }
 
   .hover-card {
-    padding: 1.75rem;
-    border-radius: 12px;
-    border: 1px solid #e0e0e0;
+    padding: 2rem;
+    border-radius: 15px;
+    border: 1px solid #e5e7eb;
     background: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
   }
 
   .hover-card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
   }
 
   .metric-icon {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    background: #fff;
+    background: linear-gradient(45deg, #f3f4f6, #ffffff);
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   .hover-card:hover .metric-icon {
-    transform: scale(1.1);
-  }
-
-  .welcome-card {
-    background: linear-gradient(45deg, #1e88e5, #42a5f5);
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    transition: transform 0.3s ease;
-  }
-
-  .welcome-card:hover {
-    transform: translateY(-5px);
+    transform: rotate(360deg) scale(1.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   }
 
   .report-tabs {
     display: flex;
-    gap: 1rem;
+    gap: 1.2rem;
     flex-wrap: wrap;
     justify-content: center;
+    padding: 0.5rem;
+    background: #f3f4f6;
+    border-radius: 12px;
   }
 
   .report-tab {
-    padding: 0.8rem 1.75rem;
-    background: #e9ecef;
+    padding: 0.9rem 2rem;
+    background: #ffffff;
     border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
-    color: #495057;
-    border: none;
-    outline: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   }
 
   .report-tab.active, .report-tab:hover {
-    background: #1e88e5;
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
     color: #fff;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: transparent;
   }
 
   .table {
     margin-bottom: 0;
-    border-radius: 12px;
+    border-radius: 15px;
     overflow: hidden;
     background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   }
 
   .table-hover tbody tr:hover {
-    background-color: rgba(66, 165, 245, 0.05);
-    transition: background-color 0.2s ease;
+    background-color: rgba(59, 130, 246, 0.05);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
   }
 
   .table thead th {
-    background: #f8f9fa;
-    color: #2c3e50;
-    font-weight: 600;
-    border-bottom: 2px solid #e0e0e0;
+    background: linear-gradient(45deg, #e0f2fe, #bae6fd);
+    color: #1e3a8a;
+    font-weight: 700;
+    border-bottom: 2px solid #bfdbfe;
+    padding: 1.2rem;
   }
 
   .badge {
-    padding: 0.5em 1em;
-    border-radius: 20px;
-    font-size: 0.85em;
-    font-weight: 600;
+    padding: 0.6em 1.2em;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 700;
     color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    text-transform: capitalize;
   }
 
-  .badge-success { background-color: #28a745; }
-  .badge-warning { background-color: #ffc107; color: #212529; }
-  .badge-danger { background-color: #dc3545; }
-  .badge-info { background-color: #17a2b8; }
-  .badge-secondary { background-color: #6c757d; }
+  .badge-success { background: linear-gradient(45deg, #22c55e, #4ade80); }
+  .badge-warning { background: linear-gradient(45deg, #f59e0b, #fbbf24); color: #1f2937; }
+  .badge-danger { background: linear-gradient(45deg, #ef4444, #f87171); }
+  .badge-info { background: linear-gradient(45deg, #0ea5e9, #38bdf8); }
+  .badge-secondary { background: linear-gradient(45deg, #6b7280, #9ca3af); }
 
   .modal-content {
-    border-radius: 15px;
+    border-radius: 20px;
     border: none;
     background: #fff;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   }
 
   .modal-header {
-    border-radius: 15px 15px 0 0;
-    padding: 1.5rem;
-    background: linear-gradient(45deg, #1e88e5, #42a5f5);
+    border-radius: 20px 20px 0 0;
+    padding: 1.8rem;
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
   }
 
   .modal-body {
-    background: #f8f9fa;
-    border-radius: 0 0 15px 15px;
+    background: #f8fafc;
+    border-radius: 0 0 20px 20px;
+    padding: 2rem;
   }
 
   .summary-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
   }
 
   .summary-table th, .summary-table td {
-    padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 1.2rem;
+    border-bottom: 1px solid #e5e7eb;
     text-align: left;
   }
 
   .summary-table th {
-    background: #e9ecef;
-    font-weight: 600;
-    color: #2c3e50;
+    background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+    font-weight: 700;
+    color: #1e3a8a;
   }
 
   .summary-table tr:last-child td {
@@ -481,95 +480,108 @@
   }
 
   .btn-danger {
-    background: #dc3545;
+    background: linear-gradient(45deg, #ef4444, #f87171);
     border: none;
-    padding: 0.6rem 1.25rem;
-    border-radius: 20px;
+    padding: 0.7rem 1.5rem;
+    border-radius: 25px;
     transition: all 0.3s ease;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .btn-danger:hover {
-    background: #c82333;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #dc2626, #ef4444);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
   }
 
   .btn-action {
-    border-radius: 20px;
-    padding: 0.4rem 1rem;
+    border-radius: 25px;
+    padding: 0.5rem 1.2rem;
     transition: all 0.3s ease;
-    background: #42a5f5;
+    background: linear-gradient(45deg, #3b82f6, #60a5fa);
     border: none;
+    color: #fff;
   }
 
   .btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-    background: #1e88e5;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(45deg, #2563eb, #3b82f6);
   }
 
   .empty-state {
-    opacity: 0.7;
-    padding: 2rem 0;
+    opacity: 0.8;
+    padding: 3rem 0;
+    animation: fadeIn 0.5s ease-in-out;
   }
 
   .price {
-    color: #28a745;
-    font-weight: 600;
-    font-size: 1rem;
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 1.1rem;
   }
 
   .font-size-lg {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
 
   .bg-gradient-light {
-    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
   }
 
   .bg-light-blue {
-    background: #e3f2fd;
+    background: linear-gradient(45deg, #e0f2fe, #bae6fd);
   }
 
   .clickable-card {
     cursor: pointer;
+    transition: all 0.3s ease;
   }
 
   .clickable-card:hover {
-    background: #f8f9fa;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #f8fafc, #e5e7eb);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-10px);
   }
 
   @media (max-width: 768px) {
-    .navbar-brand { font-size: 1.5rem; }
-    .welcome-card { padding: 1rem; }
-    .welcome-card h4 { font-size: 1.1rem; }
-    .card-body { padding: 1rem; }
-    .report-tab { padding: 0.6rem 1rem; }
-    .metric-icon { width: 50px; height: 50px; }
-    .display-4 { font-size: 2rem; }
+    .card-body { padding: 1.5rem; }
+    .report-tab { padding: 0.7rem 1.5rem; }
+    .metric-icon { width: 60px; height: 60px; }
+    .font-size-lg { font-size: 1.2rem; }
+    .table thead th, .table td { padding: 0.8rem; }
+    .modal-body { padding: 1.5rem; }
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
+    from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .card, .welcome-card {
-    animation: fadeIn 0.5s ease-in-out;
+  .card, .hover-card {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .clickable-card:hover {
+    animation: pulse 0.3s ease-in-out;
   }
 </style>
 
 <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     // Register the datalabels plugin
-    Chart.register(ChartDataLabels);
+    Chart.register(window.ChartDataLabels);
 
     // Sales & Profit Pie Chart
     const salesProfitCtx = document.getElementById('salesProfitChart').getContext('2d');
@@ -579,9 +591,10 @@
         labels: ['Total Sales', 'Total Profit'],
         datasets: [{
           data: [<%= totalSales %>, <%= totalProfit %>],
-          backgroundColor: ['#42a5f5', '#28a745'],
-          borderWidth: 2,
-          borderColor: '#fff'
+          backgroundColor: ['#3b82f6', '#22c55e'],
+          borderWidth: 3,
+          borderColor: '#ffffff',
+          hoverOffset: 20
         }]
       },
       options: {
@@ -590,28 +603,38 @@
           legend: { 
             position: 'bottom', 
             labels: { 
-              color: '#2c3e50', 
-              font: { size: 12, family: 'Poppins' },
-              padding: 10
+              color: '#1a1a2e', 
+              font: { size: 14, family: 'Inter', weight: '600' },
+              padding: 15,
+              boxWidth: 20
             }
           },
           tooltip: { 
-            backgroundColor: 'rgba(0, 0, 0, 0.8)', 
-            titleFont: { size: 14, family: 'Poppins' }, 
-            bodyFont: { size: 12, family: 'Poppins' } 
+            backgroundColor: 'rgba(31, 41, 55, 0.9)', 
+            titleFont: { size: 16, family: 'Inter', weight: '600' }, 
+            bodyFont: { size: 14, family: 'Inter' },
+            padding: 12,
+            cornerRadius: 8
           },
           datalabels: {
             color: '#fff',
-            font: { size: 14, weight: 'bold', family: 'Poppins' },
+            font: { size: 16, weight: 'bold', family: 'Inter' },
             formatter: (value) => `Rs ${value.toFixed(2)}`,
             anchor: 'center',
-            align: 'center'
+            align: 'center',
+            textShadow: true,
+            textShadowColor: 'rgba(0, 0, 0, 0.5)',
+            textShadowBlur: 5
           }
+        },
+        animation: {
+          animateScale: true,
+          animateRotate: true
         }
       }
     });
 
-    // Purchase History Bar Chart with Data Labels
+    // Purchase History Bar Chart
     const purchaseHistoryCtx = document.getElementById('purchaseHistoryChart').getContext('2d');
     const combinedHistory = <%- JSON.stringify(combinedHistory.map(entry => ({
       type: entry.type,
@@ -625,9 +648,11 @@
         datasets: [{
           label: 'Total (Rs.)',
           data: combinedHistory.map(item => item.total || 0),
-          backgroundColor: combinedHistory.map(item => item.type === 'Online' ? '#42a5f5' : '#ffca28'),
-          borderColor: combinedHistory.map(item => item.type === 'Online' ? '#42a5f5' : '#ffca28'),
-          borderWidth: 1
+          backgroundColor: combinedHistory.map(item => item.type === 'Online' ? 'rgba(59, 130, 246, 0.8)' : 'rgba(234, 179, 8, 0.8)'),
+          borderColor: combinedHistory.map(item => item.type === 'Online' ? '#3b82f6' : '#eab308'),
+          borderWidth: 2,
+          borderRadius: 8,
+          hoverBackgroundColor: combinedHistory.map(item => item.type === 'Online' ? 'rgba(59, 130, 246, 1)' : 'rgba(234, 179, 8, 1)')
         }]
       },
       options: {
@@ -636,35 +661,73 @@
         scales: {
           y: { 
             beginAtZero: true, 
-            title: { display: true, text: 'Total (Rs.)', color: '#2c3e50', font: { size: 12, family: 'Poppins' } }, 
-            ticks: { color: '#2c3e50', font: { family: 'Poppins' } },
-            grid: { color: '#e0e0e0' }
+            title: { 
+              display: true, 
+              text: 'Total (Rs.)', 
+              color: '#1a1a2e', 
+              font: { size: 14, family: 'Inter', weight: '600' } 
+            }, 
+            ticks: { 
+              color: '#4b5563', 
+              font: { family: 'Inter', size: 12 },
+              callback: (value) => `Rs ${value}`
+            },
+            grid: { 
+              color: '#e5e7eb',
+              borderColor: '#d1d5db',
+              borderWidth: 2
+            }
           },
           x: { 
-            title: { display: true, text: 'Date', color: '#2c3e50', font: { size: 12, family: 'Poppins' } }, 
-            ticks: { color: '#2c3e50', font: { family: 'Poppins' } },
-            grid: { color: '#e0e0e0' }
+            title: { 
+              display: true, 
+              text: 'Date', 
+              color: '#1a1a2e', 
+              font: { size: 14, family: 'Inter', weight: '600' } 
+            }, 
+            ticks: { 
+              color: '#4b5563', 
+              font: { family: 'Inter', size: 12 },
+              maxRotation: 45,
+              minRotation: 45
+            },
+            grid: { 
+              display: false 
+            }
           }
         },
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleFont: { size: 14, family: 'Poppins' },
-            bodyFont: { size: 12, family: 'Poppins' },
+            backgroundColor: 'rgba(31, 41, 55, 0.9)',
+            titleFont: { size: 16, family: 'Inter', weight: '600' },
+            bodyFont: { size: 14, family: 'Inter' },
+            padding: 12,
+            cornerRadius: 8,
             callbacks: {
               label: (context) => `Type: ${combinedHistory[context.dataIndex].type}, Rs. ${context.raw.toFixed(2)}`
             }
           },
           datalabels: {
             color: '#fff',
-            font: { size: 14, weight: 'bold', family: 'Poppins' },
+            font: { size: 14, weight: 'bold', family: 'Inter' },
             formatter: (value) => value > 0 ? `Rs ${value.toFixed(2)}` : '',
             anchor: 'end',
             align: 'top',
-            offset: 5
+            offset: 8,
+            textShadow: true,
+            textShadowColor: 'rgba(0, 0, 0, 0.5)',
+            textShadowBlur: 5
           }
-        }
+        },
+        animation: {
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
+
+        
+
+
       }
     });
 
@@ -680,26 +743,26 @@
       }[period];
 
       reportCards.innerHTML = `
-        <div class="col-md-4 mb-3">
-          <div class="card shadow-sm bg-white rounded-lg text-center border-light">
-            <div class="card-body">
-              <h5 class="card-title text-muted">Total Sales (PKR)</h5>
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
+            <div class="card-body p-4">
+              <h5 class="card-title text-gray-600 font-weight-bold">Total Sales (PKR)</h5>
               <p class="price font-size-lg text-primary">Rs ${totals.sales.toFixed(2)}</p>
             </div>
           </div>
         </div>
-        <div class="col-md-4 mb-3">
-          <div class="card shadow-sm bg-white rounded-lg text-center border-light">
-            <div class="card-body">
-              <h5 class="card-title text-muted">Total Profit (PKR)</h5>
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
+            <div class="card-body p-4">
+              <h5 class="card-title text-gray-600 font-weight-bold">Total Profit (PKR)</h5>
               <p class="price font-size-lg text-success">Rs ${totals.profit.toFixed(2)}</p>
             </div>
           </div>
         </div>
-        <div class="col-md-4 mb-3">
-          <div class="card shadow-sm bg-white rounded-lg text-center border-light">
-            <div class="card-body">
-              <h5 class="card-title text-muted">Total Transactions</h5>
+        <div class="col-md-4 mb-4">
+          <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
+            <div class="card-body p-4">
+              <h5 class="card-title text-gray-600 font-weight-bold">Total Transactions</h5>
               <p class="price font-size-lg text-info">${totals.orders}</p>
             </div>
           </div>
@@ -721,8 +784,8 @@
       });
     });
 
-    // Sale Summary Function with unique modal IDs
-    function showSaleSummary(saleStr) {
+    // Sale Summary Function
+    window.showSaleSummary = function(saleStr) {
       const sale = JSON.parse(saleStr);
       const modalId = `summaryModal-${sale._id}`;
       const tableId = `summaryTable-${sale._id}`;
@@ -736,7 +799,7 @@
       `;
       document.getElementById(tableId).innerHTML = html;
       $(`#${modalId}`).modal('show');
-    }
+    };
 
     // Make Total Sales card clickable
     document.getElementById('totalSalesCard').addEventListener('click', () => {

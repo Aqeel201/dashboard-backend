@@ -136,13 +136,13 @@
     color: var(--accent);
   }
 
-  .report-tabs {
+  .report-tabs, .history-type-tabs {
     display: flex;
     gap: 1rem;
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
   }
-  .report-tab {
+  .report-tab, .history-tab {
     padding: 0.8rem 1.5rem;
     background: #e0e0e0;
     border-radius: var(--border-radius);
@@ -152,7 +152,7 @@
     color: var(--dark);
     border: 1px solid #d0d0d0;
   }
-  .report-tab.active, .report-tab:hover {
+  .report-tab.active, .report-tab:hover, .history-tab.active, .history-tab:hover {
     background: var(--primary);
     color: #fff;
     transform: translateY(-3px);
@@ -280,58 +280,20 @@
     background: #fff; border: 2px solid #007bff;
   }
 
-  /* Print Styles for Professional Slip Format */
   @media print {
-    body {
-      background: none;
-      margin: 0;
-      padding: 0;
+    body.print-online .dashboard-container > *:not(.history-section),
+    body.print-inperson .dashboard-container > *:not(.history-section) {
+      display: none !important;
     }
-    .dashboard-container, .history-section, .report-section, .card, .table, .alert, .print-btn {
-      display: none;
+    body.print-online #historyContent .history-section:not(:first-child),
+    body.print-inperson #historyContent .history-section:not(:first-child) {
+      display: none !important;
     }
-    .print-slip {
-      display: block;
-      width: 80mm; /* Standard receipt width */
-      margin: 20px auto;
-      padding: 20px;
-      border: 2px solid var(--primary);
-      font-size: 12px;
-      font-family: 'Arial', sans-serif;
-      background: #fff;
-      box-shadow: none;
+    .history-type-tabs {
+      display: none !important;
     }
-    .print-slip h2 {
-      font-size: 16px;
-      color: var(--primary);
-      margin: 0 0 10px;
-      text-align: center;
-      font-weight: 700;
-    }
-    .print-slip p {
-      margin: 5px 0;
-      line-height: 1.4;
-    }
-    .print-slip .report-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    .print-slip .report-table th, .print-slip .report-table td {
-      padding: 5px;
-      text-align: left;
-      border-bottom: 1px dashed #e0e0e0;
-    }
-    .print-slip .report-table th {
-      background: none;
-      color: var(--dark);
-      font-weight: 700;
-    }
-    .print-slip .footer {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 10px;
-      color: #666;
+    .modal {
+      display: none !important;
     }
   }
 
@@ -355,10 +317,10 @@
       padding: 0.7rem;
       font-size: 0.9rem;
     }
-    .report-tabs {
+    .report-tabs, .history-type-tabs {
       flex-direction: column;
     }
-    .report-tab {
+    .report-tab, .history-tab {
       padding: 0.5rem 1rem;
     }
     .report-card, .total-card {
@@ -392,8 +354,8 @@
 <div class="dashboard-container">
   <!-- Dashboard Header -->
   <div class="dashboard-header">
-    <h1>Medical Store Purchase History</h1>
-    <p>Track all online and in-person medicine purchases, sales, and profits</p>
+    <h1>Medical Store Dashboard</h1>
+    <p>Manage and track all online and in-person medicine purchases, sales, and profits</p>
   </div>
 
   <!-- Messages -->
@@ -433,315 +395,28 @@
       </div>
     </div>
     <!-- Print Button -->
-    <button class="print-btn" onclick="printReport()">Print Report</button>
+    <button class="print-btn" onclick="window.print()">Print Dashboard</button>
   </div>
 
-  <!-- Content Header for Online Orders -->
-  <section class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1>Online Medicine Orders</h1>
-        </div>
-        <div class="col-sm-6 text-right">
-          <div class="input-group" style="max-width: 300px;">
-            <input type="text" class="form-control" id="searchInputOnline" placeholder="Search orders...">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" id="searchButtonOnline">
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Filter Buttons and Export -->
-      <div class="row mb-3">
-        <div class="col-12">
-          <div class="btn-group">
-            <button type="button" class="btn btn-outline-primary filter-btn active" data-status="all">All</button>
-            <button type="button" class="btn btn-outline-primary filter-btn" data-status="pending">Pending</button>
-            <button type="button" class="btn btn-outline-primary filter-btn" data-status="accepted">Accepted</button>
-            <button type="button" class="btn btn-outline-primary filter-btn" data-status="rejected">Rejected</button>
-          </div>
-          <button class="btn btn-info float-right" id="exportBtnOnline">
-            <i class="fas fa-file-export mr-2"></i>Export PDF
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Online Medicine Orders Section -->
+  <!-- History Type Selection -->
   <div class="history-section">
-    <div class="card card-outline card-primary">
-      <div class="card-header">
-        <h3 class="card-title">Order List</h3>
-        <div class="card-tools">
-          <div class="input-group input-group-sm" style="width: 200px;">
-            <select class="form-control" id="sortSelectOnline">
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="total_asc">Total (Low-High)</option>
-              <option value="total_desc">Total (High-Low)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="card-body p-0">
-        <% if (onlineOrders && onlineOrders.length > 0) { %>
-          <div class="table-responsive">
-            <table class="table table-hover table-striped" id="ordersTableOnline">
-              <thead class="thead-dark">
-                <tr>
-                  <th style="width: 20px">
-                    <input type="checkbox" id="selectAllOnline">
-                  </th>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Payment</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% onlineOrders.forEach(order => { %>
-                  <tr data-id="<%= order._id %>" class="order-row <%= order.status %>">
-                    <td>
-                      <input type="checkbox" class="order-checkbox">
-                    </td>
-                    <td>
-                      <div class="font-weight-bold">#<%= order._id.toString().substring(18, 24) %></div>
-                      <div class="text-muted small"><%= order.paymentMethod %></div>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center">
-                        <div>
-                          <div class="font-weight-bold">
-                            <%= order.shippingAddress.firstName %> <%= order.shippingAddress.lastName %>
-                          </div>
-                          <div class="text-muted small"><%= order.shippingEmail %></div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="font-weight-bold">Rs. <%= order.orderTotal?.toFixed(2) || '0.00' %></div>
-                      <div class="text-muted small"><%= order.cartItems?.length || 0 %> items</div>
-                    </td>
-                    <td>
-                      <span class="badge <%= order.paymentStatus === 'paid' ? 'badge-success' : 'badge-danger' %>">
-                        <%= order.paymentStatus || 'unpaid' %>
-                      </span>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center">
-                        <div class="status-indicator <%= order.status %> mr-2"></div>
-                        <span class="badge <%= 
-                          order.status === 'accepted' ? 'badge-success' : 
-                          order.status === 'rejected' ? 'badge-danger' : 'badge-warning' 
-                        %>">
-                          <%= order.status %>
-                        </span>
-                      </div>
-                    </td>
-                    <td>
-                      <%= new Date(order.date).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) %>
-                    </td>
-                    <td>
-                      <div class="d-flex align-items-center">
-                        <% if(order.status === "pending") { %>
-                          <div class="btn-group">
-                            <button class="btn btn-sm btn-success accept-btn" 
-                                    data-id="<%= order._id %>"
-                                    data-transaction-id="<%= order.transactionId || '' %>"
-                                    data-toggle="tooltip" 
-                                    title="Accept Order">
-                              <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger reject-btn" 
-                                    data-id="<%= order._id %>"
-                                    data-toggle="tooltip"
-                                    title="Reject Order">
-                              <i class="fas fa-times"></i>
-                            </button>
-                          </div>
-                        <% } %>
-                        <button class="btn btn-sm btn-info ml-2 details-btn" 
-                                data-toggle="collapse" 
-                                data-target="#details-<%= order._id %>"
-                                title="View Details">
-                          <i class="fas <%= order.status === 'pending' ? 'fa-chevron-down' : 'fa-file-invoice' %>"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr class="collapse" id="details-<%= order._id %>">
-                    <td colspan="8">
-                      <div class="p-3 bg-light">
-                        <div class="row">
-                          <div class="col-md-3">
-                            <h6><i class="fas fa-truck mr-2"></i>Shipping Details</h6>
-                            <ul class="list-unstyled">
-                              <% if(order.shippingAddress) { %>
-                                <li><strong>Address:</strong> <%= order.shippingAddress.streetAddress || 'N/A' %></li>
-                                <li><strong>Phone:</strong> <%= order.shippingAddress.phoneNumber || 'N/A' %></li>
-                                <li><strong>City:</strong> Skardu</li>
-                              <% } %>
-                            </ul>
-                          </div>
-                          <div class="col-md-3">
-                            <h6><i class="fas fa-credit-card mr-2"></i>Payment Info</h6>
-                            <ul class="list-unstyled">
-                              <li><strong>Method:</strong> <%= order.paymentMethod || 'N/A' %></li>
-                              <li><strong>Shipping Fee:</strong> Rs. <%= order.shippingFee?.toFixed(2) || '0.00' %></li>
-                              <li><strong>Total Items:</strong> <%= order.cartItems?.length || 0 %></li>
-                              <% if (order.transactionId) { %>
-                                <li><strong>Transaction ID:</strong> <%= order.transactionId %></li>
-                              <% } %>
-                            </ul>
-                          </div>
-                          <div class="col-md-4">
-                            <h6><i class="fas fa-box-open mr-2"></i>Order Items</h6>
-                            <div class="row">
-                              <% order.cartItems?.forEach(item => { %>
-                                <div class="col-6 mb-2">
-                                  <div class="media">
-                                    <% if (item.image) { %>
-                                      <img src="/uploads/<%= item.image %>" 
-                                           class="mr-3" 
-                                           style="width: 50px; height: 50px; object-fit: cover">
-                                    <% } else { %>
-                                      <div class="mr-3" style="width: 50px; height: 50px; background: #e0e0e0; border-radius: 50%;"></div>
-                                    <% } %>
-                                    <div class="media-body">
-                                      <h6 class="mt-0"><%= item.name || 'Unknown Medicine' %></h6>
-                                      <div class="text-muted">
-                                        x<%= item.cartQuantity || 0 %> @ Rs.<%= item.price ? (item.price * (item.cartQuantity || 0)).toFixed(2) : '0.00' %>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              <% }) %>
-                            </div>
-                          </div>
-                          <div class="col-md-2">
-                            <h6><i class="fas fa-history mr-2"></i>Order Timeline</h6>
-                            <ul class="list-unstyled timeline">
-                              <li class="text-success">
-                                <i class="fas fa-check"></i> Created
-                                <div class="small text-muted"><%= new Date(order.date).toLocaleTimeString() %></div>
-                              </li>
-                              <% if(order.statusUpdateHistory) { %>
-                                <% order.statusUpdateHistory.forEach(update => { %>
-                                  <li class="<%= update.status === 'accepted' ? 'text-success' : 'text-danger' %>">
-                                    <i class="fas <%= update.status === 'accepted' ? 'fa-check-circle' : 'fa-times-circle' %>"></i>
-                                    <%= update.status %>
-                                    <div class="small text-muted">
-                                      <%= new Date(update.timestamp).toLocaleString() %>
-                                    </div>
-                                  </li>
-                                <% }) %>
-                              <% } %>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-            </table>
-          </div>
-        <% } else { %>
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle mr-2"></i> No online orders found in the system.
-          </div>
-        <% } %>
-      </div>
-      <div class="card-footer clearfix">
-        <div class="float-left">
-          <button class="btn btn-danger" id="bulkActionBtnOnline" disabled>
-            <i class="fas fa-tasks mr-2"></i>Bulk Actions
-          </button>
-        </div>
-        <div class="float-right">
-          <ul class="pagination mb-0">
-            <!-- Pagination would be dynamically generated here -->
-          </ul>
-        </div>
-      </div>
+    <h2>Purchase History</h2>
+    <div class="history-type-tabs">
+      <div class="history-tab active" onclick="showHistory('online')">Online Orders</div>
+      <div class="history-tab" onclick="showHistory('inperson')">In-Person Sales</div>
+    </div>
+    <div id="historyContent">
+      <!-- History content will be dynamically updated via JavaScript -->
     </div>
   </div>
 
-  <!-- In-Person Medicine Sales Section -->
-  <div class="history-section">
-    <h2>In-Person Medicine Sales</h2>
-    <% if (inPersonSales.length === 0) { %>
-      <p class="text-muted">No in-person sales found.</p>
-    <% } else { %>
-      <table class="table table-hover table-striped">
-        <thead class="bg-light-blue">
-          <tr>
-            <th>Date</th>
-            <th>Medicine Name</th>
-            <th>Type</th>
-            <th>Quantity</th>
-            <th>Unit</th>
-            <th>Unit Price (PKR)</th>
-            <th>Total Price (PKR)</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% inPersonSales.forEach(sale => { %>
-            <tr class="transition-transform" onclick="showSaleSummary('<%= JSON.stringify(sale) %>')">
-              <td><%= new Date(sale.saleDate).toLocaleString() %></td>
-              <td><%= sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine' %></td>
-              <td><%= sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A' %></td>
-              <td><%= sale.quantitySold || 0 %></td>
-              <td><%= sale.unitType === 'Bottle' ? 'Bottle' : sale.unitType === 'Full' ? 'Full ' + (sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A') : 'Dose' %></td>
-              <td class="price">Rs <%= sale.medicineId && typeof sale.medicineId.price === 'number' ? (sale.unitType === 'Dose' && sale.medicineId.dosesPerUnit ? (sale.medicineId.price / sale.medicineId.dosesPerUnit) : sale.medicineId.price).toFixed(2) : '0.00' %></td>
-              <td class="price">Rs <%= typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00' %></td>
-              <td class="align-middle text-center">
-                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); showSaleSummary('<%= JSON.stringify(sale) %>')">View Details</button>
-              </td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    <% } %>
-  </div>
-</div>
-
-<!-- Modal for Order/Sale Summary -->
-<div class="modal" id="summaryModal">
-  <div class="modal-content">
-    <h3>Order/Sale Details</h3>
-    <table class="summary-table" id="summaryTable"></table>
-    <button class="close-btn" onclick="closeSummary()">Close</button>
-  </div>
-</div>
-
-<!-- Print Slip Template (Hidden on Screen, Shown on Print) -->
-<div class="print-slip" style="display: none;">
-  <h2>Medical Store Purchase Report</h2>
-  <p><strong>Date:</strong> <%= new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></p>
-  <p><strong>Period:</strong> <span id="printPeriod"></span></p>
-  <table class="report-table">
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Sales (PKR)</th>
-        <th>Profit (PKR)</th>
-        <th>Orders</th>
-      </tr>
-    </thead>
-    <tbody id="printReportBody"></tbody>
-  </table>
-  <div class="footer">
-    <p>Thank you for your business! | Medical Store, Skardu</p>
-    <p>Contact: +92-123-456789 | Email: store@medical.com</p>
+  <!-- Modal for Order/Sale Summary -->
+  <div class="modal" id="summaryModal">
+    <div class="modal-content">
+      <h3>Order/Sale Details</h3>
+      <table class="summary-table" id="summaryTable"></table>
+      <button class="close-btn" onclick="closeSummary()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -751,309 +426,337 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-  // Function to get status badge class
-  function getStatusBadgeClass(status) {
-    switch (status) {
-      case 'Success': return 'badge-success';
-      case 'Pending': return 'badge-warning';
-      case 'Cancelled': return 'badge-danger';
-      case 'Processing': return 'badge-info';
-      case 'accepted': return 'badge-success';
-      case 'rejected': return 'badge-danger';
-      default: return 'badge-secondary';
-    }
-  }
+// Function to set up event listeners for View Details buttons
+function setupViewDetailsListeners() {
+  const viewButtons = document.querySelectorAll('.view-btn');
+  viewButtons.forEach(button => {
+    const targetId = button.getAttribute('data-target');
+    const targetCollapse = document.querySelector(targetId);
+    const buttonText = button.querySelector('.btn-text');
 
-  // Function to show report based on time period
-  function showReport(period) {
-    const reportCards = document.getElementById('reportCards');
-    const totals = {
-      daily: { sales: <%= dailyTotals.sales %>, profit: <%= dailyTotals.profit %>, orders: <%= dailyTotals.orders %>, label: 'Daily' },
-      weekly: { sales: <%= weeklyTotals.sales %>, profit: <%= weeklyTotals.profit %>, orders: <%= weeklyTotals.orders %>, label: '7 Days' },
-      fortnightly: { sales: <%= fortnightlyTotals.sales %>, profit: <%= fortnightlyTotals.profit %>, orders: <%= fortnightlyTotals.orders %>, label: '15 Days' },
-      monthly: { sales: <%= monthlyTotals.sales %>, profit: <%= monthlyTotals.profit %>, orders: <%= monthlyTotals.orders %>, label: 'Monthly' },
-      yearly: { sales: <%= yearlyTotals.sales %>, profit: <%= yearlyTotals.profit %>, orders: <%= yearlyTotals.orders %>, label: 'Yearly' }
-    }[period];
+    // Remove any existing event listeners to avoid duplicates
+    button.removeEventListener('click', toggleCollapseHandler);
+    targetCollapse.removeEventListener('show.bs.collapse', showCollapseHandler);
+    targetCollapse.removeEventListener('hide.bs.collapse', hideCollapseHandler);
 
-    reportCards.innerHTML = `
-      <div class="report-card">
-        <h3>Total Sales (PKR)</h3>
-        <p>Rs ${totals.sales.toFixed(2)}</p>
-      </div>
-      <div class="report-card">
-        <h3>Total Profit (PKR)</h3>
-        <p>Rs ${totals.profit.toFixed(2)}</p>
-      </div>
-      <div class="report-card">
-        <h3>Total Orders</h3>
-        <p>${totals.orders}</p>
-      </div>
-    `;
+    // Add new event listeners
+    targetCollapse.addEventListener('show.bs.collapse', showCollapseHandler);
+    targetCollapse.addEventListener('hide.bs.collapse', hideCollapseHandler);
+    button.addEventListener('click', toggleCollapseHandler);
 
-    document.querySelectorAll('.report-tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelector(`.report-tab[onclick="showReport('${period}')"]`).classList.add('active');
-  }
-
-  window.onload = () => showReport('daily');
-
-  // Function to show order summary in modal
-  function showOrderSummary(orderStr) {
-    const order = JSON.parse(orderStr);
-    let html = `
-      <tr>
-        <th>Item</th>
-        <th>Quantity</th>
-        <th>Unit Price (PKR)</th>
-        <th>Total Price (PKR)</th>
-      </tr>
-    `;
-    order.cartItems.forEach(item => {
-      html += `
-        <tr>
-          <td>${item.name || 'Unknown Medicine'}</td>
-          <td>${item.cartQuantity || 0}</td>
-          <td class="price">Rs ${item.price ? item.price.toFixed(2) : '0.00'}</td>
-          <td class="price">Rs ${item.price && item.cartQuantity ? (item.price * item.cartQuantity).toFixed(2) : '0.00'}</td>
-        </tr>
-      `;
-    });
-    html += `
-      <tr>
-        <td colspan="3" style="text-align: right; font-weight: 800;">Order Total:</td>
-        <td class="price">Rs ${order.orderTotal ? order.orderTotal.toFixed(2) : '0.00'}</td>
-      </tr>
-    `;
-    document.getElementById('summaryTable').innerHTML = html;
-    document.getElementById('summaryModal').style.display = 'flex';
-  }
-
-  // Function to show in-person sale summary in modal
-  function showSaleSummary(saleStr) {
-    const sale = JSON.parse(saleStr);
-    let html = `
-      <tr>
-        <th>Medicine</th>
-        <th>Type</th>
-        <th>Quantity</th>
-        <th>Unit</th>
-        <th>Unit Price (PKR)</th>
-        <th>Total Price (PKR)</th>
-      </tr>
-      <tr>
-        <td>${sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine'}</td>
-        <td>${sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A'}</td>
-        <td>${sale.quantitySold || 0}</td>
-        <td>${sale.unitType === 'Bottle' ? 'Bottle' : sale.unitType === 'Full' ? 'Full ' + (sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A') : 'Dose'}</td>
-        <td class="price">Rs ${sale.medicineId && typeof sale.medicineId.price === 'number' ? (sale.unitType === 'Dose' && sale.medicineId.dosesPerUnit ? (sale.medicineId.price / sale.medicineId.dosesPerUnit) : sale.medicineId.price).toFixed(2) : '0.00'}</td>
-        <td class="price">Rs ${typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00'}</td>
-      </tr>
-      <tr>
-        <td colspan="5" style="text-align: right; font-weight: 800;">Sale Total:</td>
-        <td class="price">Rs ${typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00'}</td>
-      </tr>
-    `;
-    document.getElementById('summaryTable').innerHTML = html;
-    document.getElementById('summaryModal').style.display = 'flex';
-  }
-
-  // Function to close modal
-  function closeSummary() {
-    document.getElementById('summaryModal').style.display = 'none';
-  }
-
-  // JavaScript for Online Orders
-  document.addEventListener('DOMContentLoaded', () => {
-    if (typeof $ === 'undefined') {
-      console.error('jQuery is required for tooltips and modals.');
-    } else {
-      $('[data-toggle="tooltip"]').tooltip();
+    function showCollapseHandler() {
+      buttonText.textContent = 'Close';
+      button.setAttribute('aria-expanded', 'true');
     }
 
-    const searchInput = document.getElementById('searchInputOnline');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const ordersTable = document.getElementById('ordersTableOnline');
-    let orderRows = Array.from(ordersTable.querySelectorAll('tr.order-row'));
-
-    function filterOrders() {
-      const searchTerm = searchInput.value.toLowerCase();
-      const activeFilter = Array.from(filterButtons).find(btn => btn.classList.contains('active'))?.dataset.status || 'all';
-      
-      orderRows.forEach(row => {
-        const orderId = row.getAttribute('data-id').toLowerCase();
-        const orderStatus = row.classList.contains('pending') ? 'pending' : 
-                          row.classList.contains('accepted') ? 'accepted' : 
-                          row.classList.contains('rejected') ? 'rejected' : '';
-        const matchesSearch = orderId.includes(searchTerm) || 
-                            row.querySelector('td:nth-child(2)').textContent.toLowerCase().includes(searchTerm) ||
-                            row.querySelector('td:nth-child(3)').textContent.toLowerCase().includes(searchTerm);
-        const matchesFilter = activeFilter === 'all' || orderStatus === activeFilter;
-        row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
-      });
+    function hideCollapseHandler() {
+      buttonText.textContent = 'View Details';
+      button.setAttribute('aria-expanded', 'false');
     }
 
-    searchInput.addEventListener('input', filterOrders);
-
-    filterButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterButtons.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filterOrders();
-      });
-    });
-
-    document.getElementById('sortSelectOnline').addEventListener('change', (e) => {
-      const sortValue = e.target.value;
-      let sortedRows = Array.from(orderRows);
-
-      function getDate(row) {
-        const dateText = row.querySelector('td:nth-child(7)').textContent;
-        return new Date(dateText);
-      }
-
-      function getTotal(row) {
-        const totalText = row.querySelector('td:nth-child(4)').textContent.replace('Rs.', '').trim();
-        return parseFloat(totalText) || 0;
-      }
-
-      if (sortValue === 'newest') {
-        sortedRows.sort((a, b) => getDate(b) - getDate(a));
-      } else if (sortValue === 'oldest') {
-        sortedRows.sort((a, b) => getDate(a) - getDate(b));
-      } else if (sortValue === 'total_asc') {
-        sortedRows.sort((a, b) => getTotal(a) - getTotal(b));
-      } else if (sortValue === 'total_desc') {
-        sortedRows.sort((a, b) => getTotal(b) - getTotal(a));
-      }
-
-      const tbody = ordersTable.querySelector('tbody');
-      sortedRows.forEach(row => tbody.appendChild(row));
-      orderRows = sortedRows;
-    });
-
-    const selectAllCheckbox = document.getElementById('selectAllOnline');
-    selectAllCheckbox.addEventListener('change', (e) => {
-      document.querySelectorAll('.order-checkbox').forEach(checkbox => {
-        checkbox.checked = e.target.checked;
-      });
-      toggleBulkActionButton();
-    });
-
-    document.querySelectorAll('.order-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', toggleBulkActionButton);
-    });
-
-    function toggleBulkActionButton() {
-      const checked = document.querySelectorAll('.order-checkbox:checked');
-      document.getElementById('bulkActionBtnOnline').disabled = checked.length === 0;
+    function toggleCollapseHandler(e) {
+      e.stopPropagation();
+      $(targetCollapse).collapse('toggle');
     }
-
-    document.querySelectorAll('.accept-btn, .reject-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const orderId = btn.dataset.id;
-        const transactionId = btn.dataset.transactionId;
-        const action = btn.classList.contains('accept-btn') ? 'accept' : 'reject';
-
-        if (action === 'reject' && !confirm('Are you sure you want to reject this order?')) {
-          return;
-        }
-
-        try {
-          const response = await fetch(`/admin/orders/${orderId}/${action}`, {
-            method: 'POST',
-            headers: { 
-              'Authorization': `Bearer <%= token %>`,
-              'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({ transactionId })
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const row = btn.closest('tr');
-            const badge = row.querySelector('td:nth-child(6) .badge');
-            const paymentBadge = row.querySelector('td:nth-child(5) .badge');
-            const btnGroup = row.querySelector('.btn-group');
-
-            row.classList.remove('pending');
-            row.classList.add(data.order.status);
-            badge.textContent = data.order.status;
-            badge.className = `badge badge-pill badge-${data.order.status === 'accepted' ? 'success' : 'danger'}`;
-            paymentBadge.textContent = data.order.paymentStatus;
-            paymentBadge.className = `badge badge-pill badge-${data.order.paymentStatus === 'paid' ? 'success' : 'danger'}`;
-
-            if (btnGroup) {
-              btnGroup.innerHTML = `<span class="text-muted small">Action completed</span>`;
-            }
-            alert(`Order ${action}ed successfully!`);
-          } else {
-            const errorData = await response.json();
-            alert(`Action failed: ${errorData.error || 'Unknown error'}`);
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Action failed. Please try again.');
-        }
-      });
-    });
-
-    document.getElementById('exportBtnOnline').addEventListener('click', async () => {
-      try {
-        const response = await fetch('/admin/orders/export', {
-          headers: { 'Authorization': `Bearer <%= token %>` }
-        });
-        if (!response.ok) throw new Error('Export failed');
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'online_orders_export.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      } catch (error) {
-        console.error('Export failed:', error);
-        alert('Export failed. Please try again.');
-      }
-    });
   });
 
-  // Function to print report
-  function printReport() {
-    const activeTab = document.querySelector('.report-tab.active').textContent;
-    const period = {
-      'Daily': 'daily',
-      '7 Days': 'weekly',
-      '15 Days': 'fortnightly',
-      'Monthly': 'monthly',
-      'Yearly': 'yearly'
-    }[activeTab];
+  const closeButtons = document.querySelectorAll('.close-btn');
+  closeButtons.forEach(button => {
+    button.removeEventListener('click', closeCollapseHandler);
+    button.addEventListener('click', closeCollapseHandler);
 
-    const totals = {
-      daily: { sales: <%= dailyTotals.sales %>, profit: <%= dailyTotals.profit %>, orders: <%= dailyTotals.orders %> },
-      weekly: { sales: <%= weeklyTotals.sales %>, profit: <%= weeklyTotals.profit %>, orders: <%= weeklyTotals.orders %> },
-      fortnightly: { sales: <%= fortnightlyTotals.sales %>, profit: <%= fortnightlyTotals.profit %>, orders: <%= fortnightlyTotals.orders %> },
-      monthly: { sales: <%= monthlyTotals.sales %>, profit: <%= monthlyTotals.profit %>, orders: <%= monthlyTotals.orders %> },
-      yearly: { sales: <%= yearlyTotals.sales %>, profit: <%= yearlyTotals.profit %>, orders: <%= yearlyTotals.orders %> }
-    }[period];
+    function closeCollapseHandler() {
+      const targetId = button.getAttribute('data-target');
+      const targetCollapse = document.querySelector(targetId);
+      if (targetCollapse && targetCollapse.classList.contains('show')) {
+        $(targetCollapse).collapse('hide');
+      }
+    }
+  });
+}
 
-    document.getElementById('printPeriod').textContent = activeTab;
-    document.getElementById('printReportBody').innerHTML = `
+// Function to show report based on time period
+function showReport(period) {
+  const reportCards = document.getElementById('reportCards');
+  const totals = {
+    daily: { sales: <%= dailyTotals.sales %>, profit: <%= dailyTotals.profit %>, orders: <%= dailyTotals.orders %>, label: 'Daily' },
+    weekly: { sales: <%= weeklyTotals.sales %>, profit: <%= weeklyTotals.profit %>, orders: <%= weeklyTotals.orders %>, label: '7 Days' },
+    fortnightly: { sales: <%= fortnightlyTotals.sales %>, profit: <%= fortnightlyTotals.profit %>, orders: <%= fortnightlyTotals.orders %>, label: '15 Days' },
+    monthly: { sales: <%= monthlyTotals.sales %>, profit: <%= monthlyTotals.profit %>, orders: <%= monthlyTotals.orders %>, label: 'Monthly' },
+    yearly: { sales: <%= yearlyTotals.sales %>, profit: <%= yearlyTotals.profit %>, orders: <%= yearlyTotals.orders %>, label: 'Yearly' }
+  }[period];
+
+  reportCards.innerHTML = `
+    <div class="report-card">
+      <h3>Total Sales (PKR)</h3>
+      <p>Rs ${totals.sales.toFixed(2)}</p>
+    </div>
+    <div class="report-card">
+      <h3>Total Profit (PKR)</h3>
+      <p>Rs ${totals.profit.toFixed(2)}</p>
+    </div>
+    <div class="report-card">
+      <h3>Total Orders</h3>
+      <p>${totals.orders}</p>
+    </div>
+  `;
+
+  document.querySelectorAll('.report-tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelector(`.report-tab[onclick="showReport('${period}')"]`).classList.add('active');
+}
+
+// Function to print specific history section
+function printHistorySection(type) {
+  document.body.classList.remove('print-online', 'print-inperson');
+  document.body.classList.add(`print-${type}`);
+  window.print();
+  document.body.classList.remove(`print-${type}`);
+}
+
+// Function to show history based on type
+function showHistory(type) {
+  const historyContent = document.getElementById('historyContent');
+  document.querySelectorAll('.history-tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelector(`.history-tab[onclick="showHistory('${type}')"]`).classList.add('active');
+
+  if (type === 'online') {
+    historyContent.innerHTML = `
+      <div class="history-section">
+        <h2>Online Medicine Orders</h2>
+        <% if (onlineOrders.length === 0) { %>
+          <p class="text-muted">No online orders found.</p>
+        <% } else { %>
+          <div class="row mb-3">
+            <div class="col-12">
+              <button class="btn btn-success float-right print-btn" onclick="printHistorySection('online')">
+                <i class="fas fa-print mr-2"></i>Print Online Orders
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead class="bg-light-blue">
+                <tr>
+                  <th>Date</th>
+                  <th>Medicine Name</th>
+                  <th>Quantity</th>
+                  <th>Unit Price (PKR)</th>
+                  <th>Total Price (PKR)</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% onlineOrders.forEach(order => { %>
+                  <% order.cartItems.forEach(item => { %>
+                    <tr class="transition-transform">
+                      <td><%= new Date(order.date).toLocaleString() %></td>
+                      <td><%= item.name || 'Unknown Medicine' %></td>
+                      <td><%= item.cartQuantity || 0 %></td>
+                      <td class="price">Rs <%= item.price ? item.price.toFixed(2) : '0.00' %></td>
+                      <td class="price">Rs <%= item.price && item.cartQuantity ? (item.price * item.cartQuantity).toFixed(2) : '0.00' %></td>
+                      <td class="align-middle text-center">
+                        <button class="btn btn-primary btn-sm view-btn" 
+                                data-toggle="collapse" 
+                                data-target="#orderDetails-<%= order._id %>-<%= item._id %>" 
+                                aria-expanded="false" 
+                                aria-controls="orderDetails-<%= order._id %>-<%= item._id %>"
+                                onclick="event.stopPropagation()">
+                          <i class="fas fa-eye"></i> <span class="btn-text">View Details</span>
+                        </button>
+                      </td>
+                    </tr>
+                    <tr class="collapse" id="orderDetails-<%= order._id %>-<%= item._id %>">
+                      <td colspan="6">
+                        <div class="p-3 bg-light rounded shadow-sm">
+                          <h6 class="text-primary mb-2">Order Details:</h6>
+                          <ul class="list-unstyled">
+                            <li><strong>Medicine:</strong> <%= item.name || 'Unknown Medicine' %></li>
+                            <li><strong>Quantity:</strong> <%= item.cartQuantity || 0 %></li>
+                            <li><strong>Unit Price:</strong> Rs <%= item.price ? item.price.toFixed(2) : '0.00' %></li>
+                            <li><strong>Total Price:</strong> Rs <%= item.price && item.cartQuantity ? (item.price * item.cartQuantity).toFixed(2) : '0.00' %></li>
+                            <li><strong>Date:</strong> <%= new Date(order.date).toLocaleString() %></li>
+                            <li><strong>Customer:</strong> <%= order.shippingAddress.firstName %> <%= order.shippingAddress.lastName %></li>
+                          </ul>
+                          <button class="btn btn-sm btn-secondary mt-2 close-btn" 
+                                  data-toggle="collapse" 
+                                  data-target="#orderDetails-<%= order._id %>-<%= item._id %>" 
+                                  aria-expanded="true" 
+                                  aria-controls="orderDetails-<%= order._id %>-<%= item._id %>">
+                            <i class="fas fa-times"></i> Close
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    `;
+  } else {
+    historyContent.innerHTML = `
+      <div class="history-section">
+        <h2>In-Person Medicine Sales</h2>
+        <% if (inPersonSales.length === 0) { %>
+          <p class="text-muted">No in-person sales found.</p>
+        <% } else { %>
+          <div class="row mb-3">
+            <div class="col-12">
+              <button class="btn btn-success float-right print-btn" onclick="printHistorySection('inperson')">
+                <i class="fas fa-print mr-2"></i>Print In-Person Sales
+              </button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead class="bg-light-blue">
+                <tr>
+                  <th>Date</th>
+                  <th>Medicine Name</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                  <th>Unit Price (PKR)</th>
+                  <th>Total Price (PKR)</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% inPersonSales.forEach(sale => { %>
+                  <tr class="transition-transform">
+                    <td><%= new Date(sale.saleDate).toLocaleString() %></td>
+                    <td><%= sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine' %></td>
+                    <td><%= sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A' %></td>
+                    <td><%= sale.quantitySold || 0 %></td>
+                    <td><%= sale.unitType === 'Bottle' ? 'Bottle' : sale.unitType === 'Full' ? 'Full ' + (sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A') : 'Dose' %></td>
+                    <td class="price">Rs <%= sale.medicineId && typeof sale.medicineId.price === 'number' ? (sale.unitType === 'Dose' && sale.medicineId.dosesPerUnit ? (sale.medicineId.price / sale.medicineId.dosesPerUnit) : sale.medicineId.price).toFixed(2) : '0.00' %></td>
+                    <td class="price">Rs <%= typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00' %></td>
+                    <td class="align-middle text-center">
+                      <button class="btn btn-primary btn-sm view-btn" 
+                              data-toggle="collapse" 
+                              data-target="#saleDetails-<%= sale._id %>" 
+                              aria-expanded="false" 
+                              aria-controls="saleDetails-<%= sale._id %>"
+                              onclick="event.stopPropagation()">
+                        <i class="fas fa-eye"></i> <span class="btn-text">View Details</span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr class="collapse" id="saleDetails-<%= sale._id %>">
+                    <td colspan="8">
+                      <div class="p-3 bg-light rounded shadow-sm">
+                        <h6 class="text-primary mb-2">Sale Details:</h6>
+                        <ul class="list-unstyled">
+                          <li><strong>Medicine:</strong> <%= sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine' %></li>
+                          <li><strong>Type:</strong> <%= sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A' %></li>
+                          <li><strong>Quantity:</strong> <%= sale.quantitySold || 0 %></li>
+                          <li><strong>Unit:</strong> <%= sale.unitType === 'Bottle' ? 'Bottle' : sale.unitType === 'Full' ? 'Full ' + (sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A') : 'Dose' %></li>
+                          <li><strong>Unit Price:</strong> Rs <%= sale.medicineId && typeof sale.medicineId.price === 'number' ? (sale.unitType === 'Dose' && sale.medicineId.dosesPerUnit ? (sale.medicineId.price / sale.medicineId.dosesPerUnit) : sale.medicineId.price).toFixed(2) : '0.00' %></li>
+                          <li><strong>Total Price:</strong> Rs <%= typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00' %></li>
+                          <li><strong>Date:</strong> <%= new Date(sale.saleDate).toLocaleString() %></li>
+                        </ul>
+                        <button class="btn btn-sm btn-secondary mt-2 close-btn" 
+                                data-toggle="collapse" 
+                                data-target="#saleDetails-<%= sale._id %>" 
+                                aria-expanded="true" 
+                                aria-controls="saleDetails-<%= sale._id %>">
+                          <i class="fas fa-times"></i> Close
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    `;
+  }
+
+  // Reattach event listeners after content is updated
+  setupViewDetailsListeners();
+}
+
+// Function to show order summary in modal
+function showOrderSummary(orderStr) {
+  const order = JSON.parse(orderStr);
+  let html = `
+    <tr>
+      <th>Item</th>
+      <th>Quantity</th>
+      <th>Unit Price (PKR)</th>
+      <th>Total Price (PKR)</th>
+    </tr>
+  `;
+  order.cartItems.forEach(item => {
+    html += `
       <tr>
-        <td>Online Orders</td>
-        <td>Rs ${totals.sales.toFixed(2)}</td>
-        <td>Rs ${totals.profit.toFixed(2)}</td>
-        <td>${totals.orders}</td>
-      </tr>
-      <tr>
-        <td>In-Person Sales</td>
-        <td>Rs ${totals.sales.toFixed(2)}</td>
-        <td>Rs ${totals.profit.toFixed(2)}</td>
-        <td>${totals.orders}</td>
+        <td>${item.name || 'Unknown Medicine'}</td>
+        <td>${item.cartQuantity || 0}</td>
+        <td class="price">Rs ${item.price ? item.price.toFixed(2) : '0.00'}</td>
+        <td class="price">Rs ${item.price && item.cartQuantity ? (item.price * item.cartQuantity).toFixed(2) : '0.00'}</td>
       </tr>
     `;
-    window.print();
+  });
+  html += `
+    <tr>
+      <td colspan="3" style="text-align: right; font-weight: 800;">Order Total:</td>
+      <td class="price">Rs ${order.orderTotal ? order.orderTotal.toFixed(2) : '0.00'}</td>
+    </tr>
+  `;
+  document.getElementById('summaryTable').innerHTML = html;
+  document.getElementById('summaryModal').style.display = 'flex';
+}
+
+// Function to show in-person sale summary in modal
+function showSaleSummary(saleStr) {
+  const sale = JSON.parse(saleStr);
+  let html = `
+    <tr>
+      <th>Medicine</th>
+      <th>Type</th>
+      <th>Quantity</th>
+      <th>Unit</th>
+      <th>Unit Price (PKR)</th>
+      <th>Total Price (PKR)</th>
+    </tr>
+    <tr>
+      <td>${sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine'}</td>
+      <td>${sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A'}</td>
+      <td>${sale.quantitySold || 0}</td>
+      <td>${sale.unitType === 'Bottle' ? 'Bottle' : sale.unitType === 'Full' ? 'Full ' + (sale.medicineId && sale.medicineId.medicineType ? sale.medicineId.medicineType : 'N/A') : 'Dose'}</td>
+      <td class="price">Rs ${sale.medicineId && typeof sale.medicineId.price === 'number' ? (sale.unitType === 'Dose' && sale.medicineId.dosesPerUnit ? (sale.medicineId.price / sale.medicineId.dosesPerUnit) : sale.medicineId.price).toFixed(2) : '0.00'}</td>
+      <td class="price">Rs ${typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00'}</td>
+    </tr>
+    <tr>
+      <td colspan="5" style="text-align: right; font-weight: 800;">Sale Total:</td>
+      <td class="price">Rs ${typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00'}</td>
+    </tr>
+  `;
+  document.getElementById('summaryTable').innerHTML = html;
+  document.getElementById('summaryModal').style.display = 'flex';
+}
+
+// Function to close modal
+function closeSummary() {
+  document.getElementById('summaryModal').style.display = 'none';
+}
+
+// JavaScript for Dashboard
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof $ === 'undefined') {
+    console.error('jQuery is required for tooltips and modals.');
+  } else {
+    $('[data-toggle="tooltip"]').tooltip();
   }
+
+  showHistory('online'); // Initialize with online orders
+
+  window.onload = () => showReport('daily');
+});
 </script>
 
 <%- include('partials/footer') %>

@@ -66,7 +66,6 @@
                       <th>Order ID</th>
                       <th>Customer</th>
                       <th>Total</th>
-                      <th>Payment</th>
                       <th>Status</th>
                       <th>Date</th>
                       <th>Actions</th>
@@ -84,11 +83,6 @@
                         </td>
                         <td>
                           <div class="d-flex align-items-center">
-                            <% if(order.user && order.user.profileImage) { %>
-                              <img src="/uploads/<%= order.user.profileImage %>" 
-                                   class="img-circle mr-2" 
-                                   style="width: 40px; height: 40px; object-fit: cover">
-                            <% } %>
                             <div>
                               <div class="font-weight-bold">
                                 <%= order.shippingAddress?.firstName %> <%= order.shippingAddress?.lastName %>
@@ -100,11 +94,6 @@
                         <td>
                           <div class="font-weight-bold">Rs. <%= order.orderTotal?.toFixed(2) || '0.00' %></div>
                           <div class="text-muted small"><%= order.cartItems?.length || 0 %> items</div>
-                        </td>
-                        <td>
-                          <span class="badge <%= order.paymentStatus === 'paid' ? 'badge-success' : 'badge-danger' %>">
-                            <%= order.paymentStatus || 'unpaid' %>
-                          </span>
                         </td>
                         <td>
                           <div class="d-flex align-items-center">
@@ -140,16 +129,15 @@
                               </div>
                             <% } %>
                             <button class="btn btn-sm btn-info ml-2 details-btn" 
-                                    data-toggle="collapse" 
                                     data-target="#details-<%= order._id %>"
                                     title="View Details">
-                              <i class="fas <%= order.status === 'pending' ? 'fa-chevron-down' : 'fa-file-invoice' %>"></i>
+                              <i class="fas fa-chevron-down"></i>
                             </button>
                           </div>
                         </td>
                       </tr>
                       <tr class="collapse" id="details-<%= order._id %>">
-                        <td colspan="8">
+                        <td colspan="7">
                           <div class="p-3 bg-light">
                             <div class="row">
                               <div class="col-md-3">
@@ -179,11 +167,6 @@
                                   <% order.cartItems?.forEach(item => { %>
                                     <div class="col-6 mb-2">
                                       <div class="media">
-                                        <% if(item.image) { %>
-                                          <img src="/uploads/<%= item.image %>" 
-                                               class="mr-3" 
-                                               style="width: 50px; height: 50px; object-fit: cover">
-                                        <% } %>
                                         <div class="media-body">
                                           <h6 class="mt-0"><%= item.name %></h6>
                                           <div class="text-muted">
@@ -249,17 +232,86 @@
 
 <!-- Additional Styles -->
 <style>
+  :root {
+    --primary: #007bff;
+    --secondary: #17a2b8;
+    --accent: #28a745;
+    --light: #f4f7fa;
+    --dark: #2c3e50;
+    --success: #28a745;
+    --warning: #fd7e14;
+    --danger: #dc3545;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;
+    --light-gray: #e9ecef;
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light);
+    color: var(--dark);
+    line-height: 1.5;
+  }
+
   .order-row { transition: all 0.3s ease; }
-  .order-row:hover { transform: translateX(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .order-row:hover { transform: translateX(5px); box-shadow: var(--shadow); }
   .status-indicator { width: 10px; height: 10px; border-radius: 50%; }
-  .status-indicator.pending { background-color: #ffc107; }
-  .status-indicator.accepted { background-color: #28a745; }
-  .status-indicator.rejected { background-color: #dc3545; }
-  .timeline { border-left: 2px solid #dee2e6; margin-left: 10px; padding-left: 20px; }
+  .status-indicator.pending { background-color: var(--warning); }
+  .status-indicator.accepted { background-color: var(--success); }
+  .status-indicator.rejected { background-color: var(--danger); }
+  .timeline { border-left: 2px solid var(--light-gray); margin-left: 10px; padding-left: 20px; }
   .timeline li { margin-bottom: 1rem; position: relative; }
   .timeline li::before {
     content: ''; position: absolute; left: -25px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
-    background: #fff; border: 2px solid #007bff;
+    background: #fff; border: 2px solid var(--primary);
+  }
+
+  .card {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+  }
+
+  .btn-custom {
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+  }
+
+  .btn-primary-custom {
+    background: var(--primary);
+    border: none;
+  }
+
+  .btn-primary-custom:hover {
+    background: #0056b3;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+  }
+
+  .btn-info {
+    background: var(--secondary);
+    border: none;
+  }
+
+  .btn-info:hover {
+    background: #117a8b;
+    box-shadow: 0 4px 10px rgba(23, 162, 184, 0.3);
+  }
+
+  .details-btn {
+    background: var(--accent);
+    border: none;
+  }
+
+  .details-btn:hover {
+    background: #218838;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+  }
+
+  .media img {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 </style>
 
@@ -283,7 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     orderRows.forEach(row => {
       const orderId = row.getAttribute('data-id').toLowerCase();
-      const orderStatus = row.classList.contains('pending') ? 'pending' : row.classList.contains('accepted') ? 'accepted' : row.classList.contains('rejected') ? 'rejected' : '';
+      const orderStatus = row.classList.contains('pending') ? 'pending' : 
+                          row.classList.contains('accepted') ? 'accepted' : 
+                          row.classList.contains('rejected') ? 'rejected' : '';
       const matchesSearch = orderId.includes(searchTerm);
       const matchesFilter = activeFilter === 'all' || orderStatus === activeFilter;
       row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
@@ -305,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let sortedRows = Array.from(orderRows);
 
     function getDate(row) {
-      const dateText = row.querySelector('td:nth-child(7)').textContent;
+      const dateText = row.querySelector('td:nth-child(6)').textContent;
       return new Date(dateText);
     }
 
@@ -370,16 +424,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.ok) {
           const data = await response.json();
           const row = btn.closest('tr');
-          const badge = row.querySelector('td:nth-child(6) .badge');
-          const paymentBadge = row.querySelector('td:nth-child(5) .badge');
+          const badge = row.querySelector('td:nth-child(5) .badge');
           const btnGroup = row.querySelector('.btn-group');
 
           row.classList.remove('pending');
           row.classList.add(data.order.status);
           badge.textContent = data.order.status;
           badge.className = `badge badge-pill badge-${data.order.status === 'accepted' ? 'success' : 'danger'}`;
-          paymentBadge.textContent = data.order.paymentStatus;
-          paymentBadge.className = `badge badge-pill badge-${data.order.paymentStatus === 'paid' ? 'success' : 'danger'}`;
 
           if (btnGroup) {
             btnGroup.innerHTML = `<span class="text-muted small">Action completed</span>`;
@@ -414,6 +465,26 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Export failed:', error);
       alert('Export failed. Please try again.');
     }
+  });
+
+  // Toggle icon and collapse for details button
+  document.querySelectorAll('.details-btn').forEach(btn => {
+    const targetId = btn.getAttribute('data-target');
+    const collapseElement = document.querySelector(targetId);
+
+    btn.addEventListener('click', () => {
+      $(collapseElement).collapse('toggle');
+    });
+
+    collapseElement.addEventListener('show.bs.collapse', () => {
+      btn.querySelector('i').classList.remove('fa-chevron-down');
+      btn.querySelector('i').classList.add('fa-chevron-up');
+    });
+
+    collapseElement.addEventListener('hide.bs.collapse', () => {
+      btn.querySelector('i').classList.remove('fa-chevron-up');
+      btn.querySelector('i').classList.add('fa-chevron-down');
+    });
   });
 });
 </script>

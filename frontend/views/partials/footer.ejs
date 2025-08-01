@@ -4,7 +4,7 @@
   <div class="float-right d-none d-sm-block">
     <b>MediApp</b> Admin Panel
   </div>
-  <strong>&copy; 2025 MediApp.</strong> All rights reserved.
+  <strong>© 2025 MediApp.</strong> All rights reserved.
 </footer>
 </div> <!-- ./wrapper -->
 
@@ -16,17 +16,27 @@
 <!-- AdminLTE App -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 <script>
-// Logout functionality
-document.getElementById('logoutBtn')?.addEventListener('click', function(e){
-    e.preventDefault();
+  // Logout functionality: clear token from localStorage and redirect to login
+  function performLogout() {
     localStorage.removeItem('token');
     window.location.href = '/login.html';
-});
-document.getElementById('sidebarLogoutBtn')?.addEventListener('click', function(e){
+  }
+  document.getElementById('logoutBtn')?.addEventListener('click', function(e) {
     e.preventDefault();
-    localStorage.removeItem('token');
-    window.location.href = '/login.html';
-});
+    performLogout();
+  });
+  document.getElementById('sidebarLogoutBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    performLogout();
+  });
+
+  // Live time function: updates the #liveTime element every second
+  function updateClock() {
+    const now = new Date();
+    document.getElementById("liveTime").textContent = now.toLocaleTimeString();
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
 </script>
 </body>
 </html>

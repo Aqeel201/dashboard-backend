@@ -1,0 +1,128 @@
+<%- include('partials/header') %>
+
+<!-- Content Header -->
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Settings</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+    <% if (typeof message !== 'undefined' && message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">Application Settings</h3>
+      </div>
+      <form method="POST" action="/admin/settings?token=<%= token %>">
+        <div class="card-body">
+          <!-- Inventory Settings -->
+          <h4>Inventory Management</h4>
+          <div class="form-group">
+            <label for="lowStockThreshold">Low Stock Threshold:</label>
+            <input type="number" class="form-control" id="lowStockThreshold" name="lowStockThreshold" value="<%= settings.lowStockThreshold %>" min="1" required />
+            <small class="form-text text-muted">Set the quantity at which a medicine is considered low in stock.</small>
+          </div>
+          <div class="form-group">
+            <label for="expiryAlertDays">Expiry Alert Threshold (days):</label>
+            <input type="number" class="form-control" id="expiryAlertDays" name="expiryAlertDays" value="<%= settings.expiryAlertDays %>" min="1" required />
+            <small class="form-text text-muted">Set the number of days before expiry to trigger an alert.</small>
+          </div>
+
+          <!-- Notification Settings -->
+          <h4>Notification Preferences</h4>
+          <div class="form-group">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="emailNotifications" name="emailNotifications" <%= settings.emailNotifications ? 'checked' : '' %> />
+              <label class="custom-control-label" for="emailNotifications">Enable Email Notifications</label>
+            </div>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="inAppNotifications" name="inAppNotifications" <%= settings.inAppNotifications ? 'checked' : '' %> />
+              <label class="custom-control-label" for="inAppNotifications">Enable In-App Notifications</label>
+            </div>
+          </div>
+
+          <!-- User Management -->
+          <h4>User Management</h4>
+          <div class="form-group">
+            <label for="defaultUserRole">Default User Role:</label>
+            <select class="form-control" id="defaultUserRole" name="defaultUserRole">
+              <option value="user" <%= settings.defaultUserRole === 'user' ? 'selected' : '' %>>User</option>
+              <option value="admin" <%= settings.defaultUserRole === 'admin' ? 'selected' : '' %>>Admin</option>
+            </select>
+          </div>
+
+          <!-- System Settings -->
+          <h4>System Settings</h4>
+          <div class="form-group">
+            <label for="currency">Currency:</label>
+            <select class="form-control" id="currency" name="currency">
+              <option value="PKR" <%= settings.currency === 'PKR' ? 'selected' : '' %>>PKR</option>
+              <option value="USD" <%= settings.currency === 'USD' ? 'selected' : '' %>>USD</option>
+              <option value="EUR" <%= settings.currency === 'EUR' ? 'selected' : '' %>>EUR</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="dateFormat">Date Format:</label>
+            <select class="form-control" id="dateFormat" name="dateFormat">
+              <option value="DD/MM/YYYY" <%= settings.dateFormat === 'DD/MM/YYYY' ? 'selected' : '' %>>DD/MM/YYYY</option>
+              <option value="MM/DD/YYYY" <%= settings.dateFormat === 'MM/DD/YYYY' ? 'selected' : '' %>>MM/DD/YYYY</option>
+              <option value="YYYY-MM-DD" <%= settings.dateFormat === 'YYYY-MM-DD' ? 'selected' : '' %>>YYYY-MM-DD</option>
+            </select>
+          </div>
+
+          <!-- Appearance -->
+          <h4>Appearance</h4>
+          <div class="form-group">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="darkMode" name="darkMode" <%= settings.darkMode ? 'checked' : '' %> />
+              <label class="custom-control-label" for="darkMode">Enable Dark Mode</label>
+            </div>
+          </div>
+
+          <!-- Integration Settings -->
+          <h4>Integration Settings</h4>
+          <div class="form-group">
+            <label for="apiKey">API Key:</label>
+            <input type="text" class="form-control" id="apiKey" name="apiKey" value="<%= settings.apiKey %>" placeholder="Enter API Key" />
+            <small class="form-text text-muted">Enter an API key for third-party integrations.</small>
+          </div>
+
+          <!-- Backup and Restore -->
+          <h4>Backup and Restore</h4>
+          <div class="form-group">
+            <button type="button" class="btn btn-info" onclick="backupData()">Backup Data</button>
+            <button type="button" class="btn btn-warning" onclick="restoreData()">Restore Data</button>
+            <small class="form-text text-muted">Click to backup or restore system data. (Backup downloads a file; Restore is a placeholder.)</small>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  function backupData() {
+    window.location.href = '/admin/backup?token=<%= token %>';
+  }
+
+  function restoreData() {
+    alert('Restore functionality not implemented yet. Please upload a backup file manually via a future update.');
+  }
+</script>
+
+<%- include('partials/footer') %>

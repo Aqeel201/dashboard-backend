@@ -2,102 +2,344 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - MediApp</title>
   <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* Overall page background with gradient */
+    :root {
+      --primary-color: #3b82f6;
+      --secondary-color: #1e3a8a;
+      --accent-color: #60a5fa;
+      --glass-effect: rgba(255, 255, 255, 0.95);
+    }
+
     body {
-      background: linear-gradient(135deg, #71b7e6, #9b59b6);
+      background: linear-gradient(135deg, #e6f3fa 0%, #93c5fd 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Open Sans', sans-serif;
+      overflow: hidden;
+      position: relative;
     }
-    /* Container for the login card */
-    .login-container {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-      padding: 40px 30px;
-      max-width: 400px;
+
+    /* Floating Medicine Icons */
+    .medical-icons {
+      position: absolute;
       width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
     }
-    /* Logo styling */
-    .login-container .logo {
-      display: block;
-      margin: 0 auto 20px;
-      width: 80px;
+
+    .medical-icon {
+      position: absolute;
+      opacity: 0.25;
+      animation: float 12s ease-in-out infinite;
+      filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.1));
     }
-    /* Card header styling */
-    .card-header {
-      background: transparent;
-      border-bottom: none;
-      padding-bottom: 0;
+
+    .medical-icon img {
+      width: 60px;
+      height: auto;
     }
-    .card-header h3 {
-      color: #333;
+
+    .medical-icon:nth-child(1) { top: 10%; left: 15%; animation-duration: 14s; }
+    .medical-icon:nth-child(2) { top: 25%; left: 70%; animation-duration: 16s; }
+    .medical-icon:nth-child(3) { top: 60%; left: 20%; animation-duration: 13s; }
+    .medical-icon:nth-child(4) { top: 75%; left: 80%; animation-duration: 15s; }
+    .medical-icon:nth-child(5) { top: 40%; left: 50%; animation-duration: 12s; }
+
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-40px) rotate(10deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
+
+    /* Glassmorphism Login Container */
+    .login-container {
+      background: var(--glass-effect);
+      backdrop-filter: blur(15px);
+      border-radius: 25px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      padding: 50px 40px;
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      right: -5px;
+      bottom: -5px;
+      background: linear-gradient(45deg, rgba(59, 130, 246, 0.2), rgba(255, 255, 255, 0.3));
+      z-index: -1;
+      border-radius: 30px;
+      animation: gradientFlow 10s ease infinite;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Logo Design */
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 30px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .logo-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--primary-color);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .logo-text {
+      font-size: 1.8rem;
       font-weight: 700;
+      background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    /* Input field styling */
+
+    /* Form Styling */
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-label {
+      position: absolute;
+      left: 15px;
+      top: 15px;
+      color: #6b7280;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      font-size: 1rem;
+    }
+
     .form-control {
-      border-radius: 5px;
-      border: 1px solid #ddd;
+      height: 50px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 20px 15px 10px;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+      color: #1e3a8a;
     }
+
     .form-control:focus {
-      box-shadow: none;
-      border-color: #9b59b6;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+      background: #fff;
     }
-    /* Button styling */
-    .btn-primary {
-      background-color: #9b59b6;
+
+    .form-control:focus + .form-label,
+    .form-control:not(:placeholder-shown) + .form-label {
+      top: 5px;
+      font-size: 0.75rem;
+      color: var(--primary-color);
+    }
+
+    /* Password Toggle */
+    .password-toggle {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6b7280;
+      font-size: 1.2rem;
+    }
+
+    /* Login Button */
+    .btn-login {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
       border: none;
-      border-radius: 5px;
-      transition: background-color 0.3s ease;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .btn-primary:hover {
-      background-color: #8e44ad;
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
     }
-    /* Error message styling */
-    #errorMessage {
-      font-size: 0.9em;
+
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(45deg);
+      transition: all 0.5s ease;
+    }
+
+    .btn-login:hover::after {
+      left: 150%;
+    }
+
+    /* Additional Links */
+    .additional-links {
+      margin-top: 20px;
       text-align: center;
+    }
+
+    .additional-links a {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin: 0 10px;
+      transition: color 0.3s ease;
+    }
+
+    .additional-links a:hover {
+      color: var(--primary-color);
+    }
+
+    /* Error Message */
+    #errorMessage {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 576px) {
+      .login-container {
+        padding: 30px 20px;
+        margin: 10px;
+      }
+      .logo-text {
+        font-size: 1.5rem;
+      }
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+      }
+      .medical-icon img {
+        width: 50px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <!-- Logo Section -->
-    <img src="/assets/LogoBGR.png" alt="MediApp Logo" class="logo">
-    <div class="card border-0">
-      <div class="card-header text-center">
-        <h3>MediApp Login</h3>
-      </div>
-      <div class="card-body">
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="email">Email address</label>
-            <input type="email" id="email" class="form-control" placeholder="Enter email" required>
-          </div>
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Password" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-block">Login</button>
-          <div id="errorMessage" class="mt-2 text-danger"></div>
-        </form>
-      </div>
-    </div>
+  <!-- Floating Medicine Icons -->
+  <div class="medical-icons">
+    <div class="medical-icon"><img src="https://img.icons8.com/ios-filled/50/pill.png" alt="Pill"></div>
+    <div class="medical-icon"><img src="https://img.icons8.com/ios-filled/50/pill.png" alt="Syrup"></div>
+    <div class="medical-icon"><img src="https://img.icons8.com/ios-filled/50/capsule.png" alt="Capsule"></div>
+    <div class="medical-icon"><img src="https://img.icons8.com/ios-filled/50/syringe.png" alt="Bottle"></div>
+    <div class="medical-icon"><img src="https://img.icons8.com/ios-filled/50/syringe.png" alt="Syringe"></div>
   </div>
 
-  <!-- JavaScript for handling form submission -->
+  <div class="login-container">
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-icon">
+        <i class="fas fa-heartbeat" style="color: white; font-size: 1.5rem"></i>
+      </div>
+      <span class="logo-text">MediApp</span>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <input type="email" id="email" class="form-control" placeholder=" ">
+        <label class="form-label" for="email">Email Address</label>
+      </div>
+
+      <div class="form-group">
+        <input type="password" id="password" class="form-control" placeholder=" ">
+        <label class="form-label" for="password">Password</label>
+        <i class="far fa-eye password-toggle" onclick="togglePassword()"></i>
+      </div>
+
+      <button type="submit" class="btn btn-login btn-block">Sign In</button>
+
+
+      <div id="errorMessage">
+        <i class="fas fa-exclamation-circle"></i>
+        <span></span>
+      </div>
+    </form>
+  </div>
+
   <script>
+    // Password toggle
+    function togglePassword() {
+      const password = document.getElementById('password');
+      const icon = document.querySelector('.password-toggle');
+      if (password.type === 'password') {
+        password.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        password.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    // Form submission
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const errorMessage = document.getElementById('errorMessage');
+      const errorSpan = errorMessage.querySelector('span');
+      errorMessage.style.display = 'none';
+
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
+
+      // Basic client-side validation
+      if (!email || !password) {
+        errorSpan.textContent = 'Please fill in all fields';
+        errorMessage.style.display = 'flex';
+        return;
+      }
+
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -113,10 +355,12 @@
             window.location.href = '/';
           }
         } else {
-          document.getElementById('errorMessage').textContent = data.message || 'Login failed';
+          errorSpan.textContent = data.message || 'Login failed';
+          errorMessage.style.display = 'flex';
         }
       } catch (error) {
-        document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
+        errorSpan.textContent = 'An error occurred. Please try again.';
+        errorMessage.style.display = 'flex';
       }
     });
   </script>

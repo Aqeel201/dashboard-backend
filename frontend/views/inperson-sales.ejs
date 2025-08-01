@@ -49,6 +49,63 @@
     margin: 0.5rem 0 0;
   }
 
+  /* Filter Bar میں ویو ٹوگل بٹن */
+  .view-toggle {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .view-toggle button {
+    background: var(--light-gray);
+    border: none;
+    padding: 0.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  .view-toggle button.active,
+  .view-toggle button:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  /* Default Grid ویو کے لیے */
+  #medicineGrid.grid-view .row-cols-1 > .col,
+  #medicineGrid.grid-view .row-cols-sm-2 > .col,
+  #medicineGrid.grid-view .row-cols-md-3 > .col,
+  #medicineGrid.grid-view .row-cols-lg-4 > .col {
+    display: block;
+  }
+
+  /* لسٹ ویو کے لیے */
+  #medicineGrid.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #medicineGrid.list-view .col {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+  #medicineGrid.list-view .medicine-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  #medicineGrid.list-view .medicine-image {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    border-radius: var(--border-radius);
+  }
+  #medicineGrid.list-view .card-body {
+    flex: 1;
+    padding: 0;
+  }
+  #medicineGrid.list-view .card-body .card-title {
+    margin-top: 0;
+  }
+
   .medicine-card {
     background: #fff;
     border-radius: var(--border-radius);
@@ -63,7 +120,7 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   }
   .medicine-image {
-    height: 140px;
+    height: 100px; /* چھوٹی امیج کے لیے */
     width: 100%;
     object-fit: cover;
     border-bottom: 1px solid var(--light-gray);
@@ -166,7 +223,7 @@
   }
   .search-container {
     flex-grow: 1;
-    max-width: 400px;
+    max-width: 300px;
   }
   .search-input {
     border-radius: 20px;
@@ -279,6 +336,19 @@
     .medicine-card {
       margin-bottom: 1.5rem;
     }
+    /* لسٹ ویو موبائل پر بھی اچھا نظر آئے */
+    #medicineGrid.list-view .medicine-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #medicineGrid.list-view .medicine-image {
+      width: 100%;
+      height: 120px;
+      margin-bottom: 0.5rem;
+    }
+    #medicineGrid.list-view .card-body {
+      padding: 0.5rem 0;
+    }
   }
 </style>
 
@@ -292,7 +362,7 @@
   <div class="row gx-4">
     <!-- Main Inventory Section -->
     <div class="col-lg-9">
-      <!-- Filter Bar -->
+      <!-- Filter Bar اور View Toggle -->
       <div class="filter-bar">
         <button class="category-btn active" data-category="all">All</button>
         <% categories.forEach(cat => { %>
@@ -301,13 +371,21 @@
         <div class="search-container">
           <input type="text" class="search-input" placeholder="Quick search..." id="searchInput">
         </div>
+        <div class="view-toggle">
+          <button id="gridViewBtn" class="active" title="Grid View">
+            <i class="fas fa-th"></i>
+          </button>
+          <button id="listViewBtn" title="List View">
+            <i class="fas fa-list"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Medicine Grid -->
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="medicineGrid">
+      <!-- Medicine Grid / List -->
+      <div id="medicineGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 grid-view">
         <% medicines.forEach(medicine => { %>
           <div class="col">
-            <div class="medicine-card" data-category="<%= medicine.category.toLowerCase() %>" data-name="<%= medicine.name.toLowerCase() %>">
+            <div class="medicine-card position-relative" data-category="<%= medicine.category.toLowerCase() %>" data-name="<%= medicine.name.toLowerCase() %>">
               <span class="stock-status" style="background: <%= medicine.quantity > 20 ? 'var(--success)' : medicine.quantity > 5 ? 'var(--warning)' : 'var(--danger)' %>;">
                 <%= medicine.quantity %> in stock
               </span>
@@ -415,14 +493,12 @@
     }
 
     init() {
-      console.log('Initializing MediAppDashboard');
       this.setupEventListeners();
       this.renderCart();
     }
 
     setupEventListeners() {
-      console.log('Setting up event listeners');
-      
+      // کیٹیگری فلٹرنگ
       document.querySelectorAll('.category-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
@@ -430,9 +506,12 @@
           this.filterMedicines();
         });
       });
-
+      // سرچ
       document.getElementById('searchInput')?.addEventListener('input', () => this.filterMedicines());
-
+      // گرڈ اور لسٹ ویو ٹوگل
+      document.getElementById('gridViewBtn')?.addEventListener('click', () => this.setGridView());
+      document.getElementById('listViewBtn')?.addEventListener('click', () => this.setListView());
+      // Add to Cart
       document.querySelectorAll('.add-to-cart').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const target = e.currentTarget;
@@ -464,6 +543,22 @@
       document.getElementById('finalizeBtn')?.addEventListener('click', () => this.finalizeOrder());
       document.getElementById('clearCartBtn')?.addEventListener('click', () => this.clearCart());
       document.getElementById('saveCustomerBtn')?.addEventListener('click', () => this.saveCustomerDetails());
+    }
+
+    setGridView() {
+      const grid = document.getElementById('medicineGrid');
+      grid.classList.remove('list-view');
+      grid.classList.add('grid-view');
+      document.getElementById('gridViewBtn').classList.add('active');
+      document.getElementById('listViewBtn').classList.remove('active');
+    }
+
+    setListView() {
+      const grid = document.getElementById('medicineGrid');
+      grid.classList.remove('grid-view');
+      grid.classList.add('list-view');
+      document.getElementById('listViewBtn').classList.add('active');
+      document.getElementById('gridViewBtn').classList.remove('active');
     }
 
     filterMedicines() {
@@ -579,7 +674,6 @@
       const name = document.getElementById('customerNameInput')?.value.trim() || 'In-Person Customer';
       const contact = document.getElementById('customerContactInput')?.value.trim() || 'N/A';
       this.customerDetails = { name, contact };
-      console.log('Customer details saved:', this.customerDetails);
       alert('Customer details saved successfully!');
     }
 
@@ -706,13 +800,11 @@
           }
         });
         if (response.data.success) {
-          console.log('Sales recorded successfully:', response.data);
           return true;
         } else {
           throw new Error(response.data.error || 'Unknown error during sales recording');
         }
       } catch (err) {
-        console.error('Error recording sales:', err.response ? err.response.data : err.message);
         alert('Failed to record sales: ' + (err.response?.data?.error || err.message));
         return false;
       }

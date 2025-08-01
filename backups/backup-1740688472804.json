@@ -1,0 +1,3478 @@
+{
+  "users": [
+    {
+      "_id": "67a725ac6b6f0ea9fca24850",
+      "firstName": "Johar ",
+      "lastName": "Ali",
+      "CNICNo": "71103456789",
+      "email": "jakshigri@gmail.com",
+      "password": "$2a$10$70T8hiu4j74WCA.wDVU4yO6CzvY.LLyY8P5jchG1HIIY7VduL20.q",
+      "profileImage": "1739007404014-profile_1739007404359.jpg",
+      "role": "user",
+      "createdAt": "2025-02-08T09:36:44.159Z",
+      "__v": 0,
+      "address": "",
+      "dob": "",
+      "id": "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+      "phone": ""
+    },
+    {
+      "_id": "67a752b81c5ce73b2b2855bb",
+      "id": "ea545d09-4a8e-4841-9e9b-e95fb8f2e3d8",
+      "firstName": "Ayesha ",
+      "lastName": "Ali ",
+      "CNICNo": "71103958585",
+      "email": "ayesha123@gmail.com",
+      "password": "$2a$10$iGZ3v2lw0k.d1iKNAnGCj.iNzaoKAdd4sefIQ9/sGoFJUxE8B/AH.",
+      "profileImage": "1739018935910-profile_1739018934086.jpg",
+      "role": "user",
+      "createdAt": "2025-02-08T12:48:56.032Z",
+      "phone": "112334",
+      "address": "Highland",
+      "dob": "05/01/2005",
+      "__v": 0
+    },
+    {
+      "_id": "67aa138e4e1d8f77833c9034",
+      "id": "d5ef9397-148d-4f51-bd7c-b2ff1b603c08",
+      "firstName": "Aqeel",
+      "lastName": "Ahmed ",
+      "CNICNo": "",
+      "email": "aqeelah3076@gmail.com",
+      "password": "$2a$10$uzCkI5Ae/AuXA2HCUfak1uBMmIxTZxe9.asVyqOhhgy7.P8AHJt0.",
+      "profileImage": "1739199374673-profile_1739199375176.jpg",
+      "role": "user",
+      "createdAt": "2025-02-10T14:56:14.814Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67ab0cced1f5a8f0c369f060",
+      "id": "d4c227f8-e02d-489d-9b6a-bff06277dc13",
+      "firstName": "Ali ",
+      "lastName": "Hassan",
+      "CNICNo": "7110312345678",
+      "email": "ali123@gmail.com",
+      "password": "$2a$10$YDmdabC4.x4mMTdwFOwmkOlmbBQdQipaD8kVQw0AVRnxf7VlmtEPG",
+      "profileImage": "1739263496743-721faced-2c71-4f7f-87aa-0f3762c2735b.jpeg",
+      "role": "user",
+      "createdAt": "2025-02-11T08:39:42.518Z",
+      "phone": "0312345678",
+      "address": "Pakistan",
+      "dob": "02/03/2003",
+      "__v": 0
+    },
+    {
+      "_id": "67ab2119d1f5a8f0c369f120",
+      "id": "3d405472-c221-413c-a920-b382e3f1ef10",
+      "firstName": "Aliza ",
+      "lastName": "Bano ",
+      "CNICNo": "",
+      "email": "aliza123@gmail.com",
+      "password": "$2a$10$Jm59mLW7UapY2xuhRhU9fe4UGU8e6dRAmhCtL0JtJq6d7SxX9KEiC",
+      "profileImage": "1739268377491-profile_1739268377490.jpg",
+      "role": "user",
+      "createdAt": "2025-02-11T10:06:17.623Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67ac6ff4c3b5cd72a4de3c24",
+      "id": "86e74bd2-c71e-4d5e-8407-4a7006b98c71",
+      "firstName": "Aqeel ",
+      "lastName": "Ahmed ",
+      "CNICNo": "",
+      "email": "unknown@gmail.com",
+      "password": "$2a$10$zTpKTnFNZBj2Oi2HBDc4fOOO20Z0NDvVufiaWbQA9mGooV6RWm69m",
+      "profileImage": "1739354159266-2eaa7a6e-e414-4fe3-af87-0c844a5f8496.png",
+      "role": "user",
+      "createdAt": "2025-02-12T09:55:00.448Z",
+      "phone": "0349935156",
+      "address": "Kushmarah Skardu Baltisan ",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67acaf1137ca231ca3b447b7",
+      "id": "ed814347-0758-4552-8ca4-7ec4a2c4e087",
+      "firstName": "Muhammad ",
+      "lastName": "Abbas",
+      "CNICNo": "",
+      "email": "muhammadabbas@gmail.com",
+      "password": "$2a$10$6dPgeuPlPHceBEVrDeeln.X9JznTX09GGpSvPKfgjb3wC.R1jCyZy",
+      "profileImage": "1739370256638-profile_1739370256112.jpg",
+      "role": "user",
+      "createdAt": "2025-02-12T14:24:17.056Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67adc43f6727f59b8d9d9242",
+      "id": "6a290a1f-2637-4cdf-b7fc-6cadfb7262fa",
+      "firstName": "Elia ",
+      "lastName": "Jubin",
+      "CNICNo": "",
+      "email": "new@example.com",
+      "password": "$2a$10$fDSvxtQJohmqv3pHnwWN2uMSpH94buu6km7fKjhBS3pFbm2YlTgFe",
+      "profileImage": "1739441445456-1db69c19-b460-4e3d-9926-72b7dd778c2f.png",
+      "role": "user",
+      "createdAt": "2025-02-13T10:06:55.502Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67adc6d36727f59b8d9d9253",
+      "id": "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+      "firstName": "Aliza ",
+      "lastName": "",
+      "CNICNo": "",
+      "email": "aliza12345@gmail.com",
+      "password": "$2a$10$n6r0TPLPPlUoOxnzDg.9eu5i9KudEL8gD6p.qLC500YApilJIBsGO",
+      "profileImage": "1739441931614-3da2a865-90f6-4a08-abe9-93f2bebca0ea.jpeg",
+      "role": "user",
+      "createdAt": "2025-02-13T10:17:55.002Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67adc84a7c93329cfa9a335d",
+      "id": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "firstName": "Admin",
+      "lastName": "",
+      "CNICNo": "7110327480893",
+      "email": "admin@mediapp.com",
+      "password": "$2a$10$tbn8iz1.HcBf4UO/OV/8zeb2IphhX3tiaQCnwCZrAzH1HwngqkSDG",
+      "profileImage": "1739442471803-16df3a3c-f56e-4352-b808-b70acddc0797.jpeg",
+      "role": "admin",
+      "createdAt": "2025-02-13T10:24:10.505Z",
+      "phone": "03499535156",
+      "address": "Kushmarah Skardu Baltisan ",
+      "dob": "05/08/2003",
+      "__v": 0
+    },
+    {
+      "_id": "67b22dee50f64aabc2fe404e",
+      "id": "dcaaf414-2769-4863-905a-297375c6830f",
+      "firstName": "Aqeel ",
+      "lastName": "Ahmed",
+      "CNICNo": "",
+      "email": "aqee@gmail.com",
+      "password": "$2a$10$nunUlyVIhn0ImC1YzELosuQPdRsEM7cFw0bCKxkKRWYEClbIywdGW",
+      "profileImage": "1739730413890-profile_1739730413818.jpg",
+      "role": "user",
+      "createdAt": "2025-02-16T18:26:54.046Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67b2314f50f64aabc2fe4056",
+      "id": "1320df1b-47aa-4717-86e4-eb6b15751d9b",
+      "firstName": "Test",
+      "lastName": "User",
+      "CNICNo": "",
+      "email": "testuser@gmail.com",
+      "password": "$2a$10$L3PXxbd2hGUfLSgZZAVeqOs.NXr9gOQ.KDiI8eL7UaQzrc60jSGwm",
+      "profileImage": null,
+      "role": "user",
+      "createdAt": "2025-02-16T18:41:19.382Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    },
+    {
+      "_id": "67b2341c50f64aabc2fe405a",
+      "id": "76664f21-ccac-49fc-8af9-0e34478eabf8",
+      "firstName": "Test",
+      "lastName": "User2",
+      "CNICNo": "",
+      "email": "testuser2@gmail.com",
+      "password": "$2a$10$fkQTHMBekr3aiJsgJQWumurJ9KkorUvhgNw3KhNpjx0QyPz1nX2J6",
+      "profileImage": null,
+      "role": "user",
+      "createdAt": "2025-02-16T18:53:16.085Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "__v": 0
+    }
+  ],
+  "medicines": [
+    {
+      "_id": "6725ea34fd36a52281856a87",
+      "name": "paracetamol",
+      "manufacturer": "gsk",
+      "expiryDate": "2025-03-10T00:00:00.000Z",
+      "dosage": "Take 1 capsule twice a day after meals",
+      "price": 100,
+      "category": "Homeopathic",
+      "__v": 7,
+      "image": "/uploads/1739040740397-109190218-banner4.jpg",
+      "quantity": 71,
+      "likes": [
+        "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+        "3d405472-c221-413c-a920-b382e3f1ef10",
+        "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+        "3b9671ef-e826-4726-a23b-acd6120d57b4",
+        "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+        "dcaaf414-2769-4863-905a-297375c6830f",
+        "76664f21-ccac-49fc-8af9-0e34478eabf8"
+      ],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67a79a3d24931a07e9ae8983",
+      "name": "ginger root",
+      "price": 100,
+      "dosage": "5 drops three times a day",
+      "quantity": 89,
+      "image": "/uploads/1739037245076-875976358-herbal1.png",
+      "__v": 7,
+      "expiryDate": "2026-02-02T00:00:00.000Z",
+      "manufacturer": "Glentham Life Sciences",
+      "category": "Homeopathic",
+      "likes": [
+        "3d405472-c221-413c-a920-b382e3f1ef10",
+        "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+        "76664f21-ccac-49fc-8af9-0e34478eabf8"
+      ],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67a7aa92408057c75ba7adcf",
+      "name": "Herbal Liver Detox",
+      "manufacturer": "HerbalCare Pharma",
+      "expiryDate": "2027-05-02T00:00:00.000Z",
+      "price": 100,
+      "dosage": "5 drops three times a day",
+      "quantity": 91,
+      "image": "/uploads/1739041426897-542888031-homeopathic1.png",
+      "__v": 2,
+      "category": "Herbal",
+      "likes": [
+        "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+        "3d405472-c221-413c-a920-b382e3f1ef10"
+      ],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67a9b02d4a802d791641fe3b",
+      "name": "Echinacea",
+      "manufacturer": "HerbalCare Pharma",
+      "expiryDate": "2027-02-05T00:00:00.000Z",
+      "price": 250,
+      "dosage": "Take 1 capsule twice a day after meals",
+      "quantity": 74,
+      "image": "/uploads/1739173933605-919665885-611gJaHnBJL._AC_UF1000,1000_QL80_.jpg",
+      "category": "Herbal",
+      "__v": 1,
+      "likes": [],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab11e437262a070145da46",
+      "name": "Tylenol Extra Strenght",
+      "manufacturer": "Johnson & Johnson",
+      "expiryDate": "2027-03-15T00:00:00.000Z",
+      "price": 100,
+      "dosage": "500 mg tablets",
+      "quantity": 30,
+      "image": "/uploads/1739264484162-61QhYtxvnFL.jpg",
+      "category": "Analgesics",
+      "__v": 1,
+      "likes": [],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab12a637262a070145da50",
+      "name": "Amoxicillin",
+      "manufacturer": "Pfizer\t",
+      "expiryDate": "2025-12-20T00:00:00.000Z",
+      "price": 150,
+      "dosage": "500 mg capsule",
+      "quantity": 89,
+      "image": "/uploads/1739264678710-amoxicillin-500mg-capsules-please-note-you-are-purchasing-a-photograph-EJPWHE.jpg",
+      "category": "Antibiotic",
+      "__v": 1,
+      "medicineType": "Capsule",
+      "dosesPerUnit": 10,
+      "likes": [],
+      "remainingDoses": 2
+    },
+    {
+      "_id": "67ab130b37262a070145da58",
+      "name": "Omeprazole",
+      "manufacturer": "AstraZeneca",
+      "expiryDate": "2026-03-20T00:00:00.000Z",
+      "price": 120,
+      "dosage": "20 mg tablet",
+      "quantity": 36,
+      "image": "/uploads/1739264779511-a-packet-of-omeprazole-image-credit-siufaiho-2006.webp",
+      "category": "Gastrointestinal",
+      "__v": 2,
+      "likes": [],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab137f37262a070145da62",
+      "name": "Metformin",
+      "manufacturer": "Merck & Co.\t",
+      "expiryDate": "2025-06-02T00:00:00.000Z",
+      "price": 100,
+      "dosage": "500 mg tablet",
+      "quantity": 99,
+      "image": "/uploads/1739264895098-Metformin_500mg_Tablets.jpg",
+      "category": "Antidiabetic",
+      "__v": 1,
+      "likes": [
+        "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a"
+      ],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab13f537262a070145da6c",
+      "name": "Atorvastatin",
+      "manufacturer": "Pfizer",
+      "expiryDate": "2026-11-20T00:00:00.000Z",
+      "price": 250,
+      "dosage": "20 mg tablet",
+      "quantity": 87,
+      "image": "/uploads/1739265013708-images.jpeg",
+      "category": "Cardiovascular",
+      "__v": 1,
+      "medicineType": "Tablet",
+      "likes": [],
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab149937262a070145da74",
+      "name": "Ibuprofen",
+      "manufacturer": "Bayer AG",
+      "expiryDate": "2027-08-02T00:00:00.000Z",
+      "price": 80,
+      "dosage": "400 mg tablet",
+      "quantity": 38,
+      "image": "/uploads/1739265177660-360_F_320340368_3S52L7ICrOQTWmbaTbPtxzwtgJXttUrm.jpg",
+      "category": "Homeopathic",
+      "__v": 1,
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0,
+      "likes": []
+    },
+    {
+      "_id": "67ab154c37262a070145da7c",
+      "name": "Cetirizine",
+      "manufacturer": "GlaxoSmithKline (GSK)",
+      "expiryDate": "2025-05-20T00:00:00.000Z",
+      "price": 70,
+      "dosage": "10 mg tablet",
+      "quantity": 0,
+      "image": "/uploads/1739265356712-stock-photo-of-a-box-of-cetirizine-hydrochoride-antihistamine-tablets-H2NNCR.jpg",
+      "category": "Cardiovascular",
+      "__v": 2,
+      "likes": [],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab178737262a070145da87",
+      "name": "Losartan",
+      "manufacturer": "Merck & Co.",
+      "expiryDate": "2028-02-20T00:00:00.000Z",
+      "price": 180,
+      "dosage": "500 mg tablets",
+      "quantity": 0,
+      "image": "/uploads/1739265927528-images (1).jpeg",
+      "category": "Cardiovascular",
+      "__v": 2,
+      "likes": [],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67ab1b4637262a070145da8f",
+      "name": "Azithromycin",
+      "manufacturer": "Pfizer\t",
+      "expiryDate": "2026-10-20T00:00:00.000Z",
+      "price": 200,
+      "dosage": "250 mg tablet",
+      "quantity": 88,
+      "image": "/uploads/1739268160474-azithromycin-tablet-i-p-500mg.jpg",
+      "category": "Antibiotic",
+      "__v": 1,
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0,
+      "likes": []
+    },
+    {
+      "_id": "67ac568ea843a7af54cb7b8a",
+      "name": "Albuterol",
+      "manufacturer": "HerbalCare Pharma",
+      "expiryDate": "2029-03-02T00:00:00.000Z",
+      "price": 100,
+      "dosage": "500 mg capsule",
+      "quantity": 141,
+      "image": "/uploads/1739348012566-azithromycin-tablet-i-p-500mg.jpg",
+      "category": "Homeopathic",
+      "__v": 4,
+      "medicineType": "Capsule",
+      "likes": [
+        "3d405472-c221-413c-a920-b382e3f1ef10"
+      ],
+      "dosesPerUnit": 15,
+      "remainingDoses": 9
+    },
+    {
+      "_id": "67ac72f53e2d887428ea0523",
+      "name": "Bascupan",
+      "manufacturer": "GSK",
+      "expiryDate": "2027-02-12T00:00:00.000Z",
+      "price": 120,
+      "dosage": "500 mg tablets",
+      "quantity": 86,
+      "image": "/uploads/1739354869758-azithromycin-tablet-i-p-500mg.jpg",
+      "category": "Antibiotic",
+      "__v": 1,
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0,
+      "likes": []
+    },
+    {
+      "_id": "67ac7afc3e2d887428ea05ba",
+      "name": "Lyrica",
+      "manufacturer": "Codeine",
+      "expiryDate": "2027-03-12T00:00:00.000Z",
+      "price": 150,
+      "dosage": "500 mg tablets",
+      "quantity": 94,
+      "image": "/uploads/1739357278666-images (1).jpeg",
+      "category": "Analgesics",
+      "__v": 1,
+      "likes": [
+        "81e59a9b-cdcd-4b3f-864f-e44fc83f688e"
+      ],
+      "medicineType": "Tablet",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0
+    },
+    {
+      "_id": "67b31b75ba550c92d36441f4",
+      "name": "Panadol",
+      "manufacturer": "Codeine",
+      "expiryDate": "2029-09-16T00:00:00.000Z",
+      "price": 100,
+      "dosage": "500 mg tablets",
+      "quantity": 79,
+      "image": "/uploads/1740065001149-images.jpg",
+      "category": "Antidiabetic",
+      "medicineType": "Tablet",
+      "likes": [
+        "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a"
+      ],
+      "__v": 1,
+      "dosesPerUnit": 10,
+      "remainingDoses": 3
+    },
+    {
+      "_id": "67bdf7df4f5eb19874e6144e",
+      "name": "Aspirin",
+      "manufacturer": "Bayer ",
+      "expiryDate": "2028-06-26T00:00:00.000Z",
+      "price": 135,
+      "dosage": "300 to 650 mg orally every 4 to 6 hours as needed",
+      "quantity": 140,
+      "image": "/uploads/1740507354509-734-7347097_aspirin-png.png",
+      "category": "Allopathic ",
+      "medicineType": "Tablet",
+      "dosesPerUnit": 10,
+      "remainingDoses": 3,
+      "likes": [
+        "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a"
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67c020056290d62ba3860eb6",
+      "name": "Sharbat Faulad",
+      "manufacturer": "Qarshi",
+      "expiryDate": "2029-12-25T00:00:00.000Z",
+      "price": 215,
+      "dosage": "For Adults: 30ml (2 tablespoons) twice a day after meals.  For Children: 10ml (1 tablespoonful) twice a day after meals.",
+      "quantity": 97,
+      "image": "/uploads/1740644357864-Sharbat-Faulad-Web-Banner_6bf17f6a-6bfd-4dab-8ef1-be78b54ff592.webp",
+      "category": "Herbal",
+      "medicineType": "Syrup",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0,
+      "likes": [],
+      "__v": 0
+    },
+    {
+      "_id": "67c0c07cc0a12fa8751f5719",
+      "name": "Clobetasol",
+      "manufacturer": "NHS",
+      "expiryDate": "2027-12-20T00:00:00.000Z",
+      "price": 100,
+      "dosage": "Two times in a day ",
+      "quantity": 100,
+      "image": "/uploads/1740685436519-images.jpeg",
+      "category": "Analgesics",
+      "medicineType": "Capsule",
+      "dosesPerUnit": 12,
+      "remainingDoses": 0,
+      "likes": [],
+      "__v": 0
+    },
+    {
+      "_id": "67c0c44c6f496bbf9a51c8c7",
+      "name": "Brufen",
+      "manufacturer": "GSK",
+      "expiryDate": "2025-03-03T00:00:00.000Z",
+      "price": 120,
+      "dosage": "120Ml Suspension 100Mg/5Ml",
+      "quantity": 144,
+      "image": "/uploads/1740686412443-03872.jpg",
+      "category": "Herbal",
+      "medicineType": "Syrup",
+      "dosesPerUnit": 1,
+      "remainingDoses": 0,
+      "likes": [],
+      "__v": 0
+    }
+  ],
+  "orders": [
+    {
+      "_id": "67abae1ae074efb49e87d5ae",
+      "userId": "admin@example.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67ab11e437262a070145da46",
+          "name": "Tylenol Extra Strenght",
+          "manufacturer": "Johnson & Johnson",
+          "expiryDate": "2027-03-15T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 50,
+          "image": "/uploads/1739264484162-61QhYtxvnFL.jpg",
+          "category": "Analgesics",
+          "__v": 0,
+          "cartQuantity": 5,
+          "availableStock": 50
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 700,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-11T20:07:54.511Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac54b4a843a7af54cb7b52",
+      "userId": "admin@example.com",
+      "shippingEmail": "AqeelAh3076@gmail.com",
+      "billingEmail": "AqeelAh3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarah, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarah, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 0,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 278,
+          "cartQuantity": 1,
+          "availableStock": 278
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 300,
+      "location": null,
+      "status": "rejected",
+      "date": "2025-02-12T07:58:44.855Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac54cda843a7af54cb7b5c",
+      "userId": "admin@example.com",
+      "shippingEmail": "AqeelAh3076@gmail.com",
+      "billingEmail": "AqeelAh3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarah, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarah, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [],
+      "shippingFee": 200,
+      "orderTotal": 200,
+      "location": null,
+      "status": "rejected",
+      "date": "2025-02-12T07:59:09.940Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac5509a843a7af54cb7b6d",
+      "userId": "admin@example.com",
+      "shippingEmail": "lkfh@gmail.com",
+      "billingEmail": "lkfh@gmail.com",
+      "shippingAddress": {
+        "firstName": ";josdf",
+        "lastName": ";jsdf",
+        "streetAddress": "kushamarah",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": ";josdf",
+        "lastName": ";jsdf",
+        "streetAddress": "kushamarah",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67a7aa92408057c75ba7adcf",
+          "name": "Herbal Liver Detox",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2027-05-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "5 drops three times a day",
+          "quantity": 98,
+          "image": "/uploads/1739041426897-542888031-homeopathic1.png",
+          "__v": 0,
+          "category": "Herbal",
+          "cartQuantity": 4,
+          "availableStock": 98
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 600,
+      "location": null,
+      "status": "rejected",
+      "date": "2025-02-12T08:00:09.611Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac73b73e2d887428ea0547",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "Aqeel@gmail.com",
+      "billingEmail": "Aqeel@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarh, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushamarh, skardu",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 0,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 278,
+          "cartQuantity": 6,
+          "availableStock": 278
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 800,
+      "location": null,
+      "status": "accepted",
+      "date": "2025-02-12T10:11:03.632Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac747d3e2d887428ea056e",
+      "userId": "aliza123@gmail.com",
+      "shippingEmail": "Aqeel@gmail.com",
+      "billingEmail": "Aqeel@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 0,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 272,
+          "cartQuantity": 1,
+          "availableStock": 272
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 300,
+      "location": null,
+      "status": "accepted",
+      "date": "2025-02-12T10:14:21.866Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac79f53e2d887428ea0593",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "Aqeel@gmail.com",
+      "billingEmail": "Aqeel@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu, Baltistan",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu, Baltistan",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67a9b02d4a802d791641fe3b",
+          "name": "Echinacea",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2027-02-05T00:00:00.000Z",
+          "price": 250,
+          "dosage": "Take 1 capsule twice a day after meals",
+          "quantity": 87,
+          "image": "/uploads/1739173933605-919665885-611gJaHnBJL._AC_UF1000,1000_QL80_.jpg",
+          "category": "Herbal",
+          "__v": 0,
+          "cartQuantity": 5,
+          "availableStock": 87
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1450,
+      "location": null,
+      "status": "accepted",
+      "date": "2025-02-12T10:37:41.339Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67ac7b543e2d887428ea05d3",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeel@gmail.com",
+      "billingEmail": "aqeel@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel",
+        "lastName": "Ahmed",
+        "streetAddress": "Skardu",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ac7afc3e2d887428ea05ba",
+          "name": "Lyrica",
+          "manufacturer": "Codeine",
+          "expiryDate": "2027-03-12T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 100,
+          "image": "/uploads/1739356924804-images.jpeg",
+          "category": "Analgesics",
+          "__v": 0,
+          "cartQuantity": 6,
+          "availableStock": 100
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 800,
+      "location": null,
+      "status": "accepted",
+      "date": "2025-02-12T10:43:32.142Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67acb4413e2d887428ea06f8",
+      "userId": "muhammadabbas@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 0,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 271,
+          "cartQuantity": 5,
+          "availableStock": 271
+        },
+        {
+          "_id": "67a9b02d4a802d791641fe3b",
+          "name": "Echinacea",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2027-02-05T00:00:00.000Z",
+          "price": 250,
+          "dosage": "Take 1 capsule twice a day after meals",
+          "quantity": 82,
+          "image": "/uploads/1739173933605-919665885-611gJaHnBJL._AC_UF1000,1000_QL80_.jpg",
+          "category": "Herbal",
+          "__v": 0,
+          "cartQuantity": 5,
+          "availableStock": 82
+        },
+        {
+          "_id": "67ab130b37262a070145da58",
+          "name": "Omeprazole",
+          "manufacturer": "AstraZeneca",
+          "expiryDate": "2026-03-20T00:00:00.000Z",
+          "price": 120,
+          "dosage": "20 mg tablet",
+          "quantity": 49,
+          "image": "/uploads/1739264779511-a-packet-of-omeprazole-image-credit-siufaiho-2006.webp",
+          "category": "Gastrointestinal",
+          "__v": 0,
+          "cartQuantity": 5,
+          "availableStock": 49
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 2550,
+      "location": {
+        "latitude": 33.6222133,
+        "longitude": 73.059528
+      },
+      "status": "accepted",
+      "date": "2025-02-12T14:46:25.750Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67adc395787694cd5a405637",
+      "userId": "admin@example.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 3,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 266,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e"
+          ],
+          "liked": true,
+          "cartQuantity": 1,
+          "availableStock": 266
+        },
+        {
+          "likes": [],
+          "_id": "67ab11e437262a070145da46",
+          "name": "Tylenol Extra Strenght",
+          "manufacturer": "Johnson & Johnson",
+          "expiryDate": "2027-03-15T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 45,
+          "image": "/uploads/1739264484162-61QhYtxvnFL.jpg",
+          "category": "Analgesics",
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 45
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 400,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-13T10:04:05.880Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67adce217c93329cfa9a33ae",
+      "userId": "admin@mediapp.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 3,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 265,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e"
+          ],
+          "liked": true,
+          "cartQuantity": 1,
+          "availableStock": 265
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 300,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-13T10:49:05.476Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67adce427c93329cfa9a33b2",
+      "userId": "admin@mediapp.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [],
+      "shippingFee": 200,
+      "orderTotal": 200,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-13T10:49:38.512Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67adce507c93329cfa9a33b6",
+      "userId": "admin@mediapp.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [],
+      "shippingFee": 200,
+      "orderTotal": 200,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-13T10:49:52.104Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67adcf587c93329cfa9a33d5",
+      "userId": "admin@mediapp.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab11e437262a070145da46",
+          "name": "Tylenol Extra Strenght",
+          "manufacturer": "Johnson & Johnson",
+          "expiryDate": "2027-03-15T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 44,
+          "image": "/uploads/1739264484162-61QhYtxvnFL.jpg",
+          "category": "Analgesics",
+          "__v": 1,
+          "likes": [],
+          "liked": false,
+          "cartQuantity": 10,
+          "availableStock": 44
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1200,
+      "location": {
+        "latitude": 33.6222133,
+        "longitude": 73.059528
+      },
+      "status": "accepted",
+      "date": "2025-02-13T10:54:16.897Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b22ee9a0530e21d78c10fe",
+      "userId": "aqee@gmail.com",
+      "shippingEmail": "aqee@gmail.com",
+      "billingEmail": "aqee@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 5,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 250,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c"
+          ],
+          "liked": true,
+          "cartQuantity": 1,
+          "availableStock": 250
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 300,
+      "location": {
+        "latitude": 33.6222651,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "date": "2025-02-16T18:31:05.065Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b22fa1a0530e21d78c1133",
+      "userId": "aqee@gmail.com",
+      "shippingEmail": "aqee@gmail.com",
+      "billingEmail": "aqee@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "likes": [],
+          "_id": "67a9b02d4a802d791641fe3b",
+          "name": "Echinacea",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2027-02-05T00:00:00.000Z",
+          "price": 250,
+          "dosage": "Take 1 capsule twice a day after meals",
+          "quantity": 80,
+          "image": "/uploads/1739173933605-919665885-611gJaHnBJL._AC_UF1000,1000_QL80_.jpg",
+          "category": "Herbal",
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 80
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 450,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "date": "2025-02-16T18:34:09.503Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b231aea0530e21d78c114b",
+      "userId": "testuser@gmail.com",
+      "shippingEmail": "testuser@gmail.com",
+      "billingEmail": "testuser@gmail.com",
+      "shippingAddress": {
+        "firstName": "Test",
+        "lastName": "User",
+        "streetAddress": "City ABC",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Test",
+        "lastName": "User",
+        "streetAddress": "City ABC",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 6,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 249,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f"
+          ],
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 249
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 300,
+      "location": {
+        "latitude": 33.6217933,
+        "longitude": 73.0613726
+      },
+      "status": "accepted",
+      "date": "2025-02-16T18:42:54.389Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b2349aa0530e21d78c1178",
+      "userId": "testuser2@gmail.com",
+      "shippingEmail": "testuser2@gmail.com",
+      "billingEmail": "testuser2@gmail.com",
+      "shippingAddress": {
+        "firstName": "Test ",
+        "lastName": "User2",
+        "streetAddress": "City ABC",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Test ",
+        "lastName": "User2",
+        "streetAddress": "City ABC",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 6,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 249,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f"
+          ],
+          "liked": true,
+          "cartQuantity": 9,
+          "availableStock": 249
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1100,
+      "location": {
+        "latitude": 33.6217933,
+        "longitude": 73.0613726
+      },
+      "status": "accepted",
+      "date": "2025-02-16T18:55:22.124Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b72d9dbe2330536723f7bd",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "jakshigri@gmail.com",
+      "billingEmail": "jakshigri@gmail.com",
+      "shippingAddress": {
+        "firstName": "Jak",
+        "lastName": "Shigri",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Jak",
+        "lastName": "Shigri",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67ac568ea843a7af54cb7b8a",
+          "name": "Albuterol",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2029-03-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg capsule",
+          "quantity": 187,
+          "image": "/uploads/1739348012566-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Homeopathic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "likes": [],
+          "dosesPerUnit": 15,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 7,
+          "availableStock": 187
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 900,
+      "location": {
+        "latitude": 33.6221912,
+        "longitude": 73.0604709
+      },
+      "status": "accepted",
+      "date": "2025-02-20T13:26:53.205Z",
+      "statusUpdateHistory": [],
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b7314bf4e0ca2207a0ced5",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "jakshigri@gmail.com",
+      "billingEmail": "jakshigri@gmail.com",
+      "shippingAddress": {
+        "firstName": "Jak",
+        "lastName": "Shigri ",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Jak",
+        "lastName": "Shigri ",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ac568ea843a7af54cb7b8a",
+          "name": "Albuterol",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2029-03-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg capsule",
+          "quantity": 180,
+          "image": "/uploads/1739348012566-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Homeopathic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "likes": [],
+          "dosesPerUnit": 15,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 5,
+          "availableStock": 180
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 700,
+      "location": {
+        "latitude": 33.6221909,
+        "longitude": 73.060465
+      },
+      "status": "accepted",
+      "date": "2025-02-20T13:42:35.869Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b7379a7cb3047f51a552fe",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "jakshigri@gmail.com",
+      "billingEmail": "jakshigri@gmail.com",
+      "shippingAddress": {
+        "firstName": "Jak",
+        "lastName": "Ali",
+        "streetAddress": "Shigar ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Jak",
+        "lastName": "Ali",
+        "streetAddress": "Shigar ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67ac568ea843a7af54cb7b8a",
+          "name": "Albuterol",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2029-03-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg capsule",
+          "quantity": 175,
+          "image": "/uploads/1739348012566-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Homeopathic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "likes": [],
+          "dosesPerUnit": 15,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 8,
+          "availableStock": 175
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1000,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "date": "2025-02-20T14:09:30.930Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b737d67cb3047f51a5531d",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "jakshigri@gmail.com",
+      "billingEmail": "jakshigri@gmail.com",
+      "shippingAddress": {
+        "firstName": "Jak",
+        "lastName": "Ali",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Jak",
+        "lastName": "Ali",
+        "streetAddress": "Shigar Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ac568ea843a7af54cb7b8a",
+          "name": "Albuterol",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2029-03-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg capsule",
+          "quantity": 175,
+          "image": "/uploads/1739348012566-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Homeopathic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "likes": [],
+          "dosesPerUnit": 15,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 11,
+          "availableStock": 175
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1300,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "date": "2025-02-20T14:10:30.489Z",
+      "__v": 0,
+      "paymentStatus": "unpaid",
+      "transactionId": null
+    },
+    {
+      "_id": "67b73c1dc97fb2ebca42f023",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeee ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "billingAddress": {
+        "firstName": "Aqeee ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab12a637262a070145da50",
+          "name": "Amoxicillin",
+          "manufacturer": "Pfizer\t",
+          "expiryDate": "2025-12-20T00:00:00.000Z",
+          "price": 150,
+          "dosage": "500 mg capsule",
+          "quantity": 96,
+          "image": "/uploads/1739264678710-amoxicillin-500mg-capsules-please-note-you-are-purchasing-a-photograph-EJPWHE.jpg",
+          "category": "Antibiotic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "dosesPerUnit": 10,
+          "likes": [],
+          "remainingDoses": 2,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 96
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 450,
+      "location": {
+        "latitude": 33.6222133,
+        "longitude": 73.059528
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T14:28:45.323Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T14:35:30.771Z",
+          "_id": "67b73db252c686f9539fd3d5"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b74004da21b8aded38900f",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "likes": [],
+          "_id": "67ac72f53e2d887428ea0523",
+          "name": "Bascupan",
+          "manufacturer": "GSK",
+          "expiryDate": "2027-02-12T00:00:00.000Z",
+          "price": 120,
+          "dosage": "500 mg tablets",
+          "quantity": 100,
+          "image": "/uploads/1739354869758-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Antibiotic",
+          "__v": 0,
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 4,
+          "availableStock": 100
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 780,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T14:45:24.371Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T14:50:39.226Z",
+          "_id": "67b7413ff5324489edba138d"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b7417df5324489edba13a7",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03123456789"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab1b4637262a070145da8f",
+          "name": "Azithromycin",
+          "manufacturer": "Pfizer\t",
+          "expiryDate": "2026-10-20T00:00:00.000Z",
+          "price": 200,
+          "dosage": "250 mg tablet",
+          "quantity": 99,
+          "image": "/uploads/1739268160474-azithromycin-tablet-i-p-500mg.jpg",
+          "category": "Antibiotic",
+          "__v": 1,
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "likes": [],
+          "liked": false,
+          "cartQuantity": 6,
+          "availableStock": 99
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1500,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T14:51:41.513Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T15:01:43.558Z",
+          "_id": "67b743d7f5f2952649e1aa6c"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b742f2f5324489edba140a",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "shippingMethod": 1,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2025-03-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 7,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 100,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f",
+            "76664f21-ccac-49fc-8af9-0e34478eabf8"
+          ],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": true,
+          "cartQuantity": 10,
+          "availableStock": 100
+        }
+      ],
+      "shippingFee": 200,
+      "orderTotal": 1200,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T14:57:54.126Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T14:59:11.323Z",
+          "_id": "67b7433ff5324489edba141c"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b74424f5f2952649e1aa98",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2025-03-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 7,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 90,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f",
+            "76664f21-ccac-49fc-8af9-0e34478eabf8"
+          ],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": true,
+          "cartQuantity": 11,
+          "availableStock": 90
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1400,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T15:03:00.711Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T15:05:10.836Z",
+          "_id": "67b744a61c0709fb40acc20c"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b744e01c0709fb40acc228",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2025-03-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 7,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 79,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f",
+            "76664f21-ccac-49fc-8af9-0e34478eabf8"
+          ],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": true,
+          "cartQuantity": 7,
+          "availableStock": 79
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1000,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T15:06:08.795Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T15:09:31.739Z",
+          "_id": "67b745ab1c0709fb40acc26d"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b7455b1c0709fb40acc249",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03129900181"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67a7aa92408057c75ba7adcf",
+          "name": "Herbal Liver Detox",
+          "manufacturer": "HerbalCare Pharma",
+          "expiryDate": "2027-05-02T00:00:00.000Z",
+          "price": 100,
+          "dosage": "5 drops three times a day",
+          "quantity": 97,
+          "image": "/uploads/1739041426897-542888031-homeopathic1.png",
+          "__v": 2,
+          "category": "Herbal",
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10"
+          ],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": true,
+          "cartQuantity": 6,
+          "availableStock": 97
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 900,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "paid",
+      "date": "2025-02-20T15:08:11.606Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T15:09:28.490Z",
+          "_id": "67b745a81c0709fb40acc267"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b7676bbd935291854e9181",
+      "userId": "aliza123@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67a79a3d24931a07e9ae8983",
+          "name": "ginger root",
+          "price": 100,
+          "dosage": "5 drops three times a day",
+          "quantity": 99,
+          "image": "/uploads/1739037245076-875976358-herbal1.png",
+          "__v": 7,
+          "expiryDate": "2026-02-02T00:00:00.000Z",
+          "manufacturer": "Glentham Life Sciences",
+          "category": "Homeopathic",
+          "likes": [
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "76664f21-ccac-49fc-8af9-0e34478eabf8"
+          ],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": true,
+          "cartQuantity": 10,
+          "availableStock": 99
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1300,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T17:33:31.333Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T18:14:21.713Z",
+          "_id": "67b770fdbd935291854e923d"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b76a51bd935291854e91b9",
+      "userId": "aliza123@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Ahmed ",
+        "lastName": "Aqeel ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Ahmed ",
+        "lastName": "Aqeel ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab12a637262a070145da50",
+          "name": "Amoxicillin",
+          "manufacturer": "Pfizer\t",
+          "expiryDate": "2025-12-20T00:00:00.000Z",
+          "price": 150,
+          "dosage": "500 mg capsule",
+          "quantity": 95,
+          "image": "/uploads/1739264678710-amoxicillin-500mg-capsules-please-note-you-are-purchasing-a-photograph-EJPWHE.jpg",
+          "category": "Antibiotic",
+          "__v": 1,
+          "medicineType": "Capsule",
+          "dosesPerUnit": 10,
+          "likes": [],
+          "remainingDoses": 2,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 95
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 450,
+      "location": {
+        "latitude": 33.6223134,
+        "longitude": 73.0602626
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T17:45:53.314Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T18:14:18.536Z",
+          "_id": "67b770fabd935291854e9237"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67b76c94bd935291854e91e1",
+      "userId": "aliza123@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67b31b75ba550c92d36441f4",
+          "name": "Panadol",
+          "manufacturer": "Codeine",
+          "expiryDate": "2029-09-16T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 95,
+          "image": "/uploads/1740065001149-images.jpg",
+          "category": "Antidiabetic",
+          "medicineType": "Syrup",
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a"
+          ],
+          "__v": 1,
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 10,
+          "availableStock": 95
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1300,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-20T17:55:32.341Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-20T18:14:15.863Z",
+          "_id": "67b770f7bd935291854e9231"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67be02db4f5eb19874e61731",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67bdf7df4f5eb19874e6144e",
+          "name": "Aspirin",
+          "manufacturer": "Bayer ",
+          "expiryDate": "2028-06-26T00:00:00.000Z",
+          "price": 135,
+          "dosage": "300 to 650 mg orally every 4 to 6 hours as needed",
+          "quantity": 150,
+          "image": "/uploads/1740503007560-Aspirin-coated-325mg-100.avif",
+          "category": "Allopathic ",
+          "medicineType": "Tablet",
+          "dosesPerUnit": 10,
+          "remainingDoses": 3,
+          "likes": [],
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 10,
+          "availableStock": 150
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1650,
+      "location": {
+        "latitude": 33.6229155,
+        "longitude": 73.0621105
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-25T17:50:19.940Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-25T17:51:02.983Z",
+          "_id": "67be03064f5eb19874e6174e"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67be03c44f5eb19874e617ca",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab154c37262a070145da7c",
+          "name": "Cetirizine",
+          "manufacturer": "GlaxoSmithKline (GSK)",
+          "expiryDate": "2025-05-20T00:00:00.000Z",
+          "price": 70,
+          "dosage": "10 mg tablet",
+          "quantity": 4,
+          "image": "/uploads/1739265356712-stock-photo-of-a-box-of-cetirizine-hydrochoride-antihistamine-tablets-H2NNCR.jpg",
+          "category": "Cardiovascular",
+          "__v": 2,
+          "likes": [],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 4,
+          "availableStock": 4
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 580,
+      "location": {
+        "latitude": 33.6229155,
+        "longitude": 73.0621105
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-25T17:54:12.067Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-25T17:56:06.677Z",
+          "_id": "67be04364f5eb19874e61838"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67be058b4f5eb19874e61945",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "aqee201@hotmail.com",
+        "phoneNumber": "03129900181"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "aqee201@hotmail.com",
+        "phoneNumber": "03129900181"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67ab130b37262a070145da58",
+          "name": "Omeprazole",
+          "manufacturer": "AstraZeneca",
+          "expiryDate": "2026-03-20T00:00:00.000Z",
+          "price": 120,
+          "dosage": "20 mg tablet",
+          "quantity": 44,
+          "image": "/uploads/1739264779511-a-packet-of-omeprazole-image-credit-siufaiho-2006.webp",
+          "category": "Gastrointestinal",
+          "__v": 2,
+          "likes": [],
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 8,
+          "availableStock": 44
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1260,
+      "location": {
+        "latitude": 33.627306276338125,
+        "longitude": 73.06208308786154
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-25T18:01:47.876Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-25T18:03:14.463Z",
+          "_id": "67be05e24f5eb19874e6198c"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67be07634f5eb19874e61a5f",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "likes": [],
+          "_id": "67ab149937262a070145da74",
+          "name": "Ibuprofen",
+          "manufacturer": "Bayer AG",
+          "expiryDate": "2027-08-02T00:00:00.000Z",
+          "price": 80,
+          "dosage": "400 mg tablet",
+          "quantity": 43,
+          "image": "/uploads/1739265177660-360_F_320340368_3S52L7ICrOQTWmbaTbPtxzwtgJXttUrm.jpg",
+          "category": "Homeopathic",
+          "__v": 0,
+          "medicineType": "Tablet",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "liked": false,
+          "cartQuantity": 5,
+          "availableStock": 43
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 700,
+      "location": {
+        "latitude": 33.6229155,
+        "longitude": 73.0621105
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-25T18:09:39.170Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-25T18:11:19.911Z",
+          "_id": "67be07c74f5eb19874e61aaf"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67c0c1c3c0a12fa8751f5739",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "COD",
+      "cartItems": [
+        {
+          "_id": "67b31b75ba550c92d36441f4",
+          "name": "Panadol",
+          "manufacturer": "Codeine",
+          "expiryDate": "2029-09-16T00:00:00.000Z",
+          "price": 100,
+          "dosage": "500 mg tablets",
+          "quantity": 84,
+          "image": "/uploads/1740065001149-images.jpg",
+          "category": "Antidiabetic",
+          "medicineType": "Tablet",
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a"
+          ],
+          "__v": 1,
+          "dosesPerUnit": 10,
+          "remainingDoses": 3,
+          "liked": false,
+          "cartQuantity": 5,
+          "availableStock": 84
+        },
+        {
+          "_id": "67c0c07cc0a12fa8751f5719",
+          "name": "Clobetasol",
+          "manufacturer": "NHS",
+          "expiryDate": "2027-12-20T00:00:00.000Z",
+          "price": -100,
+          "dosage": "Two times in a day ",
+          "quantity": -100,
+          "image": "/uploads/1740685436519-images.jpeg",
+          "category": "Analgesics",
+          "medicineType": "Capsule",
+          "dosesPerUnit": 12,
+          "remainingDoses": 0,
+          "likes": [],
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": -100
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 700,
+      "location": {
+        "latitude": 33.6219256,
+        "longitude": 73.0598969
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-27T19:49:23.014Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-27T19:49:41.332Z",
+          "_id": "67c0c1d5c0a12fa8751f5750"
+        }
+      ],
+      "__v": 1
+    },
+    {
+      "_id": "67c0c5506f496bbf9a51c97e",
+      "userId": "jakshigri@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Baltisan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "67c0c44c6f496bbf9a51c8c7",
+          "name": "Brufen",
+          "manufacturer": "GSK",
+          "expiryDate": "2025-03-03T00:00:00.000Z",
+          "price": 120,
+          "dosage": "120Ml Suspension 100Mg/5Ml",
+          "quantity": 150,
+          "image": "/uploads/1740686412443-03872.jpg",
+          "category": "Herbal",
+          "medicineType": "Syrup",
+          "dosesPerUnit": 1,
+          "remainingDoses": 0,
+          "likes": [],
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 6,
+          "availableStock": 150
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 1020,
+      "location": {
+        "latitude": 33.6223169,
+        "longitude": 73.0602659
+      },
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-02-27T20:04:32.252Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-02-27T20:06:06.148Z",
+          "_id": "67c0c5ae6f496bbf9a51ca23"
+        }
+      ],
+      "__v": 1
+    }
+  ],
+  "carts": [
+    {
+      "_id": "67a7b82ef3ea84808f8a9079",
+      "userId": "67a725ac6b6f0ea9fca24850",
+      "cart": [],
+      "__v": 187
+    },
+    {
+      "_id": "67a7b9c9f3ea84808f8a9088",
+      "userId": "67a724bc6b6f0ea9fca2483d",
+      "cart": [],
+      "__v": 187
+    },
+    {
+      "_id": "67a7c557b39e21fa297c6a69",
+      "userId": "67a752b81c5ce73b2b2855bb",
+      "cart": [],
+      "__v": 62
+    },
+    {
+      "_id": "67aa15bbd2e2e13926c4e966",
+      "userId": "67aa138e4e1d8f77833c9034",
+      "cart": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 0,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 295,
+          "cartQuantity": 5,
+          "availableStock": 295
+        }
+      ],
+      "__v": 6
+    },
+    {
+      "_id": "67ab2163b6ec142cfd882ad5",
+      "userId": "67ab2119d1f5a8f0c369f120",
+      "cart": [],
+      "__v": 48
+    },
+    {
+      "_id": "67ab226ab6ec142cfd882b01",
+      "userId": "67ab0cced1f5a8f0c369f060",
+      "cart": [],
+      "__v": 3
+    },
+    {
+      "_id": "67ab86b3f8cc95a701778d0d",
+      "userId": "67a753a31c5ce73b2b2855d3",
+      "cart": [],
+      "__v": 12
+    },
+    {
+      "_id": "67adcdf97c93329cfa9a33aa",
+      "userId": "67adc84a7c93329cfa9a335d",
+      "cart": [],
+      "__v": 10
+    },
+    {
+      "_id": "67b22e88a0530e21d78c10f8",
+      "userId": "67b22dee50f64aabc2fe404e",
+      "cart": [
+        {
+          "_id": "6725ea34fd36a52281856a87",
+          "name": "paracetamol",
+          "manufacturer": "gsk",
+          "expiryDate": "2026-08-10T00:00:00.000Z",
+          "dosage": "Take 1 capsule twice a day after meals",
+          "price": 100,
+          "category": "Homeopathic",
+          "__v": 6,
+          "image": "/uploads/1739040740397-109190218-banner4.jpg",
+          "quantity": 249,
+          "likes": [
+            "3cdac7fc-1df8-4611-aa89-6eb6858e8a8a",
+            "3d405472-c221-413c-a920-b382e3f1ef10",
+            "81e59a9b-cdcd-4b3f-864f-e44fc83f688e",
+            "3b9671ef-e826-4726-a23b-acd6120d57b4",
+            "cdb7e0ba-cf72-4506-8cac-d1109a6bad3c",
+            "dcaaf414-2769-4863-905a-297375c6830f"
+          ],
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 249
+        }
+      ],
+      "__v": 6
+    },
+    {
+      "_id": "67b23466a0530e21d78c115c",
+      "userId": "67b2314f50f64aabc2fe4056",
+      "cart": [],
+      "__v": 12
+    }
+  ],
+  "inPersonSales": [
+    {
+      "_id": "67b7162adf37237cb871b3eb",
+      "medicineId": "67ab154c37262a070145da7c",
+      "medicineName": "Cetirizine",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 70,
+      "saleDate": "2025-02-20T11:46:50.435Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7169bdf37237cb871b3fa",
+      "medicineId": "67ab13f537262a070145da6c",
+      "medicineName": "Atorvastatin",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 250,
+      "saleDate": "2025-02-20T11:48:43.957Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7169bdf37237cb871b3fb",
+      "medicineId": "67ab1b4637262a070145da8f",
+      "medicineName": "Azithromycin",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 200,
+      "saleDate": "2025-02-20T11:48:43.958Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71859df37237cb871b427",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 6,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 40,
+      "saleDate": "2025-02-20T11:56:09.995Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71891df37237cb871b434",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 3,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 300,
+      "saleDate": "2025-02-20T11:57:05.522Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b718aadf37237cb871b441",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 4,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 26.666666666666668,
+      "saleDate": "2025-02-20T11:57:30.846Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b718cbdf37237cb871b451",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 2,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 13.333333333333334,
+      "saleDate": "2025-02-20T11:58:03.796Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b718dddf37237cb871b45a",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 3,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 20,
+      "saleDate": "2025-02-20T11:58:21.257Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71905df37237cb871b46a",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 10,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 66.66666666666667,
+      "saleDate": "2025-02-20T11:59:01.419Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71918df37237cb871b473",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 4,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 26.666666666666668,
+      "saleDate": "2025-02-20T11:59:20.969Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71acfdf37237cb871b48d",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 5,
+      "unitType": "Dose",
+      "customerName": "Ali",
+      "customerContact": "03123456789",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 33.333333333333336,
+      "saleDate": "2025-02-20T12:06:39.268Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71b11df37237cb871b49a",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 5,
+      "unitType": "Dose",
+      "customerName": "Shakeel",
+      "customerContact": "03123456789",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 33.333333333333336,
+      "saleDate": "2025-02-20T12:07:45.394Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71b66df37237cb871b4a0",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 5,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 33.333333333333336,
+      "saleDate": "2025-02-20T12:09:10.965Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71c5ddf37237cb871b4ac",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 3,
+      "unitType": "Full",
+      "customerName": "Shakeel",
+      "customerContact": "03123456789",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 300,
+      "saleDate": "2025-02-20T12:13:17.082Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71c8edf37237cb871b4b8",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "Ali",
+      "customerContact": "03123456789",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 100,
+      "saleDate": "2025-02-20T12:14:06.526Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71daadf37237cb871b4cd",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 2,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 200,
+      "saleDate": "2025-02-20T12:18:50.103Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b71dbcdf37237cb871b4d3",
+      "medicineId": "67a79a3d24931a07e9ae8983",
+      "medicineName": "ginger root",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "ali",
+      "customerContact": "03123456789",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 100,
+      "saleDate": "2025-02-20T12:19:08.233Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b745ec1c0709fb40acc294",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 6,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 40,
+      "saleDate": "2025-02-20T15:10:36.570Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b746a81c0709fb40acc2c8",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 3,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 20,
+      "saleDate": "2025-02-20T15:13:44.060Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b747d61c0709fb40acc2d3",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 10,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 1000,
+      "saleDate": "2025-02-20T15:18:46.937Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b748a31c0709fb40acc321",
+      "medicineId": "6725ea34fd36a52281856a87",
+      "medicineName": "paracetamol",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 100,
+      "saleDate": "2025-02-20T15:22:11.859Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7713abd935291854e9265",
+      "medicineId": "67b31b75ba550c92d36441f4",
+      "medicineName": "Panadol",
+      "quantitySold": 3,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 30,
+      "saleDate": "2025-02-20T18:15:22.453Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bdbd2c0e9ec788ec9a5d54",
+      "medicineId": "67ab178737262a070145da87",
+      "medicineName": "Losartan",
+      "quantitySold": 3,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 540,
+      "saleDate": "2025-02-25T12:53:00.558Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bddf97fb38dc251a077f3a",
+      "medicineId": "67ac568ea843a7af54cb7b8a",
+      "medicineName": "Albuterol",
+      "quantitySold": 5,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 500,
+      "saleDate": "2025-02-25T15:19:51.631Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bddf97fb38dc251a077f3b",
+      "medicineId": "67ab12a637262a070145da50",
+      "medicineName": "Amoxicillin",
+      "quantitySold": 5,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 750,
+      "saleDate": "2025-02-25T15:19:51.635Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bdf4324f5eb19874e61317",
+      "medicineId": "67ab178737262a070145da87",
+      "medicineName": "Losartan",
+      "quantitySold": 14,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 2520,
+      "saleDate": "2025-02-25T16:47:46.053Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bdf8514f5eb19874e6145d",
+      "medicineId": "67bdf7df4f5eb19874e6144e",
+      "medicineName": "Aspirin",
+      "quantitySold": 3,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 40.5,
+      "saleDate": "2025-02-25T17:05:21.751Z",
+      "__v": 0
+    },
+    {
+      "_id": "67bdf8944f5eb19874e61467",
+      "medicineId": "67ab13f537262a070145da6c",
+      "medicineName": "Atorvastatin",
+      "quantitySold": 1,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 250,
+      "saleDate": "2025-02-25T17:06:28.842Z",
+      "__v": 0
+    },
+    {
+      "_id": "67be07f94f5eb19874e61af2",
+      "medicineId": "67b31b75ba550c92d36441f4",
+      "medicineName": "Panadol",
+      "quantitySold": 10,
+      "unitType": "Dose",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 100,
+      "saleDate": "2025-02-25T18:12:09.595Z",
+      "__v": 0
+    },
+    {
+      "_id": "67c020286290d62ba3860ec4",
+      "medicineId": "67c020056290d62ba3860eb6",
+      "medicineName": "Sharbat Faulad",
+      "quantitySold": 3,
+      "unitType": "Bottle",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 645,
+      "saleDate": "2025-02-27T08:19:52.238Z",
+      "__v": 0
+    },
+    {
+      "_id": "67c0bb4bc0a12fa8751f5676",
+      "medicineId": "67ac72f53e2d887428ea0523",
+      "medicineName": "Bascupan",
+      "quantitySold": 4,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "3b9671ef-e826-4726-a23b-acd6120d57b4",
+      "totalAmount": 480,
+      "saleDate": "2025-02-27T19:21:47.330Z",
+      "__v": 0
+    }
+  ],
+  "transactions": [
+    {
+      "_id": "67a718902b26025707dc0767",
+      "walletNumber": "1000",
+      "walletName": "lsdhfsd;o",
+      "transactionID": "9328623",
+      "depositAmount": 10000,
+      "status": "Accepted",
+      "createdAt": "2025-02-08T08:40:48.198Z",
+      "__v": 0
+    },
+    {
+      "_id": "67a7193b2b26025707dc07d0",
+      "walletNumber": "94",
+      "walletName": "GH",
+      "transactionID": "H81",
+      "depositAmount": 500,
+      "status": "Accepted",
+      "createdAt": "2025-02-08T08:43:39.410Z",
+      "__v": 0
+    },
+    {
+      "_id": "67a75787565f8c12c70f7171",
+      "walletNumber": "049",
+      "walletName": "Hajid",
+      "transactionID": "6827381",
+      "depositAmount": 500,
+      "status": "Accepted",
+      "createdAt": "2025-02-08T13:09:27.547Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ab3270e17f0c5f89a3636a",
+      "walletNumber": "03129900181",
+      "walletName": "shakeel ahmad",
+      "transactionID": "71102354954",
+      "depositAmount": 570,
+      "status": "Accepted",
+      "createdAt": "2025-02-11T11:20:16.537Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ab3697e17f0c5f89a365a7",
+      "walletNumber": "03499535156",
+      "walletName": "shakeel ahmed",
+      "transactionID": "7110325698156",
+      "depositAmount": 570,
+      "status": "Accepted",
+      "createdAt": "2025-02-11T11:37:59.263Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ab872ee17f0c5f89a36973",
+      "walletNumber": "8949",
+      "walletName": "Hahah",
+      "transactionID": "Usuaua",
+      "depositAmount": 800,
+      "status": "Accepted",
+      "createdAt": "2025-02-11T17:21:50.079Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ab8cbd70a3eda537443f43",
+      "userId": "imranmarghoob@gmail.com",
+      "walletNumber": "6464",
+      "walletName": "Gshs",
+      "transactionID": "Hshsh",
+      "depositAmount": 800,
+      "status": "Accepted",
+      "createdAt": "2025-02-11T17:45:33.653Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ab91cb953cf879c4733719",
+      "userId": "admin@example.com",
+      "walletNumber": "03495",
+      "walletName": "iolsdhf",
+      "transactionID": "ldshf",
+      "depositAmount": 700,
+      "status": "Rejected",
+      "createdAt": "2025-02-11T18:07:07.647Z",
+      "__v": 0
+    },
+    {
+      "_id": "67aba697521d9a7bf59508d1",
+      "userId": "admin@example.com",
+      "walletNumber": "979",
+      "walletName": "BBb",
+      "transactionID": "Baba",
+      "depositAmount": 700,
+      "status": "Accepted",
+      "createdAt": "2025-02-11T19:35:51.536Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ac71f556e8c24c2751be72",
+      "userId": "admin@example.com",
+      "walletNumber": "03495535156",
+      "walletName": "shakeel ahmed",
+      "transactionID": "64023913478",
+      "depositAmount": 600,
+      "status": "Accepted",
+      "createdAt": "2025-02-12T10:03:33.752Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ac74d256e8c24c2751beb1",
+      "userId": "aliza123@gmail.com",
+      "walletNumber": "0312345678",
+      "walletName": "user123",
+      "transactionID": "789846316872",
+      "depositAmount": 300,
+      "status": "Accepted",
+      "createdAt": "2025-02-12T10:15:46.006Z",
+      "__v": 0
+    },
+    {
+      "_id": "67ac7bb456e8c24c2751bf60",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "0312345678",
+      "walletName": "test123",
+      "transactionID": "45632156876531",
+      "depositAmount": 800,
+      "status": "Accepted",
+      "createdAt": "2025-02-12T10:45:08.396Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b2306b52f9aef489a60fb8",
+      "userId": "aqee@gmail.com",
+      "walletNumber": "03123456789",
+      "walletName": "User1",
+      "transactionID": "7136193691623",
+      "depositAmount": 450,
+      "status": "Accepted",
+      "createdAt": "2025-02-16T18:37:31.390Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7315cbe2af83182bbadf8",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "015",
+      "walletName": "Baja",
+      "transactionID": "Uwiww",
+      "depositAmount": 700,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T13:42:52.347Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b737ea7cb3047f51a55321",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "6466434",
+      "walletName": "Hahah",
+      "transactionID": "Hahauiww",
+      "depositAmount": 1300,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T14:10:50.256Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b73c32c97fb2ebca42f02a",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "646",
+      "walletName": "Hhaja",
+      "transactionID": "Hshs",
+      "depositAmount": 450,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T14:29:06.176Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b74018da21b8aded389018",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "64664",
+      "walletName": "Babb",
+      "transactionID": "Hhsha",
+      "depositAmount": 780,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T14:45:44.797Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7418ff5324489edba13ab",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "6464",
+      "walletName": "Babba",
+      "transactionID": "Hhaha",
+      "depositAmount": 1500,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T14:51:59.128Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b744911c0709fb40acc1f5",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "6464",
+      "walletName": "Baba",
+      "transactionID": "Baba",
+      "depositAmount": 1400,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T15:04:49.002Z",
+      "__v": 0
+    },
+    {
+      "_id": "67b7457b1c0709fb40acc24d",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "03129900181",
+      "walletName": "Hahahiw",
+      "transactionID": "Hahusuwuw",
+      "depositAmount": 900,
+      "status": "Accepted",
+      "createdAt": "2025-02-20T15:08:43.046Z",
+      "__v": 0
+    },
+    {
+      "_id": "67be03f84f5eb19874e617ee",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "03499535156",
+      "walletName": "shakeel03129900181@gmail.com",
+      "transactionID": "Ghajajay62772",
+      "depositAmount": 580,
+      "status": "Accepted",
+      "createdAt": "2025-02-25T17:55:04.504Z",
+      "__v": 0
+    },
+    {
+      "_id": "67be05b34f5eb19874e61949",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "03129900181",
+      "walletName": "aqeelah633@gmail.com",
+      "transactionID": "6817268273722",
+      "depositAmount": 1260,
+      "status": "Accepted",
+      "createdAt": "2025-02-25T18:02:27.362Z",
+      "__v": 0
+    },
+    {
+      "_id": "67be07894f5eb19874e61a64",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "03129900181",
+      "walletName": "Shakeel Ahmed ",
+      "transactionID": "628361738272",
+      "depositAmount": 700,
+      "status": "Accepted",
+      "createdAt": "2025-02-25T18:10:17.984Z",
+      "__v": 0
+    },
+    {
+      "_id": "67c0c5766f496bbf9a51c983",
+      "userId": "jakshigri@gmail.com",
+      "walletNumber": "0312346789",
+      "walletName": "Ali Ahmed ",
+      "transactionID": "871737183628",
+      "depositAmount": 1020,
+      "status": "Accepted",
+      "createdAt": "2025-02-27T20:05:10.822Z",
+      "__v": 0
+    }
+  ],
+  "categories": [
+    {
+      "_id": "67174a61c7e56e2de511921f",
+      "name": "Homeopathic",
+      "__v": 0
+    },
+    {
+      "_id": "67174a79c7e56e2de5119221",
+      "name": "Allopathic ",
+      "__v": 0
+    },
+    {
+      "_id": "67237c24df57ed82e6b9e6cb",
+      "name": "Analgesics",
+      "__v": 0
+    },
+    {
+      "_id": "677d664236f7972ff3613d84",
+      "name": "Herbal",
+      "__v": 0
+    },
+    {
+      "_id": "67a9d2294cf8f3c7a109d9f6",
+      "name": "Vaccines",
+      "__v": 0
+    },
+    {
+      "_id": "67ab12a637262a070145da4d",
+      "name": "Antibiotic",
+      "__v": 0
+    },
+    {
+      "_id": "67ab130b37262a070145da55",
+      "name": "Gastrointestinal",
+      "__v": 0
+    },
+    {
+      "_id": "67ab137f37262a070145da5f",
+      "name": "Antidiabetic",
+      "__v": 0
+    },
+    {
+      "_id": "67ab13f537262a070145da69",
+      "name": "Cardiovascular",
+      "__v": 0
+    }
+  ],
+  "settings": [
+    {
+      "_id": "67c0cc19bf7fc2054b95d5d0",
+      "lowStockThreshold": 10,
+      "expiryAlertDays": 30,
+      "emailNotifications": true,
+      "inAppNotifications": true,
+      "defaultUserRole": "user",
+      "currency": "PKR",
+      "dateFormat": "DD/MM/YYYY",
+      "apiKey": "",
+      "darkMode": false,
+      "__v": 0
+    }
+  ]
+}
