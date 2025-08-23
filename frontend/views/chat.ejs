@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Chat</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    :root {
+      --primary-color: #3f51b5;
+      --secondary-color: #2c3e50;
+      --accent-color: #4CAF50;
+    }
+    .content-wrapper { padding: 20px; background: #f8f9fa; }
+    .chat-container { display: flex; min-height: 500px; }
+    .user-list { width: 250px; border-right: 1px solid #ddd; padding: 15px; background: #fff; }
+    .user-list h3 { margin-top: 0; font-size: 1.2rem; }
+    .user-list ul { list-style: none; padding: 0; }
+    .user-list li { margin: 10px 0; }
+    .user-list a { color: var(--primary-color); text-decoration: none; }
+    .user-list a:hover { text-decoration: underline; }
+    .user-list a.active { font-weight: bold; color: var(--accent-color); }
+    .chat-box { flex: 1; padding: 15px; background: #fff; }
+    .messages { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+    .message { margin: 10px 0; padding: 8px; border-radius: 5px; }
+    .message.sent { background: #e3f2fd; text-align: right; margin-left: 20%; }
+    .message.received { background: #f1f1f1; margin-right: 20%; }
+    .message p { margin: 0; }
+    .message small { color: #666; font-size: 0.8rem; }
+    .input-group { display: flex; gap: 10px; align-items: center; }
+    .input-group select, .input-group input[type="text"], .input-group input[type="file"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .input-group button { padding: 8px 16px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .input-group button:disabled { background: #ccc; cursor: not-allowed; }
+    .alert { margin-bottom: 15px; }
+    .no-user-selected { text-align: center; color: #666; margin-top: 50px; }
+    .dark-mode .content-wrapper { background: #343a40; }
+    .dark-mode .user-list, .dark-mode .chat-box { background: #454d55; }
+    .dark-mode .messages { border-color: #6c757d; }
+    .dark-mode .message.sent { background: #2c3e50; }
+    .dark-mode .message.received { background: #3a444e; }
+    .dark-mode .message small { color: #adb5bd; }
+    .dark-mode .user-list a { color: #90caf9; }
+    .dark-mode .input-group select, .dark-mode .input-group input[type="text"], .dark-mode .input-group input[type="file"] { background: #495057; color: #fff; border-color: #6c757d; }
+    .dark-mode .no-user-selected { color: #adb5bd; }
+  </style>
+</head>
+<body class="hold-transition <%= settings && settings.darkMode ? 'dark-mode' : '' %>">
+  <%- include('partials/header') %>
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>Admin Chat</h1>
+        </div>
+        <div class="col-sm-6 text-right">
+          <a href="/admin/chat?token=<%= token || '' %>" class="btn btn-primary">
+            <i class="fas fa-sync"></i> Refresh
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="content">
+    <div class="container-fluid">
+      <% if (message) { %>
+        <div class="alert alert-success alert-dismissible">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <%= message %>
+        </div>
+      <% } %>
+      <% if (error) { %>
+        <div class="alert alert-danger alert-dismissible">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <%= error %>
+        </div>
+      <% } %>
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="chat-container">
+            <div class="user-list">
+              <h3>Users</h3>
+              <ul>
+                <% if (users && users.length > 0) { %>
+                  <% users.forEach(function(user) { %>
+                    <li>
+                      <a href="/admin/chat?userId=<%= user.id %>&token=<%= token || '' %>" class="<%= selectedUserId && selectedUserId === user.id ? 'active' : '' %>">
+                        <%= user.firstName %> <%= user.lastName %>
+                      </a>
+                    </li>
+                  <% }); %>
+                <% } else { %>
+                  <li>No users found</li>
+                <% } %>
+              </ul>
+            </div>
+            <div class="chat-box">
+              <% if (!selectedUserId) { %>
+                <p class="no-user-selected">Please select a user to start chatting.</p>
+              <% } else { %>
+                <div class="messages" id="messages">
+                  <% if (messages && messages.length > 0) { %>
+                    <% messages.forEach(function(msg) { %>
+                      <div class="message <%= msg.sender === 'admin' ? 'sent' : 'received' %>">
+                        <% if (msg.type === 'text') { %>
+                          <p><%= msg.content %></p>
+                        <% } else if (msg.type === 'image') { %>
+                          <img src="<%= msg.content %>" style="max-width: 200px;" />
+                        <% } else if (msg.type === 'voice') { %>
+                          <audio controls><source src="<%= msg.content %>" type="audio/mpeg"></audio>
+                        <% } else if (msg.type === 'location') { %>
+                          <p>Location: <%= msg.content %></p>
+                        <% } else if (msg.type === 'document') { %>
+                          <a href="<%= msg.content %>">Download Document</a>
+                        <% } %>
+                        <small><%= new Date(msg.timestamp).toLocaleString() %></small>
+                      </div>
+                    <% }); %>
+                  <% } else { %>
+                    <p class="no-user-selected">No messages found for this user.</p>
+                  <% } %>
+                </div>
+                <form id="chatForm" enctype="multipart/form-data">
+                  <input type="hidden" name="token" id="token" value="<%= token || '' %>">
+                  <input type="hidden" name="userId" id="userId" value="<%= selectedUserId || '' %>">
+                  <div class="input-group">
+                    <select name="type" id="messageType">
+                      <option value="text">Text</option>
+                      <option value="image">Image</option>
+                      <option value="document">Document</option>
+                      <option value="voice">Voice</option>
+                    </select>
+                    <input type="text" name="content" id="messageContent" placeholder="Type a message" style="flex: 1;">
+                    <input type="file" name="file" id="messageFile">
+                    <button type="submit" id="sendButton">Send</button>
+                  </div>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <%- include('partials/footer') %>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      const socket = io('/?token=<%= token || '' %>');
+      socket.on('connect', () => {
+        console.log('Socket connected:', socket.id);
+        socket.emit('joinChat', { userId: 'admin' });
+      });
+      socket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err.message);
+        alert('Failed to connect to chat server. Please try again.');
+      });
+      socket.on('message', (msg) => {
+        console.log('Received message:', msg);
+        const selectedUserId = '<%= selectedUserId || '' %>';
+        if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
+          const messages = document.getElementById('messages');
+          if (messages) {
+            const div = document.createElement('div');
+            div.className = `message ${msg.sender === 'admin' ? 'sent' : 'received'}`;
+            if (msg.type === 'text') {
+              div.innerHTML = `<p>${msg.content}</p><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            } else if (msg.type === 'image') {
+              div.innerHTML = `<img src="${msg.content}" style="max-width: 200px;" /><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            } else if (msg.type === 'voice') {
+              div.innerHTML = `<audio controls><source src="${msg.content}" type="audio/mpeg"></audio><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            } else if (msg.type === 'location') {
+              div.innerHTML = `<p>Location: ${msg.content}</p><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            } else if (msg.type === 'document') {
+              div.innerHTML = `<a href="${msg.content}">Download Document</a><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+            }
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+          }
+        }
+      });
+
+      // Disable file input for text messages
+      $('#messageType').on('change', function() {
+        const type = $(this).val();
+        const $fileInput = $('#messageFile');
+        const $textInput = $('#messageContent');
+        if (type === 'text') {
+          $fileInput.prop('disabled', true).hide();
+          $textInput.prop('disabled', false).show();
+        } else {
+          $fileInput.prop('disabled', false).show();
+          $textInput.prop('disabled', true).hide();
+        }
+      });
+      $('#messageType').trigger('change');
+
+      // AJAX form submission
+      $('#chatForm').on('submit', function(e) {
+        e.preventDefault();
+        const type = $('#messageType').val();
+        const content = $('#messageContent').val();
+        const file = $('#messageFile').prop('files')[0];
+        const userId = $('#userId').val();
+        const token = $('#token').val();
+
+        if (type === 'text' && !content) {
+          alert('Please enter a message.');
+          return;
+        }
+        if (['image', 'document', 'voice'].includes(type) && !file) {
+          alert('Please select a file.');
+          return;
+        }
+        if (!userId) {
+          alert('No user selected.');
+          return;
+        }
+        if (!token) {
+          alert('Authentication token missing. Please log in again.');
+          window.location.href = '/login.html?error=Missing token';
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('userId', userId);
+        formData.append('type', type);
+        if (type === 'text') {
+          formData.append('content', content);
+        } else {
+          formData.append('file', file);
+        }
+
+        $.ajax({
+          url: '/admin/chat/send',
+          type: 'POST',
+          data: formData,
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          processData: false,
+          contentType: false,
+          success: function(response) {
+            console.log('Message sent successfully:', response);
+            $('#messageContent').val('');
+            $('#messageFile').val('');
+            alert('Message sent successfully!');
+          },
+          error: function(xhr, status, error) {
+            console.error('Error sending message:', xhr.responseText);
+            const errorMsg = xhr.responseJSON?.error || 'Failed to send message. Please try again.';
+            alert(errorMsg);
+            if (xhr.status === 401 || xhr.status === 403) {
+              window.location.href = `/login.html?error=${encodeURIComponent(errorMsg)}`;
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

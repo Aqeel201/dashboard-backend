@@ -8,10 +8,17 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
+const http = require('http');
+const { Server } = require('socket.io');
 
+// Initialize Express app
 const app = express();
 const PORT = 2000;
 const SECRET_KEY = 'your_secure_secret_key_here'; // Replace with a strong secret in production
+
+// Create HTTP server and Socket.IO instance
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
 
 // Middleware Setup
 app.use(express.json());
@@ -19,20 +26,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 
 // Set EJS as view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'frontend', 'views'));
 
 // Ensure upload directories exist
-const uploadsPath = path.join(__dirname, 'public', 'uploads');
+const uploadsPath = path.join(__dirname, 'public', 'Uploads');
 if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
 
-const profileUploadsDir = 'D:\\medicinebackend\\medicinebackend\\public\\uploads\\Profile';
+const profileUploadsDir = path.join(__dirname, 'public', 'Uploads', 'Profile');
 if (!fs.existsSync(profileUploadsDir)) fs.mkdirSync(profileUploadsDir, { recursive: true });
 
-if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+// Remove redundant directory creation
+// if (!fs.existsSync('uploads')) fs.mkdirSync('uploads'); // This line is unnecessary due to uploadsPath
 
 // Multer setup for file uploads (general)
 const storage1 = multer.diskStorage({
@@ -43,16 +51,58 @@ const upload1 = multer({ storage: storage1 });
 
 // Multer setup for profile image uploads
 const storage2 = multer.diskStorage({
-  destination: 'uploads/',
+  destination: (req, file, cb) => cb(null, profileUploadsDir),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
 const upload2 = multer({ storage: storage2 });
 
 // MongoDB Connection
-mongoose
-  .connect('mongodb://localhost:27017/MediApp', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+
+
+
+const uri = "mongodb+srv://teammediapp:Aqee201@mediapp.hbuyqtw.mongodb.net/mediApp?retryWrites=true&w=majority&appName=MediApp";
+
+async function connectDB() {
+  try {
+    await mongoose.connect(uri, {
+      serverApi: {
+        version: '1', // Matches ServerApiVersion.v1
+        strict: true,
+        deprecationErrors: true,
+      },
+      connectTimeoutMS: 30000, // 30 seconds
+      socketTimeoutMS: 45000,  // 45 seconds
+    });
+
+    // Wait for the connection to be established
+    await new Promise((resolve, reject) => {
+      mongoose.connection.once('open', () => {
+        console.log("Successfully connected to MongoDB via Mongoose!");
+        resolve();
+      });
+      mongoose.connection.on('error', (err) => {
+        console.error("MongoDB connection error:", err);
+        reject(err);
+      });
+    });
+
+    // Optional: Ping to verify connectivity
+    try {
+      await mongoose.connection.db.command({ ping: 1 });
+      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } catch (pingError) {
+      console.error("Ping failed, but connection is established:", pingError.message);
+      // Continue even if ping fails, as connection is open
+    }
+  } catch (error) {
+    console.error("MongoDB connection error:", error.message);
+    process.exit(1); // Exit the process on connection failure
+  }
+}
+
+
+
+// ... (rest of your schemas and routes remain unchanged until the server start)
 
 // Schemas and Models
 
@@ -220,11 +270,31 @@ const authMiddlewarePage = async (req, res, next) => {
   }
 };
 
-const authAdminPage = (req, res, next) => {
-  authMiddlewarePage(req, res, () => {
-    if (req.user && req.user.role === 'admin') next();
-    else res.status(403).send('Admin access required');
-  });
+const authAdminPage = async (req, res, next) => {
+  const token = req.query.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  console.log('authAdminPage: Token received:', token);
+  if (!token) {
+    console.error('authAdminPage: No token provided');
+    return res.redirect('/login.html?error=No token provided');
+  }
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    console.log('authAdminPage: Token decoded:', decoded);
+    const user = await User.findOne({ email: decoded.email.toLowerCase() });
+    if (!user) {
+      console.error('authAdminPage: User not found for email:', decoded.email);
+      return res.redirect('/login.html?error=User not found');
+    }
+    if (user.role !== 'admin') {
+      console.error('authAdminPage: Non-admin user attempted access:', user.email);
+      return res.status(403).send('Admin access required');
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error('authAdminPage: Token verification failed:', err.message);
+    return res.redirect('/login.html?error=Invalid token');
+  }
 };
 
 // Routes
@@ -308,6 +378,8 @@ app.get('/api/users', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+
 
 app.put('/api/users/:id/password', authMiddleware, async (req, res) => {
   const { newPassword, adminPassword } = req.body;
@@ -471,10 +543,10 @@ app.post('/api/cart', async (req, res) => {
       userCart = new Cart({ userId, cart });
       await userCart.save();
     }
-    res.json({ message: 'Cart saved successfully' });
+    res.json({ message: 'Cart saved successfully', cart: userCart.cart });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to save cart' });
+    console.error('Error saving cart:', err);
+    res.status(500).json({ error: 'Failed to save cart', details: err.message });
   }
 });
 
@@ -1280,6 +1352,228 @@ app.post('/admin/categories/:id/delete', authAdminPage, async (req, res) => {
   }
 });
 
+app.post('/api/check-interactions', authMiddleware, async (req, res) => {
+  try {
+    const { ids = [], names = [] } = req.body;
+
+    // 1) Fetch medicines from DB by ids or by name
+    let meds = [];
+    if (Array.isArray(ids) && ids.length) {
+      meds = await Medicine.find({ _id: { $in: ids } });
+    }
+    if ((!meds || meds.length === 0) && Array.isArray(names) && names.length) {
+      meds = await Promise.all(names.map(async (n) => {
+        return await Medicine.findOne({ name: new RegExp('^' + n.trim() + '$', 'i') });
+      }));
+      meds = meds.filter(Boolean);
+    }
+    if (!meds || meds.length < 1) return res.json({ interactions: [], safe: true, message: 'No medicines found' });
+
+    // 2) Lightweight interaction DB (extendable). Keyed by normalized medicine-name or active-ingredient.
+    // NOTE: This is a sample; in production you should use a verified drug DB or clinical API.
+    const interactionDB = [
+      { pair: ['aspirin', 'warfarin'], severity: 'high', message: 'Increased bleeding risk.' , alternatives: ['acetaminophen (paracetamol)']},
+      { pair: ['ibuprofen', 'lisinopril'], severity: 'moderate', message: 'NSAIDs may reduce antihypertensive effect.' , alternatives: ['consult physician']},
+      { pair: ['metformin', 'contrast media'], severity: 'moderate', message: 'Risk of lactic acidosis (with iodinated contrast).' , alternatives: ['talk to radiologist or physician']},
+      { pair: ['sildenafil', 'nitroglycerin'], severity: 'high', message: 'Severe hypotension risk (combination contraindicated).' , alternatives: ['do not combine — urgent medical review']},
+      // Add custom pairs here...
+    ];
+
+    // Helper normalize function
+    const normalize = (s) => (s || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // Build list of normalized identifiers to check: try name, manufacturer, dosage, description
+    const medsNormalized = meds.map(m => ({
+      id: m._id.toString(),
+      name: normalize(m.name),
+      manufacturer: normalize(m.manufacturer),
+      dosage: normalize(m.dosage || ''),
+      description: normalize(m.description || ''),
+      raw: m
+    }));
+
+    // 3) Detect interactions by matching DB pairs against medicine names (naive matching).
+    const found = [];
+    for (let i = 0; i < medsNormalized.length; i++) {
+      for (let j = i + 1; j < medsNormalized.length; j++) {
+        const a = medsNormalized[i], b = medsNormalized[j];
+        for (const entry of interactionDB) {
+          const p0 = entry.pair[0], p1 = entry.pair[1];
+          // match if either medicine name includes p0 and other includes p1 (or vice versa)
+          const matchA = (a.name.includes(p0) || a.description.includes(p0) || a.dosage.includes(p0));
+          const matchB = (b.name.includes(p1) || b.description.includes(p1) || b.dosage.includes(p1));
+          const matchAlt = (a.name.includes(p1) || a.description.includes(p1) || a.dosage.includes(p1)) &&
+                           (b.name.includes(p0) || b.description.includes(p0) || b.dosage.includes(p0));
+          if ((matchA && matchB) || matchAlt) {
+            found.push({
+              medicines: [a.raw, b.raw].map(m => ({ id: m._id, name: m.name, dosage: m.dosage || '', manufacturer: m.manufacturer || '' })),
+              severity: entry.severity,
+              message: entry.message,
+              suggestions: entry.alternatives || []
+            });
+          }
+        }
+      }
+    }
+
+    const safe = found.length === 0;
+    res.json({ interactions: found, safe });
+  } catch (err) {
+    console.error('Interaction check error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+// ChatMessage Schema
+const chatMessageSchema = new mongoose.Schema({
+  sender: { type: String, required: true },
+  receiver: { type: String, required: true },
+  type: { type: String, enum: ['text', 'image', 'voice', 'location', 'document'], required: true },
+  content: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
+const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+
+// Multer upload routes for chat
+app.post('/upload/image', upload1.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  res.json({ url: `/Uploads/${req.file.filename}` });
+});
+
+app.post('/upload/document', upload1.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  res.json({ url: `/Uploads/${req.file.filename}` });
+});
+
+app.post('/upload/voice', upload1.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  res.json({ url: `/Uploads/${req.file.filename}` });
+});
+
+// Socket.IO
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id, 'Query:', socket.handshake.query);
+  socket.on('joinChat', async ({ userId }) => {
+    console.log('User joined chat:', userId, 'Socket ID:', socket.id);
+    socket.join(userId);
+    try {
+      const messages = await ChatMessage.find({
+        $or: [{ sender: userId, receiver: 'admin' }, { sender: 'admin', receiver: userId }],
+      }).sort({ timestamp: 1 });
+      console.log(`Sending ${messages.length} previous messages to user ${userId}`);
+      socket.emit('previousMessages', messages);
+    } catch (err) {
+      console.error('Error fetching previous messages for user', userId, ':', err.message);
+    }
+  });
+  socket.on('sendMessage', async (msg) => {
+    console.log('Received sendMessage:', msg);
+    try {
+      const newMsg = new ChatMessage({
+        ...msg,
+        _id: new mongoose.Types.ObjectId().toString(),
+        timestamp: new Date(),
+      });
+      await newMsg.save();
+      console.log('Message saved, emitting to', msg.sender, msg.receiver);
+      io.to(msg.receiver).emit('message', newMsg);
+      io.to(msg.sender).emit('message', newMsg);
+    } catch (err) {
+      console.error('Error saving message:', err.message);
+    }
+  });
+  socket.on('disconnect', () => console.log('User disconnected:', socket.id));
+});
+
+// Admin chat route
+app.get('/admin/chat', authAdminPage, async (req, res) => {
+  try {
+    const users = await User.find({ role: 'user' }).select('id firstName lastName email');
+    const selectedUserId = req.query.userId || null;
+    let messages = [];
+    if (selectedUserId) {
+      messages = await ChatMessage.find({
+        $or: [
+          { sender: selectedUserId, receiver: 'admin' },
+          { sender: 'admin', receiver: selectedUserId },
+        ],
+      }).sort({ timestamp: 1 });
+      console.log(`Fetched ${messages.length} messages for user ${selectedUserId}`);
+    }
+    res.render('chat', {
+      user: req.user || {},
+      token: req.query.token || '',
+      users: users || [],
+      messages: messages || [],
+      selectedUserId,
+      currentPath: '/admin/chat',
+      message: req.query.message || null,
+      error: req.query.error || null,
+      settings: res.locals.settings || { darkMode: false },
+    });
+  } catch (err) {
+    console.error('Error fetching chat data:', err);
+    res.render('chat', {
+      user: req.user || {},
+      token: req.query.token || '',
+      users: [],
+      messages: [],
+      selectedUserId: null,
+      currentPath: '/admin/chat',
+      message: null,
+      error: 'Failed to load chat data: ' + err.message,
+      settings: { darkMode: false },
+    });
+  }
+});
+
+
+
+// Modified authAdminPage middleware with better logging
+
+
+// Updated /admin/chat/send route
+app.post('/admin/chat/send', authAdminPage, upload1.single('file'), async (req, res) => {
+  try {
+    const { userId, type, content } = req.body;
+    console.log('POST /admin/chat/send: Received data:', { userId, type, content, hasFile: !!req.file });
+    if (!userId) {
+      console.error('POST /admin/chat/send: Missing userId');
+      return res.status(400).json({ error: 'Missing userId' });
+    }
+    if (!type || !['text', 'image', 'document', 'voice'].includes(type)) {
+      console.error('POST /admin/chat/send: Invalid message type:', type);
+      return res.status(400).json({ error: 'Invalid message type' });
+    }
+    let messageContent = content;
+    if (req.file && ['image', 'document', 'voice'].includes(type)) {
+      messageContent = `/Uploads/${req.file.filename}`;
+      console.log('POST /admin/chat/send: File uploaded:', messageContent);
+    } else if (type === 'text' && !content) {
+      console.error('POST /admin/chat/send: Text message content is empty');
+      return res.status(400).json({ error: 'Text message cannot be empty' });
+    }
+    const newMsg = new ChatMessage({
+      sender: 'admin',
+      receiver: userId,
+      type,
+      content: messageContent,
+      timestamp: new Date(),
+      _id: new mongoose.Types.ObjectId().toString(),
+    });
+    await newMsg.save();
+    console.log('POST /admin/chat/send: Message saved to MongoDB:', newMsg);
+    io.to(userId).emit('message', newMsg);
+    io.to('admin').emit('message', newMsg);
+    res.status(200).json({ message: 'Message sent successfully' });
+  } catch (err) {
+    console.error('POST /admin/chat/send: Error:', err.message);
+    res.status(500).json({ error: 'Failed to send message: ' + err.message });
+  }
+});
+
+
+
 // Feedback Schema
 const FeedbackSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -1660,6 +1954,87 @@ app.get('/admin/sales-history', authAdminPage, async (req, res) => {
   }
 });
 
+// ------------------- Medicine Reminder Schema -------------------
+const medicineReminderSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
+  medicineName: { type: String, required: true },
+  dosage: { type: String, required: true },
+  time: { type: String, required: true }, // e.g., "08:00 AM"
+  date: { type: Date, required: true },
+  repeat: { type: String, enum: ['None', 'Daily', 'Weekly'], default: 'None' },
+  notes: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+const MedicineReminder = mongoose.model('MedicineReminder', medicineReminderSchema);
+
+// ------------------- Medicine Reminder Routes -------------------
+
+// Fetch all medicines for dropdown
+app.get('/api/medicines/list', authMiddleware, async (req, res) => {
+  try {
+    const medicines = await Medicine.find().select('name dosage'); 
+    res.json(medicines);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch medicines' });
+  }
+});
+
+// Create reminder
+app.post('/api/reminders', authMiddleware, async (req, res) => {
+  try {
+    const { medicineId, medicineName, dosage, time, date, repeat, notes } = req.body;
+    if ((!medicineId && !medicineName) || !dosage || !time || !date) {
+      return res.status(400).json({ error: 'Required fields missing' });
+    }
+
+    let medName = medicineName;
+    if (medicineId) {
+      const medicine = await Medicine.findById(medicineId);
+      if (!medicine) return res.status(404).json({ error: 'Medicine not found' });
+      medName = medicine.name;
+    }
+
+    const reminder = new MedicineReminder({
+      userId: req.user.id,
+      medicineId: medicineId || null,
+      medicineName: medName,
+      dosage,
+      time,
+      date,
+      repeat,
+      notes
+    });
+    await reminder.save();
+    res.status(201).json({ message: 'Reminder created successfully', reminder });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create reminder', details: err.message });
+  }
+});
+
+
+// Get reminders for logged-in user
+app.get('/api/reminders', authMiddleware, async (req, res) => {
+  try {
+    const reminders = await MedicineReminder.find({ userId: req.user.id }).sort({ date: 1, time: 1 });
+    res.json(reminders);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch reminders' });
+  }
+});
+
+// Delete reminder
+app.delete('/api/reminders/:id', authMiddleware, async (req, res) => {
+  try {
+    const deleted = await MedicineReminder.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!deleted) return res.status(404).json({ error: 'Reminder not found' });
+    res.json({ message: 'Reminder deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete reminder' });
+  }
+});
+
+
 // Settings Routes
 app.get('/admin/settings', authAdminPage, (req, res) => {
   res.render('settings', {
@@ -1780,19 +2155,21 @@ app.put('/api/transactions/:id', async (req, res) => {
 });
 
 setInterval(async () => {
-  const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
   try {
+    const twentyMinutesAgo = new Date(Date.now() - 20 * 60 * 1000);
     const pendingTransactions = await Transaction.find({
       status: 'Pending',
       createdAt: { $lt: twentyMinutesAgo },
     });
-    for (const txn of pendingTransactions) {
-      txn.status = 'Rejected';
-      await txn.save();
-      console.log(`Transaction ${txn._id} automatically rejected due to timeout.`);
+    if (pendingTransactions.length > 0) {
+      for (const txn of pendingTransactions) {
+        txn.status = 'Rejected';
+        await txn.save();
+        console.log(`Transaction ${txn._id} automatically rejected due to timeout.`);
+      }
     }
   } catch (error) {
-    console.error('Error auto-rejecting transactions:', error);
+    console.error('Error auto-rejecting transactions:', error.message);
   }
 }, 60 * 1000);
 
@@ -1829,44 +2206,56 @@ app.get('/admin', (req, res) => {
 });
 
 // Server Start
-app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`Unified server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', async () => {
+  console.log(`Server running on port ${PORT}`);
 
-  try {
-    const adminEmail1 = 'admin@mediapp.com';
-    const defaultPassword1 = 'admin123';
-    const hashedPassword1 = bcrypt.hashSync(defaultPassword1, 10);
-    let adminUser1 = await User.findOne({ email: adminEmail1 });
-    if (adminUser1) {
-      adminUser1.password = hashedPassword1;
-      adminUser1.role = 'admin';
-      await adminUser1.save();
-      console.log('Admin user updated successfully (MediApp default).');
-    } else {
-      adminUser1 = new User({
-        id: uuidv4(),
-        firstName: 'Admin',
-        lastName: 'User',
-        email: adminEmail1,
-        password: hashedPassword1,
-        role: 'admin',
-        createdAt: new Date().toISOString(),
-      });
-      await adminUser1.save();
-      console.log('New admin user created successfully (MediApp default).');
-    }
+  // Connect to MongoDB
+  await connectDB();
 
-    const adminEmail2 = 'admin@example.com';
-    const existingAdmin2 = await User.findOne({ email: adminEmail2 });
-    if (existingAdmin2) {
-      console.log('Default admin user already exists (third server). No new admin account will be created.');
-    } else {
-      console.log('No default admin account exists (third server). Admin account creation is forbidden.');
-    }
-  } catch (err) {
-    console.error('Error setting up admin users:', err.message);
+  // Admin user setup
+  // Admin user setup
+try {
+  const adminEmail1 = 'admin@mediapp.com';
+  const defaultPassword1 = 'admin123';
+  const hashedPassword1 = bcrypt.hashSync(defaultPassword1, 10);
+  console.log('Attempting to set up admin user:', adminEmail1);
+
+  let adminUser1 = await User.findOne({ email: adminEmail1 });
+  if (adminUser1) {
+    console.log('Existing admin user found:', adminUser1.email);
+    adminUser1.password = hashedPassword1;
+    adminUser1.role = 'admin';
+    adminUser1.firstName = adminUser1.firstName || 'Admin';
+    adminUser1.lastName = adminUser1.lastName || 'User';
+    adminUser1.createdAt = adminUser1.createdAt || new Date().toISOString();
+    await adminUser1.save();
+    console.log('Admin user updated successfully (MediApp default).');
+  } else {
+    console.log('No existing admin user found. Creating new admin user.');
+    adminUser1 = new User({
+      id: uuidv4(),
+      firstName: 'Admin',
+      lastName: 'User',
+      email: adminEmail1,
+      password: hashedPassword1,
+      role: 'admin',
+      createdAt: new Date().toISOString(),
+    });
+    await adminUser1.save();
+    console.log('New admin user created successfully (MediApp default):', adminUser1.email);
   }
 
+  const adminEmail2 = 'admin@example.com';
+  const existingAdmin2 = await User.findOne({ email: adminEmail2 });
+  if (existingAdmin2) {
+    console.log('Default admin user already exists (third server):', adminEmail2);
+  } else {
+    console.log('No default admin account exists (third server). Admin account creation is forbidden.');
+  }
+} catch (err) {
+  console.error('Error setting up admin users:', err.message, err.stack);
+}
+  // Database migrations
   try {
     const medicinesWithoutType = await Medicine.find({ medicineType: { $exists: false } });
     if (medicinesWithoutType.length > 0) {
@@ -1889,6 +2278,6 @@ app.listen(PORT, '0.0.0.0', async () => {
       console.log('Remaining doses updated successfully.');
     }
   } catch (err) {
-    console.error('Error during migration:', err);
+    console.error('Error during migration:', err.message);
   }
 });

@@ -1,0 +1,194 @@
+{
+  "users": [
+    {
+      "_id": "68987421435a7ea82985f411",
+      "id": "cff4a106-4e45-41d9-a9b3-5db707fd907c",
+      "firstName": "Aqeel ",
+      "lastName": "Ahmed",
+      "CNICNo": "71106094616646",
+      "email": "admin@mediapp.com",
+      "password": "$2a$10$dwKzcO9aTL8HrqzHVTxJ7uXMKu9DY2crEPK2gfX1Ft5c90LsvXkoS",
+      "profileImage": "1754830967493-93526b7f-560f-402c-a8ab-1f8e4234c6ff.jpeg",
+      "role": "admin",
+      "createdAt": "2025-08-10T10:27:45.451Z",
+      "phone": "03499535156",
+      "address": "Kushmarah Skardu ",
+      "dob": "05/08/2003",
+      "__v": 0,
+      "verified": true
+    },
+    {
+      "_id": "689899103368a2c1357d3763",
+      "id": "a0431804-5856-42c7-9a0f-34156b9da923",
+      "firstName": "Aqeel ",
+      "lastName": "Ahmed ",
+      "CNICNo": "",
+      "email": "aqeelah3076@gmail.com",
+      "password": "$2a$10$A3uAb5kynSsMzsdxmfbBzOzEnIjQofehjXbveKfi6qyrWQzIL4Ytu",
+      "profileImage": "1754831063227-profile_1754831063622.jpg",
+      "role": "user",
+      "createdAt": "2025-08-10T13:04:24.485Z",
+      "phone": "",
+      "address": "",
+      "dob": "",
+      "verified": true,
+      "__v": 0
+    }
+  ],
+  "medicines": [
+    {
+      "_id": "68989a485360a1498a893328",
+      "name": "Paracare 500",
+      "manufacturer": "MedLife Pharmaceuticals",
+      "expiryDate": "2026-12-31T00:00:00.000Z",
+      "price": 150,
+      "dosage": "500mg",
+      "quantity": 189,
+      "image": "/uploads/1754831432950-images.jpg",
+      "category": "Pain Relief",
+      "medicineType": "Tablet",
+      "dosesPerUnit": 10,
+      "remainingDoses": 0,
+      "likes": [],
+      "description": "Paracare 500 is used to relieve mild to moderate pain, such as headaches, muscle aches, and fever.",
+      "__v": 0
+    }
+  ],
+  "orders": [
+    {
+      "_id": "68989a835360a1498a89334f",
+      "userId": "aqeelah3076@gmail.com",
+      "shippingEmail": "aqeelah3076@gmail.com",
+      "billingEmail": "aqeelah3076@gmail.com",
+      "shippingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Pakistan ",
+        "phoneNumber": "03499535156"
+      },
+      "billingAddress": {
+        "firstName": "Aqeel ",
+        "lastName": "Ahmed ",
+        "streetAddress": "Kushmarah Skardu Pakistan ",
+        "phoneNumber": "03499535156"
+      },
+      "shippingMethod": 2,
+      "paymentMethod": "EasyPaisa",
+      "cartItems": [
+        {
+          "_id": "68989a485360a1498a893328",
+          "name": "Paracare 500",
+          "manufacturer": "MedLife Pharmaceuticals",
+          "expiryDate": "2026-12-31T00:00:00.000Z",
+          "price": 150,
+          "dosage": "500mg",
+          "quantity": 200,
+          "image": "/uploads/1754831432950-images.jpg",
+          "category": "Pain Relief",
+          "medicineType": "Tablet",
+          "dosesPerUnit": 10,
+          "remainingDoses": 0,
+          "likes": [],
+          "description": "Paracare 500 is used to relieve mild to moderate pain, such as headaches, muscle aches, and fever.",
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 200
+        }
+      ],
+      "shippingFee": 300,
+      "orderTotal": 450,
+      "status": "accepted",
+      "transactionId": null,
+      "paymentStatus": "unpaid",
+      "date": "2025-08-10T13:11:31.049Z",
+      "statusUpdateHistory": [
+        {
+          "status": "accepted",
+          "timestamp": "2025-08-10T13:12:19.621Z",
+          "_id": "68989ab35360a1498a89337f"
+        }
+      ],
+      "__v": 1
+    }
+  ],
+  "carts": [
+    {
+      "_id": "68989a6b5360a1498a89334b",
+      "userId": "689899103368a2c1357d3763",
+      "cart": [
+        {
+          "_id": "68989a485360a1498a893328",
+          "name": "Paracare 500",
+          "manufacturer": "MedLife Pharmaceuticals",
+          "expiryDate": "2026-12-31T00:00:00.000Z",
+          "price": 150,
+          "dosage": "500mg",
+          "quantity": 200,
+          "image": "/uploads/1754831432950-images.jpg",
+          "category": "Pain Relief",
+          "medicineType": "Tablet",
+          "dosesPerUnit": 10,
+          "remainingDoses": 0,
+          "likes": [],
+          "description": "Paracare 500 is used to relieve mild to moderate pain, such as headaches, muscle aches, and fever.",
+          "__v": 0,
+          "liked": false,
+          "cartQuantity": 1,
+          "availableStock": 200
+        }
+      ],
+      "__v": 0
+    }
+  ],
+  "inPersonSales": [
+    {
+      "_id": "68989ae75360a1498a8933b8",
+      "medicineId": "68989a485360a1498a893328",
+      "medicineName": "Paracare 500",
+      "quantitySold": 10,
+      "unitType": "Full",
+      "customerName": "In-Person Customer",
+      "customerContact": "N/A",
+      "adminId": "cff4a106-4e45-41d9-a9b3-5db707fd907c",
+      "totalAmount": 1500,
+      "saleDate": "2025-08-10T13:13:11.392Z",
+      "__v": 0
+    }
+  ],
+  "transactions": [
+    {
+      "_id": "68989a9e5360a1498a893352",
+      "userId": "aqeelah3076@gmail.com",
+      "walletNumber": "03499535156",
+      "walletName": "Shakeel Ahmed ",
+      "transactionID": "728372748372",
+      "depositAmount": 450,
+      "status": "Accepted",
+      "createdAt": "2025-08-10T13:11:58.182Z",
+      "__v": 0
+    }
+  ],
+  "categories": [
+    {
+      "_id": "68989a485360a1498a893325",
+      "name": "Pain Relief",
+      "__v": 0
+    }
+  ],
+  "settings": [
+    {
+      "_id": "6898743e435a7ea82985f420",
+      "lowStockThreshold": 10,
+      "expiryAlertDays": 30,
+      "emailNotifications": true,
+      "inAppNotifications": true,
+      "defaultUserRole": "user",
+      "currency": "PKR",
+      "dateFormat": "DD/MM/YYYY",
+      "apiKey": "",
+      "darkMode": false,
+      "__v": 0
+    }
+  ]
+}
