@@ -1453,9 +1453,11 @@ app.post('/upload/voice', upload1.single('file'), (req, res) => {
 // Socket.IO
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id, 'Query:', socket.handshake.query);
-  socket.on('joinChat', async ({ userId }) => {
+  socket.on('join', async (userId) => {
     console.log('User joined chat:', userId, 'Socket ID:', socket.id);
     socket.join(userId);
+
+    
     try {
       const messages = await ChatMessage.find({
         $or: [{ sender: userId, receiver: 'admin' }, { sender: 'admin', receiver: userId }],
@@ -1466,26 +1468,88 @@ io.on('connection', (socket) => {
       console.error('Error fetching previous messages for user', userId, ':', err.message);
     }
   });
-  socket.on('sendMessage', async (msg) => {
+
+  socket.on('sendMessage', async (msg, callback) => {
     console.log('Received sendMessage:', msg);
     try {
       const newMsg = new ChatMessage({
-        ...msg,
         _id: new mongoose.Types.ObjectId().toString(),
+        sender: msg.sender,
+        receiver: msg.receiver,
+        type: msg.type,
+        content: msg.content,
         timestamp: new Date(),
       });
       await newMsg.save();
       console.log('Message saved, emitting to', msg.sender, msg.receiver);
-      io.to(msg.receiver).emit('message', newMsg);
-      io.to(msg.sender).emit('message', newMsg);
+      io.to(msg.receiver).emit('receiveMessage', newMsg);
+      io.to(msg.sender).emit('receiveMessage', newMsg);
+      callback({ success: true });
     } catch (err) {
       console.error('Error saving message:', err.message);
+      callback({ error: err.message });
     }
+    
   });
+
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
-// Admin chat route
+// Chat Routes
+app.post('/chat/upload', authMiddleware, upload1.single('file'), async (req, res) => {
+  try {
+    const { userId, type, receiver } = req.body;
+    console.log('POST /chat/upload: Received data:', { userId, type, receiver, hasFile: !!req.file });
+    if (!userId || !type || !receiver) {
+      console.error('POST /chat/upload: Missing required fields');
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (!['image', 'document', 'voice'].includes(type)) {
+      console.error('POST /chat/upload: Invalid message type:', type);
+      return res.status(400).json({ error: 'Invalid message type' });
+    }
+    if (!req.file) {
+      console.error('POST /chat/upload: No file uploaded');
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const messageContent = `/Uploads/${req.file.filename}`;
+    const newMsg = new ChatMessage({
+      _id: new mongoose.Types.ObjectId().toString(),
+      sender: userId,
+      receiver,
+      type,
+      content: messageContent,
+      timestamp: new Date(),
+    });
+    await newMsg.save();
+    console.log('POST /chat/upload: Message saved to MongoDB:', newMsg);
+    io.to(receiver).emit('receiveMessage', newMsg);
+    io.to(userId).emit('receiveMessage', newMsg);
+    res.status(200).json({ message: 'File uploaded and message sent successfully', url: messageContent });
+  } catch (err) {
+    console.error('POST /chat/upload: Error:', err.message);
+    res.status(500).json({ error: 'Failed to upload file: ' + err.message });
+  }
+});
+
+app.get('/api/messages/admin', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('GET /api/messages/admin: Fetching messages for user:', userId);
+    const messages = await ChatMessage.find({
+      $or: [
+        { sender: userId, receiver: 'admin' },
+        { sender: 'admin', receiver: userId },
+      ],
+    }).sort({ timestamp: 1 });
+    console.log(`GET /api/messages/admin: Fetched ${messages.length} messages for user ${userId}`);
+    res.json(messages);
+  } catch (err) {
+    console.error('GET /api/messages/admin: Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch messages: ' + err.message });
+  }
+});
+
 app.get('/admin/chat', authAdminPage, async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('id firstName lastName email');
@@ -1527,12 +1591,6 @@ app.get('/admin/chat', authAdminPage, async (req, res) => {
   }
 });
 
-
-
-// Modified authAdminPage middleware with better logging
-
-
-// Updated /admin/chat/send route
 app.post('/admin/chat/send', authAdminPage, upload1.single('file'), async (req, res) => {
   try {
     const { userId, type, content } = req.body;
@@ -1554,23 +1612,30 @@ app.post('/admin/chat/send', authAdminPage, upload1.single('file'), async (req, 
       return res.status(400).json({ error: 'Text message cannot be empty' });
     }
     const newMsg = new ChatMessage({
+      _id: new mongoose.Types.ObjectId().toString(),
       sender: 'admin',
       receiver: userId,
       type,
       content: messageContent,
       timestamp: new Date(),
-      _id: new mongoose.Types.ObjectId().toString(),
     });
     await newMsg.save();
     console.log('POST /admin/chat/send: Message saved to MongoDB:', newMsg);
-    io.to(userId).emit('message', newMsg);
-    io.to('admin').emit('message', newMsg);
+    io.to(userId).emit('receiveMessage', newMsg);
+    io.to('admin').emit('receiveMessage', newMsg);
     res.status(200).json({ message: 'Message sent successfully' });
   } catch (err) {
     console.error('POST /admin/chat/send: Error:', err.message);
     res.status(500).json({ error: 'Failed to send message: ' + err.message });
   }
 });
+
+
+
+// Modified authAdminPage middleware with better logging
+
+
+
 
 
 

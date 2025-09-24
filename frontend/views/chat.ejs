@@ -2,47 +2,441 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Chat</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     :root {
-      --primary-color: #3f51b5;
-      --secondary-color: #2c3e50;
-      --accent-color: #4CAF50;
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --primary-light: #e0e7ff;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #1f2937;
+      --dark-light: #374151;
+      --light: #f9fafb;
+      --gray: #6b7280;
+      --gray-light: #e5e7eb;
+      --white: #ffffff;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius: 8px;
+      --radius-lg: 12px;
     }
-    .content-wrapper { padding: 20px; background: #f8f9fa; }
-    .chat-container { display: flex; min-height: 500px; }
-    .user-list { width: 250px; border-right: 1px solid #ddd; padding: 15px; background: #fff; }
-    .user-list h3 { margin-top: 0; font-size: 1.2rem; }
-    .user-list ul { list-style: none; padding: 0; }
-    .user-list li { margin: 10px 0; }
-    .user-list a { color: var(--primary-color); text-decoration: none; }
-    .user-list a:hover { text-decoration: underline; }
-    .user-list a.active { font-weight: bold; color: var(--accent-color); }
-    .chat-box { flex: 1; padding: 15px; background: #fff; }
-    .messages { height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-    .message { margin: 10px 0; padding: 8px; border-radius: 5px; }
-    .message.sent { background: #e3f2fd; text-align: right; margin-left: 20%; }
-    .message.received { background: #f1f1f1; margin-right: 20%; }
-    .message p { margin: 0; }
-    .message small { color: #666; font-size: 0.8rem; }
-    .input-group { display: flex; gap: 10px; align-items: center; }
-    .input-group select, .input-group input[type="text"], .input-group input[type="file"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    .input-group button { padding: 8px 16px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; }
-    .input-group button:disabled { background: #ccc; cursor: not-allowed; }
-    .alert { margin-bottom: 15px; }
-    .no-user-selected { text-align: center; color: #666; margin-top: 50px; }
-    .dark-mode .content-wrapper { background: #343a40; }
-    .dark-mode .user-list, .dark-mode .chat-box { background: #454d55; }
-    .dark-mode .messages { border-color: #6c757d; }
-    .dark-mode .message.sent { background: #2c3e50; }
-    .dark-mode .message.received { background: #3a444e; }
-    .dark-mode .message small { color: #adb5bd; }
-    .dark-mode .user-list a { color: #90caf9; }
-    .dark-mode .input-group select, .dark-mode .input-group input[type="text"], .dark-mode .input-group input[type="file"] { background: #495057; color: #fff; border-color: #6c757d; }
-    .dark-mode .no-user-selected { color: #adb5bd; }
+    .content-wrapper {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .chat-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      height: calc(100vh - 200px);
+      min-height: 600px;
+    }
+    .users-panel {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    .panel-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--primary);
+    }
+    .search-box {
+      margin-top: 16px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 40px;
+      border: 1px solid var(--gray-light);
+      border-radius: var(--radius);
+      font-size: 14px;
+    }
+    .search-box i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+    .users-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-light);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .user-item:hover {
+      background: var(--primary-light);
+    }
+    .user-item.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .user-item.active .user-name,
+    .user-item.active .user-status,
+    .user-item.active .status-dot {
+      color: var(--white);
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 600;
+    }
+    .user-info {
+      flex: 1;
+    }
+    .user-name {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .user-status {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--gray);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .status-dot.online {
+      background: var(--secondary);
+    }
+    .status-dot.offline {
+      background: var(--gray);
+    }
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--gray-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chat-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-secondary {
+      background: var(--gray-light);
+      color: var(--dark);
+    }
+    .btn-secondary:hover {
+      background: var(--gray);
+      color: var(--white);
+    }
+    .messages-container {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .no-chat-selected {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--gray);
+      text-align: center;
+    }
+    .no-chat-selected i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--primary-light);
+    }
+    .message {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+    .message.received {
+      align-self: flex-start;
+      background: var(--white);
+      border-top-left-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .message.sent {
+      align-self: flex-end;
+      background: var(--primary);
+      color: var(--white);
+      border-top-right-radius: 4px;
+    }
+    .message-content {
+      margin-bottom: 6px;
+    }
+    .message-time {
+      font-size: 12px;
+      opacity: 0.7;
+      text-align: right;
+    }
+    .message-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .message-file a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .message-file a:hover {
+      text-decoration: underline;
+    }
+    .message-image {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    .message-audio {
+      margin-top: 8px;
+    }
+    .message-audio audio {
+      width: 200px;
+      border-radius: 6px;
+    }
+    .chat-input-container {
+      padding: 20px;
+      border-top: 1px solid var(--gray-light);
+    }
+    .message-type-selector {
+      display: flex;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+    .type-btn {
+      padding: 6px 12px;
+      background: var(--gray-light);
+      border: none;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .type-btn.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .input-group {
+      display: flex;
+      gap: 12px;
+    }
+    .input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid var(--gray-light);
+      border-radius: var(--radius);
+      font-size: 14px;
+    }
+    .input-group button {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .input-group button:hover {
+      background: var(--primary-dark);
+    }
+    .file-input-container {
+      display: none;
+      margin-top: 12px;
+    }
+    .file-input-container.active {
+      display: block;
+    }
+    .file-input-label {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .selected-file {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--gray);
+    }
+    .alert {
+      margin-bottom: 15px;
+      border-radius: var(--radius);
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--secondary);
+    }
+    .alert-danger {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+    .alert .close {
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0.7;
+    }
+    .theme-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .dark-mode .content-wrapper {
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: var(--light);
+    }
+    .dark-mode .users-panel,
+    .dark-mode .chat-panel {
+      background: var(--dark);
+      color: var(--light);
+    }
+    .dark-mode .messages-container {
+      background: #1a202c;
+    }
+    .dark-mode .message.received {
+      background: var(--dark-light);
+      color: var(--light);
+    }
+    .dark-mode .search-box input,
+    .dark-mode .input-group input {
+      background: var(--dark-light);
+      border-color: var(--dark-light);
+      color: var(--light);
+    }
+    .dark-mode .user-item:hover {
+      background: var(--primary-dark);
+    }
+    .dark-mode .user-item.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .dark-mode .panel-header,
+    .dark-mode .chat-header {
+      border-bottom-color: var(--dark-light);
+    }
+    .dark-mode .type-btn {
+      background: var(--dark-light);
+      color: var(--light);
+    }
+    .dark-mode .type-btn.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .dark-mode .file-input-label {
+      background: var(--primary-dark);
+      color: var(--light);
+    }
+    .dark-mode .message-file {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .dark-mode .message-file a {
+      color: var(--primary-light);
+    }
+    @media (max-width: 1024px) {
+      .chat-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .users-panel {
+        height: 300px;
+      }
+    }
+    @media (max-width: 768px) {
+      .content-wrapper {
+        padding: 10px;
+      }
+      .message {
+        max-width: 85%;
+      }
+    }
   </style>
 </head>
 <body class="hold-transition <%= settings && settings.darkMode ? 'dark-mode' : '' %>">
@@ -65,144 +459,260 @@
     <div class="container-fluid">
       <% if (message) { %>
         <div class="alert alert-success alert-dismissible">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <span class="close" data-dismiss="alert">&times;</span>
           <%= message %>
         </div>
       <% } %>
       <% if (error) { %>
         <div class="alert alert-danger alert-dismissible">
-          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <span class="close" data-dismiss="alert">&times;</span>
           <%= error %>
         </div>
       <% } %>
-      <div class="card">
-        <div class="card-body p-0">
-          <div class="chat-container">
-            <div class="user-list">
-              <h3>Users</h3>
-              <ul>
-                <% if (users && users.length > 0) { %>
-                  <% users.forEach(function(user) { %>
-                    <li>
-                      <a href="/admin/chat?userId=<%= user.id %>&token=<%= token || '' %>" class="<%= selectedUserId && selectedUserId === user.id ? 'active' : '' %>">
-                        <%= user.firstName %> <%= user.lastName %>
-                      </a>
-                    </li>
-                  <% }); %>
-                <% } else { %>
-                  <li>No users found</li>
-                <% } %>
-              </ul>
+      <div class="chat-container">
+        <div class="users-panel">
+          <div class="panel-header">
+            <h2><i class="fas fa-user-friends"></i> Users</h2>
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="userSearch" placeholder="Search users...">
             </div>
-            <div class="chat-box">
-              <% if (!selectedUserId) { %>
-                <p class="no-user-selected">Please select a user to start chatting.</p>
-              <% } else { %>
-                <div class="messages" id="messages">
-                  <% if (messages && messages.length > 0) { %>
-                    <% messages.forEach(function(msg) { %>
-                      <div class="message <%= msg.sender === 'admin' ? 'sent' : 'received' %>">
-                        <% if (msg.type === 'text') { %>
-                          <p><%= msg.content %></p>
-                        <% } else if (msg.type === 'image') { %>
-                          <img src="<%= msg.content %>" style="max-width: 200px;" />
-                        <% } else if (msg.type === 'voice') { %>
-                          <audio controls><source src="<%= msg.content %>" type="audio/mpeg"></audio>
-                        <% } else if (msg.type === 'location') { %>
-                          <p>Location: <%= msg.content %></p>
-                        <% } else if (msg.type === 'document') { %>
-                          <a href="<%= msg.content %>">Download Document</a>
-                        <% } %>
-                        <small><%= new Date(msg.timestamp).toLocaleString() %></small>
-                      </div>
-                    <% }); %>
-                  <% } else { %>
-                    <p class="no-user-selected">No messages found for this user.</p>
-                  <% } %>
-                </div>
-                <form id="chatForm" enctype="multipart/form-data">
-                  <input type="hidden" name="token" id="token" value="<%= token || '' %>">
-                  <input type="hidden" name="userId" id="userId" value="<%= selectedUserId || '' %>">
-                  <div class="input-group">
-                    <select name="type" id="messageType">
-                      <option value="text">Text</option>
-                      <option value="image">Image</option>
-                      <option value="document">Document</option>
-                      <option value="voice">Voice</option>
-                    </select>
-                    <input type="text" name="content" id="messageContent" placeholder="Type a message" style="flex: 1;">
-                    <input type="file" name="file" id="messageFile">
-                    <button type="submit" id="sendButton">Send</button>
+          </div>
+          <div class="users-list" id="usersList">
+            <% if (users && users.length > 0) { %>
+              <% users.forEach(function(user) { %>
+                <div class="user-item <%= selectedUserId && selectedUserId === user.id ? 'active' : '' %>" data-user-id="<%= user.id %>">
+                  <div class="user-avatar"><%= user.firstName[0] %><%= user.lastName[0] %></div>
+                  <div class="user-info">
+                    <div class="user-name"><%= user.firstName %> <%= user.lastName %></div>
+                    <div class="user-status" data-user-id="<%= user.id %>">
+                      <span class="status-dot <%= user.status === 'online' ? 'online' : 'offline' %>"></span>
+                      <span class="status-text"><%= user.status === 'online' ? 'Online' : 'Offline' %></span>
+                    </div>
                   </div>
-                </form>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="no-chat-selected">
+                <i class="fas fa-users"></i>
+                <h3>No Users Found</h3>
+                <p>Add users to start chatting</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+        <div class="chat-panel">
+          <div class="chat-header">
+            <div class="chat-user-info">
+              <% if (selectedUserId && users) { %>
+                <% const selectedUser = users.find(u => u.id === selectedUserId); %>
+                <% if (selectedUser) { %>
+                  <div class="user-avatar"><%= selectedUser.firstName[0] %><%= selectedUser.lastName[0] %></div>
+                  <div>
+                    <div class="user-name"><%= selectedUser.firstName %> <%= selectedUser.lastName %></div>
+                    <div class="user-status" data-user-id="<%= selectedUser.id %>">
+                      <span class="status-dot <%= selectedUser.status === 'online' ? 'online' : 'offline' %>"></span>
+                      <span class="status-text"><%= selectedUser.status === 'online' ? 'Online' : 'Offline' %></span>
+                    </div>
+                  </div>
+                <% } %>
+              <% } else { %>
+                <div class="user-name">Select a User</div>
               <% } %>
             </div>
+            <div class="chat-actions">
+              <button class="btn btn-secondary"><i class="fas fa-phone-alt"></i></button>
+              <button class="btn btn-secondary"><i class="fas fa-video"></i></button>
+              <button class="btn btn-secondary"><i class="fas fa-info-circle"></i></button>
+            </div>
+          </div>
+          <div class="messages-container" id="messages">
+            <% if (!selectedUserId) { %>
+              <div class="no-chat-selected">
+                <i class="fas fa-comments"></i>
+                <h3>Select a User</h3>
+                <p>Choose a user from the list to start chatting</p>
+              </div>
+            <% } else if (messages && messages.length > 0) { %>
+              <% messages.forEach(function(msg) { %>
+                <div class="message <%= msg.sender === 'admin' ? 'sent' : 'received' %>">
+                  <div class="message-content">
+                    <% if (msg.type === 'text') { %>
+                      <%= msg.content %>
+                    <% } else if (msg.type === 'image') { %>
+                      <div><%= msg.caption || 'Image' %></div>
+                      <img src="<%= msg.content %>" class="message-image" />
+                    <% } else if (msg.type === 'voice') { %>
+                      <div><%= msg.caption || 'Voice message' %></div>
+                      <div class="message-audio">
+                        <audio controls>
+                          <source src="<%= msg.content %>" type="audio/mpeg">
+                          Your browser does not support the audio element.
+                        </audio>
+                      </div>
+                    <% } else if (msg.type === 'location') { %>
+                      Location: <%= msg.content %>
+                    <% } else if (msg.type === 'document') { %>
+                      <div><%= msg.caption || 'File' %></div>
+                      <div class="message-file">
+                        <i class="fas fa-file-alt"></i>
+                        <a href="<%= msg.content %>" target="_blank" download><%= msg.content.split('/').pop() %></a>
+                      </div>
+                    <% } %>
+                  </div>
+                  <div class="message-time"><%= new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %></div>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <div class="no-chat-selected">
+                <i class="fas fa-comments"></i>
+                <h3>No Messages</h3>
+                <p>Start a conversation with this user</p>
+              </div>
+            <% } %>
+          </div>
+          <div class="chat-input-container">
+            <% if (selectedUserId) { %>
+              <form id="chatForm" enctype="multipart/form-data">
+                <input type="hidden" name="token" id="token" value="<%= token || '' %>">
+                <input type="hidden" name="userId" id="userId" value="<%= selectedUserId || '' %>">
+                <div class="message-type-selector">
+                  <button type="button" class="type-btn active" data-type="text">Text</button>
+                  <button type="button" class="type-btn" data-type="image">Image</button>
+                  <button type="button" class="type-btn" data-type="document">File</button>
+                  <button type="button" class="type-btn" data-type="voice">Voice</button>
+                </div>
+                <div class="input-group">
+                  <input type="text" name="content" id="messageInput" placeholder="Type a message...">
+                  <button type="submit" id="sendButton"><i class="fas fa-paper-plane"></i> Send</button>
+                </div>
+                <div class="file-input-container" id="fileInputContainer">
+                  <label for="fileInput" class="file-input-label">
+                    <i class="fas fa-cloud-upload-alt"></i> Choose File
+                  </label>
+                  <input type="file" name="file" id="fileInput" style="display: none;">
+                  <div class="selected-file" id="selectedFile">No file selected</div>
+                </div>
+              </form>
+            <% } %>
           </div>
         </div>
       </div>
     </div>
   </section>
   <%- include('partials/footer') %>
+  <div class="theme-toggle" id="themeToggle">
+    <i class="fas fa-moon"></i>
+  </div>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
   <script>
     $(document).ready(function() {
-      const socket = io('/?token=<%= token || '' %>');
+      // Theme toggle functionality
+      const themeToggle = $('#themeToggle');
+      const body = $('body');
+      themeToggle.on('click', function() {
+        body.toggleClass('dark-mode');
+        const icon = themeToggle.find('i');
+        if (body.hasClass('dark-mode')) {
+          icon.removeClass('fa-moon').addClass('fa-sun');
+        } else {
+          icon.removeClass('fa-sun').addClass('fa-moon');
+        }
+      });
+
+      // Socket.IO setup
+      const socket = io('/?token=<%= token || '' %>&userId=admin');
       socket.on('connect', () => {
         console.log('Socket connected:', socket.id);
-        socket.emit('joinChat', { userId: 'admin' });
+        socket.emit('join', 'admin');
       });
       socket.on('connect_error', (err) => {
         console.error('Socket connection error:', err.message);
         alert('Failed to connect to chat server. Please try again.');
       });
-      socket.on('message', (msg) => {
+
+      // Handle real-time messages
+      socket.on('receiveMessage', (msg) => {
         console.log('Received message:', msg);
         const selectedUserId = '<%= selectedUserId || '' %>';
         if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
-          const messages = document.getElementById('messages');
-          if (messages) {
-            const div = document.createElement('div');
-            div.className = `message ${msg.sender === 'admin' ? 'sent' : 'received'}`;
+          const messages = $('#messages');
+          if (messages.length) {
+            const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
+            let content = '';
             if (msg.type === 'text') {
-              div.innerHTML = `<p>${msg.content}</p><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+              content = `<div class="message-content">${msg.content}</div>`;
             } else if (msg.type === 'image') {
-              div.innerHTML = `<img src="${msg.content}" style="max-width: 200px;" /><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+              content = `<div class="message-content"><div>${msg.caption || 'Image'}</div><img src="${msg.content}" class="message-image" /></div>`;
             } else if (msg.type === 'voice') {
-              div.innerHTML = `<audio controls><source src="${msg.content}" type="audio/mpeg"></audio><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+              content = `<div class="message-content"><div>${msg.caption || 'Voice message'}</div><div class="message-audio"><audio controls><source src="${msg.content}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>`;
             } else if (msg.type === 'location') {
-              div.innerHTML = `<p>Location: ${msg.content}</p><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+              content = `<div class="message-content">Location: ${msg.content}</div>`;
             } else if (msg.type === 'document') {
-              div.innerHTML = `<a href="${msg.content}">Download Document</a><small>${new Date(msg.timestamp).toLocaleString()}</small>`;
+              content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
             }
-            messages.appendChild(div);
-            messages.scrollTop = messages.scrollHeight;
+            div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`);
+            messages.append(div);
+            messages[0].scrollTop = messages[0].scrollHeight;
           }
         }
       });
 
-      // Disable file input for text messages
-      $('#messageType').on('change', function() {
-        const type = $(this).val();
-        const $fileInput = $('#messageFile');
-        const $textInput = $('#messageContent');
+      // Handle user online/offline status
+      socket.on('userOnline', (data) => {
+        console.log('User online:', data);
+        const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
+        userStatusElements.each(function() {
+          $(this).find('.status-dot').removeClass('offline').addClass('online');
+          $(this).find('.status-text').text('Online');
+        });
+      });
+
+      socket.on('userOffline', (data) => {
+        console.log('User offline:', data);
+        const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
+        userStatusElements.each(function() {
+          $(this).find('.status-dot').removeClass('online').addClass('offline');
+          $(this).find('.status-text').text('Offline');
+        });
+      });
+
+      // Message type selector functionality
+      const typeButtons = $('.type-btn');
+      const fileInputContainer = $('#fileInputContainer');
+      const messageInput = $('#messageInput');
+      typeButtons.on('click', function() {
+        typeButtons.removeClass('active');
+        $(this).addClass('active');
+        const type = $(this).data('type');
         if (type === 'text') {
-          $fileInput.prop('disabled', true).hide();
-          $textInput.prop('disabled', false).show();
+          fileInputContainer.removeClass('active');
+          messageInput.attr('placeholder', 'Type a message...');
         } else {
-          $fileInput.prop('disabled', false).show();
-          $textInput.prop('disabled', true).hide();
+          fileInputContainer.addClass('active');
+          messageInput.attr('placeholder', 'Add a caption (optional)...');
         }
       });
-      $('#messageType').trigger('change');
+
+      // File input functionality
+      const fileInput = $('#fileInput');
+      const selectedFile = $('#selectedFile');
+      fileInput.on('change', function() {
+        if (this.files.length > 0) {
+          selectedFile.text(this.files[0].name);
+        } else {
+          selectedFile.text('No file selected');
+        }
+      });
 
       // AJAX form submission
       $('#chatForm').on('submit', function(e) {
         e.preventDefault();
-        const type = $('#messageType').val();
-        const content = $('#messageContent').val();
-        const file = $('#messageFile').prop('files')[0];
+        const type = $('.type-btn.active').data('type');
+        const content = $('#messageInput').val();
+        const file = fileInput[0].files[0];
         const userId = $('#userId').val();
         const token = $('#token').val();
 
@@ -231,6 +741,7 @@
           formData.append('content', content);
         } else {
           formData.append('file', file);
+          formData.append('caption', content);
         }
 
         $.ajax({
@@ -244,8 +755,9 @@
           contentType: false,
           success: function(response) {
             console.log('Message sent successfully:', response);
-            $('#messageContent').val('');
-            $('#messageFile').val('');
+            $('#messageInput').val('');
+            $('#fileInput').val('');
+            $('#selectedFile').text('No file selected');
             alert('Message sent successfully!');
           },
           error: function(xhr, status, error) {
@@ -257,6 +769,33 @@
             }
           }
         });
+      });
+
+      // User selection functionality
+      $('.user-item').on('click', function() {
+        const userId = $(this).data('user-id');
+        window.location.href = `/admin/chat?userId=${userId}&token=<%= token || '' %>`;
+      });
+
+      // Search users functionality
+      $('#userSearch').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.user-item').each(function() {
+          const userName = $(this).find('.user-name').text().toLowerCase();
+          $(this).toggle(userName.includes(searchTerm));
+        });
+      });
+
+      // Allow sending message with Enter key
+      $('#messageInput').on('keypress', function(e) {
+        if (e.key === 'Enter') {
+          $('#sendButton').click();
+        }
+      });
+
+      // Handle alert dismissal
+      $('.alert .close').on('click', function() {
+        $(this).parent().hide();
       });
     });
   </script>
