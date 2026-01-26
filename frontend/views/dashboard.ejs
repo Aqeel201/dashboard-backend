@@ -1,752 +1,366 @@
 <%- include('partials/header') %>
 
-<!-- Define getStatusBadgeClass function -->
-<% 
-  function getStatusBadgeClass(status) {
-    switch (status.toLowerCase()) {
-      case 'success': return 'badge-success';
-      case 'pending': return 'badge-warning';
-      case 'cancelled': return 'badge-danger';
-      case 'processing': return 'badge-info';
-      case 'accepted': return 'badge-success';
-      case 'rejected': return 'badge-danger';
-      default: return 'badge-secondary';
-    }
-  }
+  <% function getStatusBadgeClass(status) { if (!status) return 'badge-secondary' ; switch (status.toLowerCase()) {
+    case 'success' : return 'badge-success' ; case 'pending' : return 'badge-warning' ; case 'cancelled' :
+    return 'badge-danger' ; case 'processing' : return 'badge-info' ; case 'accepted' : return 'badge-success' ;
+    case 'rejected' : return 'badge-danger' ; default: return 'badge-secondary' ; } } // Default arrays if undefined var
+    localExpiryMedicines=(typeof expiryMedicines !=='undefined' ? expiryMedicines : []); var
+    localLowStockMedicines=(typeof lowStockMedicines !=='undefined' ? lowStockMedicines : []); var
+    totalAlerts=localExpiryMedicines.length + localLowStockMedicines.length; var localOnlineOrders=(typeof onlineOrders
+    !=='undefined' ? onlineOrders : []); var localInPersonSales=(typeof inPersonSales !=='undefined' ? inPersonSales :
+    []); %>
 
-  // Default arrays if undefined
-  var localExpiryMedicines = (typeof expiryMedicines !== 'undefined' ? expiryMedicines : []);
-  var localLowStockMedicines = (typeof lowStockMedicines !== 'undefined' ? lowStockMedicines : []);
-  var totalAlerts = localExpiryMedicines.length + localLowStockMedicines.length;
-  var localOnlineOrders = (typeof onlineOrders !== 'undefined' ? onlineOrders : []);
-  var localInPersonSales = (typeof inPersonSales !== 'undefined' ? inPersonSales : []);
-%>
-
-<!-- Main Dashboard Container -->
-<div class="container-fluid mt-4 p-0" style="max-width: 1500px;">
-  <!-- Header Section -->
-  <section class="content-header mb-4">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="text-dark font-weight-bold">
-            <i class="fas fa-tachometer-alt mr-2"></i> Insights Dashboard
-          </h1>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Key Metrics Row -->
-  <div class="row mb-5">
-    <div class="col-md-6 col-lg-3 mb-4">
-      <div class="card shadow-md hover-card bg-white rounded-lg border-light">
-        <div class="card-body d-flex flex-column align-items-center text-center p-4">
-          <div class="metric-icon mb-3">
-            <i class="fas fa-prescription-bottle fa-3x text-primary"></i>
+    <!-- Main Dashboard Container -->
+    <div class="container-fluid mt-4 p-0">
+      <!-- Header Section -->
+      <section class="content-header mb-4">
+        <div class="container-fluid">
+          <div class="row mb-2">
+            <div class="col-sm-6">
+              <h1 class="text-dark font-weight-bold">
+                <i class="fas fa-tachometer-alt mr-2"></i> Insights Dashboard
+              </h1>
+            </div>
           </div>
-          <h5 class="card-title text-muted mb-1">Total Medicines</h5>
-          <h3 class="card-text font-weight-bold text-primary mb-2"><%= medicineCount %></h3>
-          <a href="/admin/medicines?token=<%= token %>" class="btn btn-link text-primary p-0 mt-auto">View <i class="fas fa-arrow-right"></i></a>
         </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-      <div class="card shadow-md hover-card bg-white rounded-lg border-light">
-        <div class="card-body d-flex flex-column align-items-center text-center p-4">
-          <div class="metric-icon mb-3">
-            <i class="fas fa-users fa-3x text-success"></i>
-          </div>
-          <h5 class="card-title text-muted mb-1">Total Users</h5>
-          <h3 class="card-text font-weight-bold text-success mb-2"><%= userCount %></h3>
-          <a href="/admin/users?token=<%= token %>" class="btn btn-link text-success p-0 mt-auto">View <i class="fas fa-arrow-right"></i></a>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-      <div class="card shadow-md hover-card bg-white rounded-lg border-light">
-        <div class="card-body d-flex flex-column align-items-center text-center p-4">
-          <div class="metric-icon mb-3">
-            <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
-          </div>
-          <h5 class="card-title text-muted mb-1">Medicine Alerts</h5>
-          <h3 class="card-text font-weight-bold text-danger mb-2"><%= totalAlerts %></h3>
-          <a href="/admin/medicine-alerts?token=<%= token %>" class="btn btn-link text-danger p-0 mt-auto">View <i class="fas fa-arrow-right"></i></a>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-3 mb-4">
-      <div class="card shadow-md hover-card bg-white rounded-lg border-light clickable-card" id="totalSalesCard">
-        <div class="card-body d-flex flex-column align-items-center text-center p-4">
-          <div class="metric-icon mb-3">
-            <i class="fas fa-dollar-sign fa-3x text-warning"></i>
-          </div>
-          <h5 class="card-title text-muted mb-1">Total Sales</h5>
-          <h3 class="card-text font-weight-bold text-warning mb-2">Rs <%= totalSales %></h3>
-        </div>
-      </div>
-    </div>
-  </div>
+      </section>
 
-  <!-- Graphs Row -->
-  <div class="row mb-5">
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-lg bg-white rounded-lg overflow-hidden">
-        <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><i class="fas fa-chart-pie mr-2"></i> Sales & Profit</h5>
-          <button type="button" class="btn btn-tool text-white" data-toggle="collapse" data-target="#salesProfitChartCollapse">
-            <i class="fas fa-minus"></i>
-          </button>
-        </div>
-        <div class="card-body collapse show p-4" id="salesProfitChartCollapse">
-          <canvas id="salesProfitChart" height="250"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-lg bg-white rounded-lg overflow-hidden">
-        <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-          <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i> Purchase History (Last 5)</h5>
-          <button type="button" class="btn btn-tool text-white" data-toggle="collapse" data-target="#purchaseHistoryChartCollapse">
-            <i class="fas fa-minus"></i>
-          </button>
-        </div>
-        <div class="card-body collapse show p-4" id="purchaseHistoryChartCollapse">
-          <canvas id="purchaseHistoryChart" height="250"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sales Report Tabs -->
-  <div class="card shadow-lg bg-white rounded-lg mb-5">
-    <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i> Sales & Profit Reports</h5>
-    </div>
-    <div class="card-body p-4">
-      <div class="report-tabs mb-4 d-flex flex-wrap justify-content-center">
-        <button class="report-tab active" data-period="daily">Daily</button>
-        <button class="report-tab" data-period="weekly">7 Days</button>
-        <button class="report-tab" data-period="fortnightly">15 Days</button>
-        <button class="report-tab" data-period="monthly">Monthly</button>
-        <button class="report-tab" data-period="yearly">Yearly</button>
-      </div>
-      <div class="row justify-content-center" id="reportCards"></div>
-    </div>
-  </div>
-
- 
-<!-- Combined Purchase History Table -->
-<div class="card shadow-lg bg-white rounded-lg">
-  <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Recent Purchase History</h5>
-    <div class="card-tools">
-      <button type="button" class="btn btn-tool text-white" data-toggle="collapse" data-target="#purchaseHistoryTableCollapse" aria-expanded="true" aria-controls="purchaseHistoryTableCollapse">
-        <i class="fas fa-minus"></i>
-      </button>
-      <button type="button" class="btn btn-tool text-white" data-card-widget="remove">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  </div>
-  <div class="card-body p-0 table-responsive collapse show" id="purchaseHistoryTableCollapse">
-    <table class="table table-hover table-striped">
-      <thead class="bg-light-blue">
-        <tr>
-          <th>Type</th>
-          <th>Customer/Details</th>
-          <th>Total (Rs.)</th>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% 
-          const combinedHistory = [
-            ...localOnlineOrders.map(order => ({ type: 'Online', data: order })),
-            ...localInPersonSales.map(sale => ({ type: 'In-Person', data: sale }))
-          ].sort((a, b) => new Date(b.data.date || b.data.saleDate) - new Date(a.data.date || a.data.saleDate)).slice(0, 5);
-        %>
-        <% if (combinedHistory.length > 0) { %>
-          <% combinedHistory.forEach(entry => { %>
-            <% if (entry.type === 'Online') { %>
-              <tr class="transition-transform">
-                <td>Online Order</td>
-                <td><%= entry.data.shippingAddress.firstName %> <%= entry.data.shippingAddress.lastName %> (<%= entry.data.shippingEmail %>)</td>
-                <td class="font-weight-bold text-center">Rs. <%= entry.data.orderTotal ? entry.data.orderTotal.toFixed(2) : '0.00' %></td>
-                <td class="text-center">
-                  <span class="badge <%= getStatusBadgeClass(entry.data.status) %>"><%= entry.data.status %></span>
-                </td>
-                <td class="text-center"><%= new Date(entry.data.date).toLocaleString() %></td>
-                <td class="text-center">
-                  <button class="btn btn-sm btn-info btn-action toggle-details-btn" data-target="#onlineDetails-<%= entry.data._id %>">
-                    <i class="fas fa-eye"></i> <span class="btn-text">View</span>
-                  </button>
-                </td>
-              </tr>
-              <tr class="collapse" id="onlineDetails-<%= entry.data._id %>">
-                <td colspan="6">
-                  <div class="p-3 bg-light rounded shadow-sm">
-                    <h6 class="text-primary mb-2">Order Items:</h6>
-                    <% if (entry.data.cartItems && entry.data.cartItems.length > 0) { %>
-                      <% entry.data.cartItems.forEach(item => { %>
-                        <p class="mb-1"><%= item.name || 'Unknown Medicine' %> - x<%= item.cartQuantity || 0 %> @ Rs.<%= item.price ? (item.price * (item.cartQuantity || 0)).toFixed(2) : '0.00' %></p>
-                      <% }) %>
-                    <% } else { %>
-                      <p class="text-muted">No items available.</p>
-                    <% } %>
-                  </div>
-                </td>
-              </tr>
-            <% } else { %>
-              <tr class="transition-transform">
-                <td>In-Person Sale</td>
-                <td><%= entry.data.customerName || 'N/A' %> (<%= entry.data.customerContact || 'N/A' %>)</td>
-                <td class="font-weight-bold text-center">Rs. <%= entry.data.totalAmount ? entry.data.totalAmount.toFixed(2) : '0.00' %></td>
-                <td class="text-center">
-                  <span class="badge badge-success">Completed</span>
-                </td>
-                <td class="text-center"><%= new Date(entry.data.saleDate).toLocaleString() %></td>
-                <td class="text-center">
-                  <button class="btn btn-sm btn-info btn-action" data-toggle="modal" data-target="#summaryModal-<%= entry.data._id %>" onclick="showSaleSummary('<%- JSON.stringify(entry.data) %>')">
-                    <i class="fas fa-eye"></i> View
-                  </button>
-                </td>
-              </tr>
-            <% } %>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="6" class="text-center py-4">
-              <div class="empty-state">
-                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No purchase history found</h4>
+      <!-- Key Metrics Row -->
+      <div class="row mb-5">
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card shadow-md hover-card bg-primary rounded-lg border-none text-white">
+            <div class="card-body d-flex flex-column align-items-center text-center p-4">
+              <div class="metric-icon mb-3 bg-white-opacity">
+                <i class="fas fa-prescription-bottle fa-3x text-white"></i>
               </div>
-            </td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-</div>
+              <h5 class="card-title mb-1">Total Medicines</h5>
+              <h3 class="card-text font-weight-bold mb-2">
+                <%= medicineCount %>
+              </h3>
+              <a href="/admin/medicines?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
+                  class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card shadow-md hover-card bg-success rounded-lg border-none text-white">
+            <div class="card-body d-flex flex-column align-items-center text-center p-4">
+              <div class="metric-icon mb-3 bg-white-opacity">
+                <i class="fas fa-users fa-3x text-white"></i>
+              </div>
+              <h5 class="card-title mb-1">Total Users</h5>
+              <h3 class="card-text font-weight-bold mb-2">
+                <%= userCount %>
+              </h3>
+              <a href="/admin/users?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
+                  class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card shadow-md hover-card bg-danger rounded-lg border-none text-white">
+            <div class="card-body d-flex flex-column align-items-center text-center p-4">
+              <div class="metric-icon mb-3 bg-white-opacity">
+                <i class="fas fa-exclamation-triangle fa-3x text-white"></i>
+              </div>
+              <h5 class="card-title mb-1">Medicine Alerts</h5>
+              <h3 class="card-text font-weight-bold mb-2">
+                <%= totalAlerts %>
+              </h3>
+              <a href="/admin/medicine-alerts?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
+                  class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card shadow-md hover-card bg-warning rounded-lg border-none text-white">
+            <div class="card-body d-flex flex-column align-items-center text-center p-4">
+              <div class="metric-icon mb-3 bg-white-opacity">
+                <i class="fas fa-dollar-sign fa-3x text-white"></i>
+              </div>
+              <h5 class="card-title mb-1">Total Sales</h5>
+              <h3 class="card-text font-weight-bold mb-2">Rs <%= totalSales %>
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
 
-<!-- Toggle Script -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.toggle-details-btn').forEach(button => {
-      button.addEventListener('click', function () {
-        const targetId = this.getAttribute('data-target');
-        const targetRow = document.querySelector(targetId);
-        const btnText = this.querySelector('.btn-text');
-        const icon = this.querySelector('i');
+      <!-- Graphs Row -->
+      <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-lg bg-white rounded-lg overflow-hidden">
+            <div class="card-header text-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="fas fa-chart-pie mr-2"></i> Sales & Profit</h5>
+              <button type="button" class="btn btn-tool text-white" data-toggle="collapse"
+                data-target="#salesProfitChartCollapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+            <div class="card-body collapse show p-4" id="salesProfitChartCollapse">
+              <canvas id="salesProfitChart" height="250"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 mb-4">
+          <div class="card shadow-lg bg-white rounded-lg overflow-hidden">
+            <div class="card-header text-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i> Purchase History (Last 5)</h5>
+              <button type="button" class="btn btn-tool text-white" data-toggle="collapse"
+                data-target="#purchaseHistoryChartCollapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+            <div class="card-body collapse show p-4" id="purchaseHistoryChartCollapse">
+              <canvas id="purchaseHistoryChart" height="250"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        if (targetRow.classList.contains('show')) {
-          $(targetRow).collapse('hide');
-          icon.classList.remove('fa-times');
-          icon.classList.add('fa-eye');
-          btnText.textContent = 'View';
-        } else {
-          $(targetRow).collapse('show');
-          icon.classList.remove('fa-eye');
-          icon.classList.add('fa-times');
-          btnText.textContent = 'Close';
-        }
-      });
-    });
-  });
-</script>
+      <!-- Sales Report Tabs -->
+      <div class="card shadow-lg bg-white rounded-lg mb-5">
+        <div class="card-header text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-chart-line mr-2"></i> Sales & Profit Reports</h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="report-tabs mb-4 d-flex flex-wrap justify-content-center">
+            <button class="report-tab active" data-period="daily">Daily</button>
+            <button class="report-tab" data-period="weekly">7 Days</button>
+            <button class="report-tab" data-period="fortnightly">15 Days</button>
+            <button class="report-tab" data-period="monthly">Monthly</button>
+            <button class="report-tab" data-period="yearly">Yearly</button>
+          </div>
+          <div class="row justify-content-center" id="reportCards"></div>
+        </div>
+      </div>
 
-
-<!-- Modal for Sale Summary (Dynamic per entry) -->
-<% combinedHistory.forEach(entry => { %>
-  <% if (entry.type === 'In-Person') { %>
-    <div class="modal fade" id="summaryModal-<%= entry.data._id %>" tabindex="-1" aria-labelledby="summaryModalLabel-<%= entry.data._id %>" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow-lg border-0 rounded-lg">
-          <div class="modal-header bg-gradient-primary text-white">
-            <h5 class="modal-title font-weight-bold" id="summaryModalLabel-<%= entry.data._id %>">Sale Details</h5>
-            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">×</span>
+      <!-- Combined Purchase History Table -->
+      <div class="card shadow-lg bg-white rounded-lg">
+        <div class="card-header text-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Recent Purchase History</h5>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool text-white" data-toggle="collapse"
+              data-target="#purchaseHistoryTableCollapse">
+              <i class="fas fa-minus"></i>
             </button>
           </div>
-          <div class="modal-body p-4 bg-light">
-            <table class="summary-table table table-bordered table-hover mb-0">
-              <thead class="thead-light">
-                <tr>
-                  <th>Medicine</th>
-                  <th>Quantity</th>
-                  <th>Unit Price (PKR)</th>
-                  <th>Total Price (PKR)</th>
-                </tr>
-              </thead>
-              <tbody id="summaryTable-<%= entry.data._id %>"></tbody>
-            </table>
-          </div>
-          <div class="modal-footer bg-white border-0">
-            <button type="button" class="btn btn-danger btn-sm font-weight-bold shadow-sm" data-dismiss="modal">Close</button>
-          </div>
+        </div>
+        <div class="card-body p-0 table-responsive collapse show" id="purchaseHistoryTableCollapse">
+          <table class="table table-hover table-striped">
+            <thead class="bg-light-blue">
+              <tr>
+                <th>Type</th>
+                <th>Customer/Details</th>
+                <th>Total (Rs.)</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% const combinedHistory=[ ...localOnlineOrders.map(order=> ({ type: 'Online', data: order })),
+                ...localInPersonSales.map(sale => ({ type: 'In-Person', data: sale }))
+                ].sort((a, b) => new Date(b.data.date || b.data.saleDate) - new Date(a.data.date ||
+                a.data.saleDate)).slice(0, 5);
+                %>
+                <% if (combinedHistory.length> 0) { %>
+                  <% combinedHistory.forEach(entry=> { %>
+                    <% if (entry.type==='Online' ) { %>
+                      <tr class="transition-transform">
+                        <td>Online Order</td>
+                        <td>
+                          <%= entry.data.shippingAddress ? entry.data.shippingAddress.firstName + ' ' +
+                            entry.data.shippingAddress.lastName : 'N/A' %> (<%= entry.data.shippingEmail %>)
+                        </td>
+                        <td class="font-weight-bold text-center">Rs. <%= entry.data.orderTotal ?
+                            entry.data.orderTotal.toFixed(2) : '0.00' %>
+                        </td>
+                        <td class="text-center">
+                          <span class="badge <%= getStatusBadgeClass(entry.data.status) %>">
+                            <%= entry.data.status %>
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <%= new Date(entry.data.date).toLocaleString() %>
+                        </td>
+                        <td class="text-center">
+                          <button class="btn btn-sm btn-info btn-action toggle-details-btn"
+                            data-target="#onlineDetails-<%= entry.data._id %>">
+                            <i class="fas fa-eye"></i> <span class="btn-text">View</span>
+                          </button>
+                        </td>
+                      </tr>
+                      <tr class="collapse" id="onlineDetails-<%= entry.data._id %>">
+                        <td colspan="6">
+                          <div class="p-3 bg-light rounded shadow-sm">
+                            <h6 class="text-primary mb-2">Order Items:</h6>
+                            <% if (entry.data.cartItems && entry.data.cartItems.length> 0) { %>
+                              <% entry.data.cartItems.forEach(item=> { %>
+                                <p class="mb-1">
+                                  <%= item.name || 'Unknown Medicine' %> - x<%= item.cartQuantity || 0 %> @ Rs.<%=
+                                        item.price ? (item.price * (item.cartQuantity || 0)).toFixed(2) : '0.00' %>
+                                </p>
+                                <% }) %>
+                                  <% } else { %>
+                                    <p class="text-muted">No items available.</p>
+                                    <% } %>
+                          </div>
+                        </td>
+                      </tr>
+                      <% } else { %>
+                        <tr class="transition-transform">
+                          <td>In-Person Sale</td>
+                          <td>
+                            <%= entry.data.customerName || 'N/A' %> (<%= entry.data.customerContact || 'N/A' %>)
+                          </td>
+                          <td class="font-weight-bold text-center">Rs. <%= entry.data.totalAmount ?
+                              entry.data.totalAmount.toFixed(2) : '0.00' %>
+                          </td>
+                          <td class="text-center">
+                            <span class="badge badge-success">Completed</span>
+                          </td>
+                          <td class="text-center">
+                            <%= new Date(entry.data.saleDate).toLocaleString() %>
+                          </td>
+                          <td class="text-center">
+                            <button class="btn btn-sm btn-info btn-action"
+                              onclick="showSaleSummary('<%- JSON.stringify(entry.data) %>')" data-toggle="modal"
+                              data-target="#summaryModal-<%= entry.data._id %>">
+                              <i class="fas fa-eye"></i> View
+                            </button>
+                          </td>
+                        </tr>
+                        <% } %>
+                          <% }) %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="6" class="text-center py-4">
+                                  <div class="empty-state">
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No purchase history found</h4>
+                                  </div>
+                                </td>
+                              </tr>
+                              <% } %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  <% } %>
-<% }) %>
 
-<!-- Custom Styles -->
-<style>
-  body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
-    color: #1a1a2e;
-    overflow-x: hidden;
-  }
+    <!-- Modal for Sale Summary -->
+    <% combinedHistory.forEach(entry=> { %>
+      <% if (entry.type==='In-Person' ) { %>
+        <div class="modal fade" id="summaryModal-<%= entry.data._id %>" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg border-0 rounded-lg">
+              <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title font-weight-bold">Sale Details</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">×</span>
+                </button>
+              </div>
+              <div class="modal-body p-4 bg-light">
+                <table class="summary-table table table-bordered table-hover mb-0">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Medicine</th>
+                      <th>Quantity</th>
+                      <th>Unit Price (PKR)</th>
+                      <th>Total Price (PKR)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="summaryTable-<%= entry.data._id %>"></tbody>
+                </table>
+              </div>
+              <div class="modal-footer bg-white border-0">
+                <button type="button" class="btn btn-danger btn-sm font-weight-bold shadow-sm"
+                  data-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+          <% }) %>
 
-  .container-fluid {
-    max-width: 1500px;
-    padding: 0 20px;
-  }
+            <!-- Custom Scripts and Styles -->
+            <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+            <script
+              src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
-  .content-header {
-    background: #ffffff;
-    padding: 1.5rem 0;
-    border-radius: 15px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e5e7eb;
-  }
+            <script>
+              document.addEventListener('DOMContentLoaded', () => {
+                Chart.register(window.ChartDataLabels);
 
-  .card {
-    border: none;
-    border-radius: 15px;
-    background: #fff;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  }
+                // Pie Chart
+                const salesProfitCtx = document.getElementById('salesProfitChart').getContext('2d');
+                new Chart(salesProfitCtx, {
+                  type: 'pie',
+                  data: {
+                    labels: ['Total Sales', 'Total Profit'],
+                    datasets: [{
+                      data: [<%= totalSales %>, <%= totalProfit %>],
+                      backgroundColor: ['#6366f1', '#10b981'],
+                      borderWidth: 3,
+                      borderColor: '#ffffff',
+                      hoverOffset: 20
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    plugins: {
+                      legend: { position: 'bottom' },
+                      datalabels: {
+                        color: '#fff',
+                        formatter: (val) => `Rs ${val.toFixed(2)}`
+                      }
+                    }
+                  }
+                });
 
-  .card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  }
+                // Bar Chart
+                const purchaseHistoryCtx = document.getElementById('purchaseHistoryChart').getContext('2d');
+                const chartData = <% - JSON.stringify(combinedHistory.map(e => ({
+                  type: e.type,
+                  total: e.type === 'Online' ? e.data.orderTotal : e.data.totalAmount,
+                  date: new Date(e.data.date || e.data.saleDate).toLocaleDateString()
+                }))) %>;
 
-  .card-header {
-    border-radius: 15px 15px 0 0;
-    padding: 1.8rem;
-    background: linear-gradient(45deg, #3b82f6, #60a5fa);
-    border-bottom: none;
-    color: #fff;
-  }
+                new Chart(purchaseHistoryCtx, {
+                  type: 'bar',
+                  data: {
+                    labels: chartData.map(d => d.date),
+                    datasets: [{
+                      label: 'Total (Rs.)',
+                      data: chartData.map(d => d.total || 0),
+                      backgroundColor: chartData.map(d => d.type === 'Online' ? 'rgba(99, 102, 241, 0.8)' : 'rgba(234, 179, 8, 0.8)'),
+                      borderRadius: 8
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                  }
+                });
 
-  .hover-card {
-    padding: 2rem;
-    border-radius: 15px;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-  }
+                // Report showing function
+                window.showReport = function (period) {
+                  const totals = {
+                    daily: { sales: <%= dailyTotals.sales %>, profit: <%= dailyTotals.profit %>, orders: <%= dailyTotals.orders %> },
+                    weekly: { sales: <%= weeklyTotals.sales %>, profit: <%= weeklyTotals.profit %>, orders: <%= weeklyTotals.orders %> },
+                    fortnightly: { sales: <%= fortnightlyTotals.sales %>, profit: <%= fortnightlyTotals.profit %>, orders: <%= fortnightlyTotals.orders %> },
+                    monthly: { sales: <%= monthlyTotals.sales %>, profit: <%= monthlyTotals.profit %>, orders: <%= monthlyTotals.orders %> },
+                    yearly: { sales: <%= yearlyTotals.sales %>, profit: <%= yearlyTotals.profit %>, orders: <%= yearlyTotals.orders %> }
+                  }[period];
 
-  .hover-card:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
-  }
-
-  .metric-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: linear-gradient(45deg, #f3f4f6, #ffffff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .hover-card:hover .metric-icon {
-    transform: rotate(360deg) scale(1.15);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .report-tabs {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 0.5rem;
-    background: #f3f4f6;
-    border-radius: 12px;
-  }
-
-  .report-tab {
-    padding: 0.9rem 2rem;
-    background: #ffffff;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 600;
-    color: #374151;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  }
-
-  .report-tab.active, .report-tab:hover {
-    background: linear-gradient(45deg, #3b82f6, #60a5fa);
-    color: #fff;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    border-color: transparent;
-  }
-
-  .table {
-    margin-bottom: 0;
-    border-radius: 15px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  }
-
-  .table-hover tbody tr:hover {
-    background-color: rgba(59, 130, 246, 0.05);
-    transform: scale(1.01);
-    transition: all 0.2s ease;
-  }
-
-  .table thead th {
-    background: linear-gradient(45deg, #e0f2fe, #bae6fd);
-    color: #1e3a8a;
-    font-weight: 700;
-    border-bottom: 2px solid #bfdbfe;
-    padding: 1.2rem;
-  }
-
-  .badge {
-    padding: 0.6em 1.2em;
-    border-radius: 25px;
-    font-size: 0.9em;
-    font-weight: 700;
-    color: #fff;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-    text-transform: capitalize;
-  }
-
-  .badge-success { background: linear-gradient(45deg, #22c55e, #4ade80); }
-  .badge-warning { background: linear-gradient(45deg, #f59e0b, #fbbf24); color: #1f2937; }
-  .badge-danger { background: linear-gradient(45deg, #ef4444, #f87171); }
-  .badge-info { background: linear-gradient(45deg, #0ea5e9, #38bdf8); }
-  .badge-secondary { background: linear-gradient(45deg, #6b7280, #9ca3af); }
-
-  .modal-content {
-    border-radius: 20px;
-    border: none;
-    background: #fff;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-  }
-
-  .modal-header {
-    border-radius: 20px 20px 0 0;
-    padding: 1.8rem;
-    background: linear-gradient(45deg, #3b82f6, #60a5fa);
-  }
-
-  .modal-body {
-    background: #f8fafc;
-    border-radius: 0 0 20px 20px;
-    padding: 2rem;
-  }
-
-  .summary-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .summary-table th, .summary-table td {
-    padding: 1.2rem;
-    border-bottom: 1px solid #e5e7eb;
-    text-align: left;
-  }
-
-  .summary-table th {
-    background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
-    font-weight: 700;
-    color: #1e3a8a;
-  }
-
-  .summary-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  .btn-danger {
-    background: linear-gradient(45deg, #ef4444, #f87171);
-    border: none;
-    padding: 0.7rem 1.5rem;
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    font-weight: 700;
-  }
-
-  .btn-danger:hover {
-    background: linear-gradient(45deg, #dc2626, #ef4444);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-  }
-
-  .btn-action {
-    border-radius: 25px;
-    padding: 0.5rem 1.2rem;
-    transition: all 0.3s ease;
-    background: linear-gradient(45deg, #3b82f6, #60a5fa);
-    border: none;
-    color: #fff;
-  }
-
-  .btn-action:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(45deg, #2563eb, #3b82f6);
-  }
-
-  .empty-state {
-    opacity: 0.8;
-    padding: 3rem 0;
-    animation: fadeIn 0.5s ease-in-out;
-  }
-
-  .price {
-    color: #22c55e;
-    font-weight: 700;
-    font-size: 1.1rem;
-  }
-
-  .font-size-lg {
-    font-size: 1.5rem;
-  }
-
-  .bg-gradient-light {
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
-  }
-
-  .bg-light-blue {
-    background: linear-gradient(45deg, #e0f2fe, #bae6fd);
-  }
-
-  .clickable-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .clickable-card:hover {
-    background: linear-gradient(135deg, #f8fafc, #e5e7eb);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    transform: translateY(-10px);
-  }
-
-  @media (max-width: 768px) {
-    .card-body { padding: 1.5rem; }
-    .report-tab { padding: 0.7rem 1.5rem; }
-    .metric-icon { width: 60px; height: 60px; }
-    .font-size-lg { font-size: 1.2rem; }
-    .table thead th, .table td { padding: 0.8rem; }
-    .modal-body { padding: 1.5rem; }
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .card, .hover-card {
-    animation: fadeIn 0.6s ease-in-out;
-  }
-
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-
-  .clickable-card:hover {
-    animation: pulse 0.3s ease-in-out;
-  }
-</style>
-
-<!-- Scripts -->
-<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Register the datalabels plugin
-    Chart.register(window.ChartDataLabels);
-
-    // Sales & Profit Pie Chart
-    const salesProfitCtx = document.getElementById('salesProfitChart').getContext('2d');
-    new Chart(salesProfitCtx, {
-      type: 'pie',
-      data: {
-        labels: ['Total Sales', 'Total Profit'],
-        datasets: [{
-          data: [<%= totalSales %>, <%= totalProfit %>],
-          backgroundColor: ['#3b82f6', '#22c55e'],
-          borderWidth: 3,
-          borderColor: '#ffffff',
-          hoverOffset: 20
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { 
-            position: 'bottom', 
-            labels: { 
-              color: '#1a1a2e', 
-              font: { size: 14, family: 'Inter', weight: '600' },
-              padding: 15,
-              boxWidth: 20
-            }
-          },
-          tooltip: { 
-            backgroundColor: 'rgba(31, 41, 55, 0.9)', 
-            titleFont: { size: 16, family: 'Inter', weight: '600' }, 
-            bodyFont: { size: 14, family: 'Inter' },
-            padding: 12,
-            cornerRadius: 8
-          },
-          datalabels: {
-            color: '#fff',
-            font: { size: 16, weight: 'bold', family: 'Inter' },
-            formatter: (value) => `Rs ${value.toFixed(2)}`,
-            anchor: 'center',
-            align: 'center',
-            textShadow: true,
-            textShadowColor: 'rgba(0, 0, 0, 0.5)',
-            textShadowBlur: 5
-          }
-        },
-        animation: {
-          animateScale: true,
-          animateRotate: true
-        }
-      }
-    });
-
-    // Purchase History Bar Chart
-    const purchaseHistoryCtx = document.getElementById('purchaseHistoryChart').getContext('2d');
-    const combinedHistory = <%- JSON.stringify(combinedHistory.map(entry => ({
-      type: entry.type,
-      total: entry.type === 'Online' ? entry.data.orderTotal : entry.data.totalAmount,
-      date: entry.type === 'Online' ? new Date(entry.data.date).toLocaleDateString() : new Date(entry.data.saleDate).toLocaleDateString()
-    }))) %>;
-    new Chart(purchaseHistoryCtx, {
-      type: 'bar',
-      data: {
-        labels: combinedHistory.map(item => item.date),
-        datasets: [{
-          label: 'Total (Rs.)',
-          data: combinedHistory.map(item => item.total || 0),
-          backgroundColor: combinedHistory.map(item => item.type === 'Online' ? 'rgba(59, 130, 246, 0.8)' : 'rgba(234, 179, 8, 0.8)'),
-          borderColor: combinedHistory.map(item => item.type === 'Online' ? '#3b82f6' : '#eab308'),
-          borderWidth: 2,
-          borderRadius: 8,
-          hoverBackgroundColor: combinedHistory.map(item => item.type === 'Online' ? 'rgba(59, 130, 246, 1)' : 'rgba(234, 179, 8, 1)')
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: { 
-            beginAtZero: true, 
-            title: { 
-              display: true, 
-              text: 'Total (Rs.)', 
-              color: '#1a1a2e', 
-              font: { size: 14, family: 'Inter', weight: '600' } 
-            }, 
-            ticks: { 
-              color: '#4b5563', 
-              font: { family: 'Inter', size: 12 },
-              callback: (value) => `Rs ${value}`
-            },
-            grid: { 
-              color: '#e5e7eb',
-              borderColor: '#d1d5db',
-              borderWidth: 2
-            }
-          },
-          x: { 
-            title: { 
-              display: true, 
-              text: 'Date', 
-              color: '#1a1a2e', 
-              font: { size: 14, family: 'Inter', weight: '600' } 
-            }, 
-            ticks: { 
-              color: '#4b5563', 
-              font: { family: 'Inter', size: 12 },
-              maxRotation: 45,
-              minRotation: 45
-            },
-            grid: { 
-              display: false 
-            }
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: 'rgba(31, 41, 55, 0.9)',
-            titleFont: { size: 16, family: 'Inter', weight: '600' },
-            bodyFont: { size: 14, family: 'Inter' },
-            padding: 12,
-            cornerRadius: 8,
-            callbacks: {
-              label: (context) => `Type: ${combinedHistory[context.dataIndex].type}, Rs. ${context.raw.toFixed(2)}`
-            }
-          },
-          datalabels: {
-            color: '#fff',
-            font: { size: 14, weight: 'bold', family: 'Inter' },
-            formatter: (value) => value > 0 ? `Rs ${value.toFixed(2)}` : '',
-            anchor: 'end',
-            align: 'top',
-            offset: 8,
-            textShadow: true,
-            textShadowColor: 'rgba(0, 0, 0, 0.5)',
-            textShadowBlur: 5
-          }
-        },
-        animation: {
-          duration: 1000,
-          easing: 'easeOutQuart'
-        },
-
-        
-
-
-      }
-    });
-
-    // Sales Report Function
-    function showReport(period) {
-      const reportCards = document.getElementById('reportCards');
-      const totals = {
-        daily: { sales: <%= dailyTotals.sales %>, profit: <%= dailyTotals.profit %>, orders: <%= dailyTotals.orders %> },
-        weekly: { sales: <%= weeklyTotals.sales %>, profit: <%= weeklyTotals.profit %>, orders: <%= weeklyTotals.orders %> },
-        fortnightly: { sales: <%= fortnightlyTotals.sales %>, profit: <%= fortnightlyTotals.profit %>, orders: <%= fortnightlyTotals.orders %> },
-        monthly: { sales: <%= monthlyTotals.sales %>, profit: <%= monthlyTotals.profit %>, orders: <%= monthlyTotals.orders %> },
-        yearly: { sales: <%= yearlyTotals.sales %>, profit: <%= yearlyTotals.profit %>, orders: <%= yearlyTotals.orders %> }
-      }[period];
-
-      reportCards.innerHTML = `
+                  document.getElementById('reportCards').innerHTML = `
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
             <div class="card-body p-4">
-              <h5 class="card-title text-gray-600 font-weight-bold">Total Sales (PKR)</h5>
+              <h5 class="card-title text-gray-600 font-weight-bold">Total Sales</h5>
               <p class="price font-size-lg text-primary">Rs ${totals.sales.toFixed(2)}</p>
             </div>
           </div>
@@ -754,7 +368,7 @@
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
             <div class="card-body p-4">
-              <h5 class="card-title text-gray-600 font-weight-bold">Total Profit (PKR)</h5>
+              <h5 class="card-title text-gray-600 font-weight-bold">Total Profit</h5>
               <p class="price font-size-lg text-success">Rs ${totals.profit.toFixed(2)}</p>
             </div>
           </div>
@@ -762,50 +376,74 @@
         <div class="col-md-4 mb-4">
           <div class="card shadow-sm bg-white rounded-lg text-center border-light hover-card">
             <div class="card-body p-4">
-              <h5 class="card-title text-gray-600 font-weight-bold">Total Transactions</h5>
+              <h5 class="card-title text-gray-600 font-weight-bold">Transactions</h5>
               <p class="price font-size-lg text-info">${totals.orders}</p>
             </div>
           </div>
         </div>
       `;
+                  document.querySelectorAll('.report-tab').forEach(t => t.classList.remove('active'));
+                  document.querySelector(`.report-tab[data-period="${period}"]`).classList.add('active');
+                };
 
-      document.querySelectorAll('.report-tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelector(`.report-tab[data-period="${period}"]`).classList.add('active');
-    }
+                showReport('daily');
+                document.querySelectorAll('.report-tab').forEach(t => t.addEventListener('click', () => showReport(t.dataset.period)));
 
-    // Initial report load
-    showReport('daily');
+                window.showSaleSummary = function (str) {
+                  const sale = JSON.parse(str);
+                  const html = `<tr>
+        <td>${sale.medicineId?.name || sale.medicineName || 'Unknown'}</td>
+        <td>${sale.quantitySold || 0}</td>
+        <td>Rs ${sale.medicineId?.price?.toFixed(2) || '0.00'}</td>
+        <td>Rs ${sale.totalAmount?.toFixed(2) || '0.00'}</td>
+      </tr>`;
+                  document.getElementById(`summaryTable-${sale._id}`).innerHTML = html;
+                };
 
-    // Make report tabs clickable
-    document.querySelectorAll('.report-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const period = tab.getAttribute('data-period');
-        showReport(period);
-      });
-    });
+                // Toggle View
+                document.querySelectorAll('.toggle-details-btn').forEach(btn => {
+                  btn.addEventListener('click', function () {
+                    const target = $(this.dataset.target);
+                    target.collapse('toggle');
+                    const isShown = target.hasClass('show');
+                    this.querySelector('i').className = isShown ? 'fas fa-eye' : 'fas fa-times';
+                    this.querySelector('.btn-text').textContent = isShown ? 'View' : 'Close';
+                  });
+                });
+              });
+            </script>
 
-    // Sale Summary Function
-    window.showSaleSummary = function(saleStr) {
-      const sale = JSON.parse(saleStr);
-      const modalId = `summaryModal-${sale._id}`;
-      const tableId = `summaryTable-${sale._id}`;
-      const html = `
-        <tr>
-          <td>${sale.medicineId && sale.medicineId.name ? sale.medicineId.name : sale.medicineName || 'Unknown Medicine'}</td>
-          <td>${sale.quantitySold || 0}</td>
-          <td class="price">Rs ${sale.medicineId && typeof sale.medicineId.price === 'number' ? sale.medicineId.price.toFixed(2) : '0.00'}</td>
-          <td class="price">Rs ${typeof sale.totalAmount === 'number' ? sale.totalAmount.toFixed(2) : '0.00'}</td>
-        </tr>
-      `;
-      document.getElementById(tableId).innerHTML = html;
-      $(`#${modalId}`).modal('show');
-    };
+            <style>
+              .card-header {
+                background: linear-gradient(45deg, #3b82f6, #1e40af);
+              }
 
-    // Make Total Sales card clickable
-    document.getElementById('totalSalesCard').addEventListener('click', () => {
-      window.location.href = '/admin/purchase-history?token=<%= token %>';
-    });
-  });
-</script>
+              .report-tab.active {
+                background: #3b82f6 !important;
+                color: #fff;
+              }
 
-<%- include('partials/footer') %>
+              .hover-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                transition: 0.3s;
+              }
+
+              .price {
+                font-size: 1.5rem;
+                font-weight: 700;
+              }
+
+              .bg-white-opacity {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                padding: 15px;
+              }
+
+              .metric-icon {
+                width: auto;
+                height: auto;
+              }
+            </style>
+
+            <%- include('partials/footer') %>

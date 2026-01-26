@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
@@ -10,11 +11,13 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Initialize Express app
 const app = express();
-const PORT = 2000;
-const SECRET_KEY = 'your_secure_secret_key_here'; // Replace with a strong secret in production
+const PORT = process.env.PORT || 2000;
+const SECRET_KEY = process.env.SECRET_KEY || 'your_secure_secret_key_here'; // Replace with a strong secret in production
 
 // Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
@@ -32,35 +35,36 @@ app.use('/uploads', express.static(path.join(__dirname, 'Uploads')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'frontend', 'views'));
 
-// Ensure upload directories exist
-const uploadsPath = path.join(__dirname, 'public', 'Uploads');
-if (!fs.existsSync(uploadsPath)) fs.mkdirSync(uploadsPath, { recursive: true });
+// Cloudinary Configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const profileUploadsDir = path.join(__dirname, 'public', 'Uploads', 'Profile');
-if (!fs.existsSync(profileUploadsDir)) fs.mkdirSync(profileUploadsDir, { recursive: true });
-
-// Remove redundant directory creation
-// if (!fs.existsSync('uploads')) fs.mkdirSync('uploads'); // This line is unnecessary due to uploadsPath
-
-// Multer setup for file uploads (general)
+// Multer setup for file uploads (general - medicines etc might still need local or separate setup)
 const storage1 = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsPath),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
 const upload1 = multer({ storage: storage1 });
 
-// Multer setup for profile image uploads
-const storage2 = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, profileUploadsDir),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+// Multer setup for profile image uploads using Cloudinary
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'mediapp/profiles',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }],
+  },
 });
-const upload2 = multer({ storage: storage2 });
+const uploadProfile = multer({ storage: profileStorage });
 
 // MongoDB Connection
 
 
 
-const uri = "mongodb+srv://teammediapp:Aqee201@mediapp.hbuyqtw.mongodb.net/mediApp?retryWrites=true&w=majority&appName=MediApp";
+const uri = process.env.MONGODB_URI || "mongodb+srv://teammediapp:Aqee201@mediapp.hbuyqtw.mongodb.net/mediApp?retryWrites=true&w=majority&appName=MediApp";
 
 async function connectDB() {
   try {
@@ -252,7 +256,15 @@ const authMiddleware = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid token' });
+    console.log('--- AUTH ERROR START ---');
+    console.error('authMiddleware error:', err.message);
+    console.log('Token received:', req.headers.authorization);
+    console.log('--- AUTH ERROR END ---');
+    return res.status(401).json({
+      message: 'Invalid token',
+      error: err.message,
+      server_type: 'MEDICINE_BACKEND_LATEST'
+    });
   }
 };
 
@@ -302,9 +314,9 @@ const authAdminPage = async (req, res, next) => {
 app.get('/login.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
-app.post('/api/auth/signup', upload1.single('profileImage'), async (req, res) => {
+app.post('/api/auth/signup', uploadProfile.single('profileImage'), async (req, res) => {
   let { firstName, lastName, CNICNo, email, password } = req.body;
-  const profileImage = req.file ? req.file.filename : null;
+  const profileImage = req.file ? req.file.path : null;
   if (!firstName || !email || !password) return res.status(400).json({ message: 'Required fields missing' });
   email = email.toLowerCase();
   try {
@@ -350,7 +362,7 @@ app.get('/api/auth/profile', authMiddleware, (req, res) => {
   res.json({ user: userWithoutPassword });
 });
 
-app.put('/api/auth/update', authMiddleware, upload1.single('profileImage'), async (req, res) => {
+app.put('/api/auth/update', authMiddleware, uploadProfile.single('profileImage'), async (req, res) => {
   try {
     const user = req.user;
     const { firstName, lastName, CNICNo, phone, address, dob } = req.body;
@@ -360,7 +372,7 @@ app.put('/api/auth/update', authMiddleware, upload1.single('profileImage'), asyn
     if (phone) user.phone = phone;
     if (address) user.address = address;
     if (dob) user.dob = dob;
-    if (req.file) user.profileImage = req.file.filename;
+    if (req.file) user.profileImage = req.file.path;
     await user.save();
     const { password, ...userWithoutPassword } = user.toObject();
     res.json({ message: 'Profile updated successfully', user: userWithoutPassword });
@@ -487,7 +499,7 @@ app.get('/medicines', async (req, res) => {
         const decoded = jwt.verify(token, SECRET_KEY);
         const user = await User.findOne({ email: decoded.email.toLowerCase() });
         if (user) userId = user.id;
-      } catch (err) {}
+      } catch (err) { }
     }
     const medicines = await Medicine.find().sort({ name: 1 });
     const result = medicines.map((med) => {
@@ -1372,10 +1384,10 @@ app.post('/api/check-interactions', authMiddleware, async (req, res) => {
     // 2) Lightweight interaction DB (extendable). Keyed by normalized medicine-name or active-ingredient.
     // NOTE: This is a sample; in production you should use a verified drug DB or clinical API.
     const interactionDB = [
-      { pair: ['aspirin', 'warfarin'], severity: 'high', message: 'Increased bleeding risk.' , alternatives: ['acetaminophen (paracetamol)']},
-      { pair: ['ibuprofen', 'lisinopril'], severity: 'moderate', message: 'NSAIDs may reduce antihypertensive effect.' , alternatives: ['consult physician']},
-      { pair: ['metformin', 'contrast media'], severity: 'moderate', message: 'Risk of lactic acidosis (with iodinated contrast).' , alternatives: ['talk to radiologist or physician']},
-      { pair: ['sildenafil', 'nitroglycerin'], severity: 'high', message: 'Severe hypotension risk (combination contraindicated).' , alternatives: ['do not combine — urgent medical review']},
+      { pair: ['aspirin', 'warfarin'], severity: 'high', message: 'Increased bleeding risk.', alternatives: ['acetaminophen (paracetamol)'] },
+      { pair: ['ibuprofen', 'lisinopril'], severity: 'moderate', message: 'NSAIDs may reduce antihypertensive effect.', alternatives: ['consult physician'] },
+      { pair: ['metformin', 'contrast media'], severity: 'moderate', message: 'Risk of lactic acidosis (with iodinated contrast).', alternatives: ['talk to radiologist or physician'] },
+      { pair: ['sildenafil', 'nitroglycerin'], severity: 'high', message: 'Severe hypotension risk (combination contraindicated).', alternatives: ['do not combine — urgent medical review'] },
       // Add custom pairs here...
     ];
 
@@ -1403,7 +1415,7 @@ app.post('/api/check-interactions', authMiddleware, async (req, res) => {
           const matchA = (a.name.includes(p0) || a.description.includes(p0) || a.dosage.includes(p0));
           const matchB = (b.name.includes(p1) || b.description.includes(p1) || b.dosage.includes(p1));
           const matchAlt = (a.name.includes(p1) || a.description.includes(p1) || a.dosage.includes(p1)) &&
-                           (b.name.includes(p0) || b.description.includes(p0) || b.dosage.includes(p0));
+            (b.name.includes(p0) || b.description.includes(p0) || b.dosage.includes(p0));
           if ((matchA && matchB) || matchAlt) {
             found.push({
               medicines: [a.raw, b.raw].map(m => ({ id: m._id, name: m.name, dosage: m.dosage || '', manufacturer: m.manufacturer || '' })),
@@ -1457,7 +1469,7 @@ io.on('connection', (socket) => {
     console.log('User joined chat:', userId, 'Socket ID:', socket.id);
     socket.join(userId);
 
-    
+
     try {
       const messages = await ChatMessage.find({
         $or: [{ sender: userId, receiver: 'admin' }, { sender: 'admin', receiver: userId }],
@@ -1489,7 +1501,7 @@ io.on('connection', (socket) => {
       console.error('Error saving message:', err.message);
       callback({ error: err.message });
     }
-    
+
   });
 
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
@@ -1669,12 +1681,12 @@ app.post('/api/feedback', authMiddleware, async (req, res) => {
       createdAt: new Date(),
     });
     await feedback.save();
-    console.log('Feedback submitted:', { 
-      userId: req.user.id, 
-      userName, 
-      userProfileImage: req.user.profileImage, 
-      rating, 
-      comment 
+    console.log('Feedback submitted:', {
+      userId: req.user.id,
+      userName,
+      userProfileImage: req.user.profileImage,
+      rating,
+      comment
     });
     res.status(201).json({ message: 'Feedback submitted successfully', feedback });
   } catch (err) {
@@ -2038,7 +2050,7 @@ const MedicineReminder = mongoose.model('MedicineReminder', medicineReminderSche
 // Fetch all medicines for dropdown
 app.get('/api/medicines/list', authMiddleware, async (req, res) => {
   try {
-    const medicines = await Medicine.find().select('name dosage'); 
+    const medicines = await Medicine.find().select('name dosage');
     res.json(medicines);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch medicines' });
@@ -2270,79 +2282,86 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Server Start
-server.listen(PORT, '0.0.0.0', async () => {
-  console.log(`Server running on port ${PORT}`);
+// Server Start (Conditional for Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  server.listen(PORT, '0.0.0.0', async () => {
+    console.log(`Server running on port ${PORT}`);
 
-  // Connect to MongoDB
-  await connectDB();
+    // Connect to MongoDB
+    await connectDB();
 
-  // Admin user setup
-  // Admin user setup
-try {
-  const adminEmail1 = 'admin@mediapp.com';
-  const defaultPassword1 = 'admin123';
-  const hashedPassword1 = bcrypt.hashSync(defaultPassword1, 10);
-  console.log('Attempting to set up admin user:', adminEmail1);
+    // Admin user setup
+    try {
+      const adminEmail1 = 'admin@mediapp.com';
+      const defaultPassword1 = 'admin123';
+      const hashedPassword1 = bcrypt.hashSync(defaultPassword1, 10);
+      console.log('Attempting to set up admin user:', adminEmail1);
 
-  let adminUser1 = await User.findOne({ email: adminEmail1 });
-  if (adminUser1) {
-    console.log('Existing admin user found:', adminUser1.email);
-    adminUser1.password = hashedPassword1;
-    adminUser1.role = 'admin';
-    adminUser1.firstName = adminUser1.firstName || 'Admin';
-    adminUser1.lastName = adminUser1.lastName || 'User';
-    adminUser1.createdAt = adminUser1.createdAt || new Date().toISOString();
-    await adminUser1.save();
-    console.log('Admin user updated successfully (MediApp default).');
-  } else {
-    console.log('No existing admin user found. Creating new admin user.');
-    adminUser1 = new User({
-      id: uuidv4(),
-      firstName: 'Admin',
-      lastName: 'User',
-      email: adminEmail1,
-      password: hashedPassword1,
-      role: 'admin',
-      createdAt: new Date().toISOString(),
-    });
-    await adminUser1.save();
-    console.log('New admin user created successfully (MediApp default):', adminUser1.email);
-  }
+      let adminUser1 = await User.findOne({ email: adminEmail1 });
+      if (adminUser1) {
+        console.log('Existing admin user found:', adminUser1.email);
+        adminUser1.password = hashedPassword1;
+        adminUser1.role = 'admin';
+        adminUser1.firstName = adminUser1.firstName || 'Admin';
+        adminUser1.lastName = adminUser1.lastName || 'User';
+        adminUser1.createdAt = adminUser1.createdAt || new Date().toISOString();
+        await adminUser1.save();
+        console.log('Admin user updated successfully (MediApp default).');
+      } else {
+        console.log('No existing admin user found. Creating new admin user.');
+        adminUser1 = new User({
+          id: uuidv4(),
+          firstName: 'Admin',
+          lastName: 'User',
+          email: adminEmail1,
+          password: hashedPassword1,
+          role: 'admin',
+          createdAt: new Date().toISOString(),
+        });
+        await adminUser1.save();
+        console.log('New admin user created successfully (MediApp default):', adminUser1.email);
+      }
 
-  const adminEmail2 = 'admin@example.com';
-  const existingAdmin2 = await User.findOne({ email: adminEmail2 });
-  if (existingAdmin2) {
-    console.log('Default admin user already exists (third server):', adminEmail2);
-  } else {
-    console.log('No default admin account exists (third server). Admin account creation is forbidden.');
-  }
-} catch (err) {
-  console.error('Error setting up admin users:', err.message, err.stack);
+      const adminEmail2 = 'admin@example.com';
+      const existingAdmin2 = await User.findOne({ email: adminEmail2 });
+      if (existingAdmin2) {
+        console.log('Default admin user already exists (third server):', adminEmail2);
+      } else {
+        console.log('No default admin account exists (third server). Admin account creation is forbidden.');
+      }
+    } catch (err) {
+      console.error('Error setting up admin users:', err.message, err.stack);
+    }
+    // Database migrations
+    try {
+      const medicinesWithoutType = await Medicine.find({ medicineType: { $exists: false } });
+      if (medicinesWithoutType.length > 0) {
+        console.log(`Found ${medicinesWithoutType.length} medicines without medicineType. Setting default to 'Tablet'.`);
+        await Medicine.updateMany({ medicineType: { $exists: false } }, { $set: { medicineType: 'Tablet', dosesPerUnit: 1, remainingDoses: 0 } });
+        console.log('Medicine types updated successfully.');
+      }
+
+      const medicinesWithoutDoses = await Medicine.find({ dosesPerUnit: { $exists: false } });
+      if (medicinesWithoutDoses.length > 0) {
+        console.log(`Found ${medicinesWithoutDoses.length} medicines without dosesPerUnit. Setting default to 1.`);
+        await Medicine.updateMany({ dosesPerUnit: { $exists: false } }, { $set: { dosesPerUnit: 1, remainingDoses: 0 } });
+        console.log('Doses per unit updated successfully.');
+      }
+
+      const medicinesWithoutRemaining = await Medicine.find({ remainingDoses: { $exists: false } });
+      if (medicinesWithoutRemaining.length > 0) {
+        console.log(`Found ${medicinesWithoutRemaining.length} medicines without remainingDoses. Setting default to 0.`);
+        await Medicine.updateMany({ remainingDoses: { $exists: false } }, { $set: { remainingDoses: 0 } });
+        console.log('Remaining doses updated successfully.');
+      }
+    } catch (err) {
+      console.error('Error during migration:', err.message);
+    }
+  });
+} else {
+  // On Vercel
+  connectDB().catch(err => console.error("Initial Vercel DB connect error:", err));
 }
-  // Database migrations
-  try {
-    const medicinesWithoutType = await Medicine.find({ medicineType: { $exists: false } });
-    if (medicinesWithoutType.length > 0) {
-      console.log(`Found ${medicinesWithoutType.length} medicines without medicineType. Setting default to 'Tablet'.`);
-      await Medicine.updateMany({ medicineType: { $exists: false } }, { $set: { medicineType: 'Tablet', dosesPerUnit: 1, remainingDoses: 0 } });
-      console.log('Medicine types updated successfully.');
-    }
 
-    const medicinesWithoutDoses = await Medicine.find({ dosesPerUnit: { $exists: false } });
-    if (medicinesWithoutDoses.length > 0) {
-      console.log(`Found ${medicinesWithoutDoses.length} medicines without dosesPerUnit. Setting default to 1.`);
-      await Medicine.updateMany({ dosesPerUnit: { $exists: false } }, { $set: { dosesPerUnit: 1, remainingDoses: 0 } });
-      console.log('Doses per unit updated successfully.');
-    }
-
-    const medicinesWithoutRemaining = await Medicine.find({ remainingDoses: { $exists: false } });
-    if (medicinesWithoutRemaining.length > 0) {
-      console.log(`Found ${medicinesWithoutRemaining.length} medicines without remainingDoses. Setting default to 0.`);
-      await Medicine.updateMany({ remainingDoses: { $exists: false } }, { $set: { remainingDoses: 0 } });
-      console.log('Remaining doses updated successfully.');
-    }
-  } catch (err) {
-    console.error('Error during migration:', err.message);
-  }
-});
+// Export for Vercel
+module.exports = app;

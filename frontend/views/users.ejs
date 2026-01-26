@@ -1,99 +1,113 @@
 <%- include('partials/header') %>
 
-<!-- Content Header -->
-<section class="content-header">
-  <div class="container-fluid">
-    <div class="row mb-2">
-      <div class="col-sm-6">
-        <h1>User Management</h1>
-      </div>
-      <div class="col-sm-6 text-right">
-        <a href="/admin/users?token=<%= token %>" class="btn btn-primary">
-          <i class="fas fa-sync"></i> Refresh
-        </a>
+  <!-- Content Header -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1>User Management</h1>
+        </div>
+        <div class="col-sm-6 text-right">
+          <a href="/admin/users?token=<%= token %>" class="btn btn-primary">
+            <i class="fas fa-sync"></i> Refresh
+          </a>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- Main Content -->
-<section class="content">
-  <div class="container-fluid">
-    <% if (message) { %>
-      <div class="alert alert-success alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        <%= message %>
-      </div>
-    <% } %>
-    <% if (error) { %>
-      <div class="alert alert-danger alert-dismissible">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-        <%= error %>
-      </div>
-    <% } %>
-
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">Registered Users</h3>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-striped table-hover mb-0">
-          <thead>
-            <tr>
-              <th style="width: 10%">Profile</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Registered</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (users && users.length > 0) { %>
-              <% users.forEach(function(u) { %>
-                <tr>
-                  <td>
-                    <% if (u.profileImage) { %>
-                      <!-- Display profile image from the /uploads/Profile/ folder -->
-                      <img src="/uploads/Profile/<%= u.profileImage %>" alt="User Image" class="img-circle" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
-                    <% } else { %>
-                      <div class="img-circle text-center" style="width: 40px; height: 40px; background: #ccc; line-height: 40px;">
-                        <i class="fas fa-user"></i>
-                      </div>
-                    <% } %>
-                  </td>
-                  <td><%= u.firstName %> <%= u.lastName %></td>
-                  <td><%= u.email %></td>
-                  <td><%= u.phone || 'N/A' %></td>
-                  <td>
-                    <span class="badge <%= u.role === 'admin' ? 'badge-danger' : 'badge-primary' %>">
-                      <%= u.role.toUpperCase() %>
-                    </span>
-                  </td>
-                  <td><%= new Date(u.createdAt).toLocaleDateString() %></td>
-                  <td>
-                    <form action="/admin/users/<%= u.id %>/delete?token=<%= token %>" method="POST" style="display: inline;">
-                      <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?')">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </form>
-                    <a href="/admin/users/<%= u.id %>/change-password?token=<%= token %>" class="btn btn-warning btn-sm" style="margin-left: 5px;">
-                      <i class="fas fa-key"></i> Change Password
-                    </a>
-                  </td>
-                </tr>
-              <% }); %>
-            <% } else { %>
-              <tr>
-                <td colspan="7" class="text-center">No users found</td>
-              </tr>
+  <!-- Main Content -->
+  <section class="content">
+    <div class="container-fluid">
+      <% if (message) { %>
+        <div class="alert alert-success alert-dismissible">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <%= message %>
+        </div>
+        <% } %>
+          <% if (error) { %>
+            <div class="alert alert-danger alert-dismissible">
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+              <%= error %>
+            </div>
             <% } %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
 
-<%- include('partials/footer') %>
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Registered Users</h3>
+                </div>
+                <div class="card-body p-0">
+                  <table class="table table-striped table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th style="width: 10%">Profile</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (users && users.length> 0) { %>
+                        <% users.forEach(function(u) { %>
+                          <tr>
+                            <td>
+                              <% if (u.profileImage) { %>
+                                <!-- Display profile image from the /uploads/Profile/ folder -->
+                                <img src="<%= u.profileImage %>" alt="User Image" class="img-circle"
+                                  style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #ddd;">
+                                <% } else { %>
+                                  <div class="img-circle text-center"
+                                    style="width: 40px; height: 40px; background: #ccc; line-height: 40px;">
+                                    <i class="fas fa-user"></i>
+                                  </div>
+                                  <% } %>
+                            </td>
+                            <td>
+                              <%= u.firstName %>
+                                <%= u.lastName %>
+                            </td>
+                            <td>
+                              <%= u.email %>
+                            </td>
+                            <td>
+                              <%= u.phone || 'N/A' %>
+                            </td>
+                            <td>
+                              <span class="badge <%= u.role === 'admin' ? 'badge-danger' : 'badge-primary' %>">
+                                <%= u.role.toUpperCase() %>
+                              </span>
+                            </td>
+                            <td>
+                              <%= new Date(u.createdAt).toLocaleDateString() %>
+                            </td>
+                            <td>
+                              <form action="/admin/users/<%= u.id %>/delete?token=<%= token %>" method="POST"
+                                style="display: inline;">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                  onclick="return confirm('Are you sure you want to delete this user?')">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </form>
+                              <a href="/admin/users/<%= u.id %>/change-password?token=<%= token %>"
+                                class="btn btn-warning btn-sm" style="margin-left: 5px;">
+                                <i class="fas fa-key"></i> Change Password
+                              </a>
+                            </td>
+                          </tr>
+                          <% }); %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="7" class="text-center">No users found</td>
+                              </tr>
+                              <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
