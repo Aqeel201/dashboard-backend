@@ -727,7 +727,20 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
       <script>
+        // Global selectUser function - available immediately
+        window.selectUser = function (userId) {
+          console.log('Global selectUser triggered for:', userId);
+          const token = '<%= token || '' %>';
+          if (!userId) return;
+          // Direct redirection - most reliable method
+          window.location.href = `/admin/chat?userId=${userId}&token=${token}`;
+        };
+      </script>
+
+      <script>
         $(document).ready(function () {
+          console.log('Chat JS Ready');
+
           // Theme toggle functionality
           const themeToggle = $('#themeToggle');
           const body = $('body');
@@ -753,60 +766,56 @@
               socket.on('connect_error', (err) => {
                 console.error('Socket connection error:', err.message);
               });
+
+              // Handle real-time messages
+              socket.on('receiveMessage', (msg) => {
+                console.log('Received message:', msg);
+                const selectedUserId = '<%= selectedUserId || '' %>';
+                if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
+                  const messages = $('#messages');
+                  if (messages.length) {
+                    const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
+                    let content = '';
+                    if (msg.type === 'text') {
+                      content = `<div class="message-content">${msg.content}</div>`;
+                    } else if (msg.type === 'image') {
+                      content = `<div class="message-content"><div>${msg.caption || 'Image'}</div><img src="${msg.content}" class="message-image" /></div>`;
+                    } else if (msg.type === 'voice') {
+                      content = `<div class="message-content"><div>${msg.caption || 'Voice message'}</div><div class="message-audio"><audio controls><source src="${msg.content}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>`;
+                    } else if (msg.type === 'location') {
+                      content = `<div class="message-content">Location: ${msg.content}</div>`;
+                    } else if (msg.type === 'document') {
+                      content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
+                    }
+                    div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`);
+                    messages.append(div);
+                    const msgDiv = messages[0];
+                    if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;
+                  }
+                }
+              });
+
+              socket.on('userOnline', (data) => {
+                const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
+                userStatusElements.each(function () {
+                  $(this).find('.status-dot').removeClass('offline').addClass('online');
+                  $(this).find('.status-text').text('Online');
+                });
+              });
+
+              socket.on('userOffline', (data) => {
+                const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
+                userStatusElements.each(function () {
+                  $(this).find('.status-dot').removeClass('online').addClass('offline');
+                  $(this).find('.status-text').text('Offline');
+                });
+              });
+
             } catch (e) {
               console.error('Socket initialization failed:', e);
             }
           } else {
-            console.warn('Socket.io library not loaded (IO undefined). Real-time features disabled.');
-          }
-
-          // Handle real-time messages
-          if (socket) {
-            socket.on('receiveMessage', (msg) => {
-              console.log('Received message:', msg);
-              const selectedUserId = '<%= selectedUserId || '' %>';
-              if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
-                const messages = $('#messages');
-                if (messages.length) {
-                  const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
-                  let content = '';
-                  if (msg.type === 'text') {
-                    content = `<div class="message-content">${msg.content}</div>`;
-                  } else if (msg.type === 'image') {
-                    content = `<div class="message-content"><div>${msg.caption || 'Image'}</div><img src="${msg.content}" class="message-image" /></div>`;
-                  } else if (msg.type === 'voice') {
-                    content = `<div class="message-content"><div>${msg.caption || 'Voice message'}</div><div class="message-audio"><audio controls><source src="${msg.content}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>`;
-                  } else if (msg.type === 'location') {
-                    content = `<div class="message-content">Location: ${msg.content}</div>`;
-                  } else if (msg.type === 'document') {
-                    content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
-                  }
-                  div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`);
-                  messages.append(div);
-                  messages[0].scrollTop = messages[0].scrollHeight;
-                }
-              });
-          }
-
-          // Handle user online/offline status
-          if (socket) {
-            socket.on('userOnline', (data) => {
-              console.log('User online:', data);
-              const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
-              userStatusElements.each(function () {
-                $(this).find('.status-dot').removeClass('offline').addClass('online');
-                $(this).find('.status-text').text('Online');
-              });
-            });
-
-            socket.on('userOffline', (data) => {
-              console.log('User offline:', data);
-              const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);
-              userStatusElements.each(function () {
-                $(this).find('.status-dot').removeClass('online').addClass('offline');
-                $(this).find('.status-text').text('Offline');
-              });
-            });
+            console.warn('Socket.io library not loaded. Real-time notifications disabled.');
           }
 
           // Message type selector functionality
@@ -884,11 +893,10 @@
               processData: false,
               contentType: false,
               success: function (response) {
-                console.log('Message sent successfully:', response);
                 $('#messageInput').val('');
                 $('#fileInput').val('');
                 $('#selectedFile').text('No file selected');
-                alert('Message sent successfully!');
+                // Optional: Show temporary success message
               },
               error: function (xhr, status, error) {
                 console.error('Error sending message:', xhr.responseText);
@@ -899,20 +907,6 @@
                 }
               }
             });
-          });
-
-          // Global function for user selection (used in onclick)
-          window.selectUser = function (userId) {
-            console.log('selectUser triggered for:', userId);
-            const token = '<%= token || '' %>';
-            window.location.href = `/admin/chat?userId=${userId}&token=${token}`;
-          };
-
-          // Fallback selector functionality
-          $(document).on('click', '.user-item', function (e) {
-            console.log('jQuery User item clicked');
-            const userId = $(this).data('user-id');
-            selectUser(userId);
           });
 
           // Search users functionality
@@ -927,13 +921,14 @@
           // Allow sending message with Enter key
           $('#messageInput').on('keypress', function (e) {
             if (e.key === 'Enter') {
+              e.preventDefault();
               $('#sendButton').click();
             }
           });
 
           // Handle alert dismissal
-          $('.alert .close').on('click', function () {
-            $(this).parent().hide();
+          $(document).on('click', '.alert .close', function () {
+            $(this).parent().fadeOut();
           });
         });
       </script>
