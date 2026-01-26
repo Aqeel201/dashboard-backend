@@ -54,11 +54,23 @@ const profileStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'mediapp/profiles',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif'],
     transformation: [{ width: 500, height: 500, crop: 'limit' }],
   },
 });
+
+// Multer setup for medicine image uploads using Cloudinary
+const medicineStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'mediapp/medicines',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif'],
+    transformation: [{ width: 800, height: 800, crop: 'limit' }],
+  },
+});
+
 const uploadProfile = multer({ storage: profileStorage });
+const uploadMedicine = multer({ storage: medicineStorage });
 
 // MongoDB Connection
 
@@ -834,7 +846,7 @@ app.get('/admin/add-medicine', authAdminPage, async (req, res) => {
   }
 });
 
-app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (req, res) => {
+app.post('/admin/add-medicine', authAdminPage, uploadMedicine.single('image'), async (req, res) => {
   try {
     let { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit, description } = req.body;
     const parsedQuantity = parseInt(quantity, 10);
@@ -888,7 +900,7 @@ app.post('/admin/add-medicine', authAdminPage, upload1.single('image'), async (r
       });
     }
 
-    const image = req.file ? '/uploads/' + req.file.filename : null;
+    const image = req.file ? req.file.path : null;
 
     if (!['Tablet', 'Capsule', 'Syrup'].includes(medicineType)) {
       return res.render('add-medicine', {
@@ -1209,7 +1221,7 @@ app.get('/admin/medicines/:id/edit', authAdminPage, async (req, res) => {
   }
 });
 
-app.post('/admin/medicines/:id/edit', authAdminPage, upload1.single('image'), async (req, res) => {
+app.post('/admin/medicines/:id/edit', authAdminPage, uploadMedicine.single('image'), async (req, res) => {
   try {
     const { name, manufacturer, expiryDate, price, dosage, quantity, category, newCategory, medicineType, dosesPerUnit, description } = req.body;
     const medicine = await Medicine.findById(req.params.id);
@@ -1279,7 +1291,7 @@ app.post('/admin/medicines/:id/edit', authAdminPage, upload1.single('image'), as
     medicine.quantity = parsedQuantity;
     medicine.medicineType = medicineType;
     medicine.dosesPerUnit = parsedDosesPerUnit;
-    if (req.file) medicine.image = '/uploads/' + req.file.filename;
+    if (req.file) medicine.image = req.file.path;
     medicine.description = description;
 
     let finalCategory = category;
