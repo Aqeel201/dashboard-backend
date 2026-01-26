@@ -1577,7 +1577,7 @@ app.get('/api/messages/admin', authMiddleware, async (req, res) => {
 
 app.get('/admin/chat', authAdminPage, async (req, res) => {
   try {
-    const users = await User.find({ role: 'user' }).select('id firstName lastName email');
+    const users = await User.find({ role: 'user' }).select('id firstName lastName email profileImage');
     const selectedUserId = req.query.userId || null;
     let messages = [];
     if (selectedUserId) {

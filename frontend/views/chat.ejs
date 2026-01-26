@@ -567,10 +567,15 @@
                       <% if (users && users.length> 0) { %>
                         <% users.forEach(function(user) { %>
                           <div class="user-item <%= selectedUserId && selectedUserId === user.id ? 'active' : '' %>"
-                            data-user-id="<%= user.id %>">
+                            data-user-id="<%= user.id %>" onclick="selectUser('<%= user.id %>')">
                             <div class="user-avatar">
-                              <%= user.firstName[0] %>
-                                <%= user.lastName[0] %>
+                              <% if (user.profileImage && user.profileImage.trim() !=='' ) { %>
+                                <img src="<%= user.profileImage %>" class="img-circle elevation-2"
+                                  style="width: 40px; height: 40px; object-fit: cover;" alt="Avatar">
+                                <% } else { %>
+                                  <%= user.firstName[0] %>
+                                    <%= user.lastName[0] %>
+                                      <% } %>
                             </div>
                             <div class="user-info">
                               <div class="user-name">
@@ -896,13 +901,18 @@
             });
           });
 
-          // User selection functionality (Using delegation for reliability)
-          $(document).on('click', '.user-item', function (e) {
-            console.log('User item clicked');
-            const userId = $(this).data('user-id');
+          // Global function for user selection (used in onclick)
+          window.selectUser = function (userId) {
+            console.log('selectUser triggered for:', userId);
             const token = '<%= token || '' %>';
-            console.log('Redirecting to chat with user:', userId);
             window.location.href = `/admin/chat?userId=${userId}&token=${token}`;
+          };
+
+          // Fallback selector functionality
+          $(document).on('click', '.user-item', function (e) {
+            console.log('jQuery User item clicked');
+            const userId = $(this).data('user-id');
+            selectUser(userId);
           });
 
           // Search users functionality
