@@ -22,7 +22,12 @@ const SECRET_KEY = process.env.SECRET_KEY || 'your_secure_secret_key_here'; // R
 
 // Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+  cors: { origin: '*' },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
 
 // Middleware Setup
 app.use(express.json());
