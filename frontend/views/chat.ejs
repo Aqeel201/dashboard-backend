@@ -677,8 +677,11 @@
                                               <% } %>
                               </div>
                               <div class="message-time">
-                                <%= new Date(msg.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Karachi' ,
-                                  hour: '2-digit' , minute: '2-digit' , hour12: true }) %>
+                                <% if (msg.timestamp) { %>
+                                  <%= new Date(new Date(msg.timestamp).getTime() + (5 * 60 * 60 *
+                                    1000)).toLocaleTimeString('en-US', { hour: '2-digit' , minute: '2-digit' , hour12:
+                                    true }) %>
+                                    <% } %>
                               </div>
                             </div>
                             <% }); %>
@@ -795,7 +798,9 @@
                     } else if (msg.type === 'document') {
                       content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
                     }
-                    div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', hour12: true })}</div>`);
+                    const msgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+                    const pktTime = new Date(msgDate.getTime() + (5 * 60 * 60 * 1000)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                    div.html(`${content}<div class="message-time">${pktTime}</div>`);
                     messages.append(div);
                     const msgDiv = messages[0];
                     if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;

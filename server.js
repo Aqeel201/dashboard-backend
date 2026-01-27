@@ -49,9 +49,13 @@ cloudinary.config({
 });
 
 // Multer setup for file uploads (general - medicines etc might still need local or separate setup)
-const uploadsPath = path.join(__dirname, 'Uploads');
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath, { recursive: true });
+const uploadsPath = process.env.VERCEL ? path.join('/tmp', 'Uploads') : path.join(__dirname, 'Uploads');
+try {
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Could not create uploads directory:', err.message);
 }
 
 const storage1 = multer.diskStorage({
