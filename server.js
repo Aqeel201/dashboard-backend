@@ -18,7 +18,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 2000;
-const SECRET_KEY = process.env.SECRET_KEY || 'your_secure_secret_key_here'; // Replace with a strong secret in production
+const SECRET_KEY = process.env.SECRET_KEY || 'Mediapp_Shared_Secret_2026_Key_Sync_Fix'; // Standardized fallback
 
 // Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
