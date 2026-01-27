@@ -2423,4 +2423,8 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
 }
 
 // Export for Vercel
-module.exports = app;
+module.exports = app;/ /  
+ R e - d e p l o y  
+ t r i g g e r  
+ 2  
+ 
