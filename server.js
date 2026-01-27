@@ -1524,37 +1524,39 @@ io.on('connection', (socket) => {
     }
   });
 
-  app.post('/api/chat/send', authMiddleware, async (req, res) => {
-    try {
-      const { receiver, type, content } = req.body;
-      const userId = req.user.id;
-
-      if (!receiver || !type || !content) {
-        return res.status(400).json({ error: 'Missing required fields' });
-      }
-
-      const newMsg = new ChatMessage({
-        _id: new mongoose.Types.ObjectId().toString(),
-        sender: userId,
-        receiver,
-        type,
-        content,
-        timestamp: new Date(),
-      });
-
-      await newMsg.save();
-      console.log('POST /api/chat/send: Message saved and emitting');
-
-      io.to(receiver).emit('receiveMessage', newMsg);
-      io.to(userId).emit('receiveMessage', newMsg);
-
-      res.status(200).json({ success: true, message: newMsg });
-    } catch (err) {
-      console.error('POST /api/chat/send error:', err.message);
-      res.status(500).json({ error: 'Failed to send message: ' + err.message });
-    }
-  });
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
+});
+
+// MOVE THESE OUTSIDE io.on
+app.post('/api/chat/send', authMiddleware, async (req, res) => {
+  try {
+    const { receiver, type, content } = req.body;
+    const userId = req.user.id;
+
+    if (!receiver || !type || !content) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const newMsg = new ChatMessage({
+      _id: new mongoose.Types.ObjectId().toString(),
+      sender: userId,
+      receiver,
+      type,
+      content,
+      timestamp: new Date(),
+    });
+
+    await newMsg.save();
+    console.log('POST /api/chat/send: Message saved and emitting');
+
+    io.to(receiver).emit('receiveMessage', newMsg);
+    io.to(userId).emit('receiveMessage', newMsg);
+
+    res.status(200).json({ success: true, message: newMsg });
+  } catch (err) {
+    console.error('POST /api/chat/send error:', err.message);
+    res.status(500).json({ error: 'Failed to send message: ' + err.message });
+  }
 });
 
 // Chat Routes
@@ -1592,6 +1594,14 @@ app.post('/chat/upload', authMiddleware, upload1.single('file'), async (req, res
     console.error('POST /chat/upload: Error:', err.message);
     res.status(500).json({ error: 'Failed to upload file: ' + err.message });
   }
+});
+
+app.get('/api/debug-auth', (req, res) => {
+  res.json({
+    secret_length: SECRET_KEY.length,
+    secret_prefix: SECRET_KEY.substring(0, 3),
+    env_secret: process.env.SECRET_KEY ? 'SET' : 'NOT_SET'
+  });
 });
 
 app.get('/api/messages/admin', authMiddleware, async (req, res) => {
