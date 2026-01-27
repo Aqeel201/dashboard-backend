@@ -1514,14 +1514,43 @@ io.on('connection', (socket) => {
       console.log('Message saved, emitting to', msg.sender, msg.receiver);
       io.to(msg.receiver).emit('receiveMessage', newMsg);
       io.to(msg.sender).emit('receiveMessage', newMsg);
-      callback({ success: true });
+      if (callback) callback({ success: true });
     } catch (err) {
       console.error('Error saving message:', err.message);
-      callback({ error: err.message });
+      if (callback) callback({ error: err.message });
     }
-
   });
 
+  app.post('/api/chat/send', authMiddleware, async (req, res) => {
+    try {
+      const { receiver, type, content } = req.body;
+      const userId = req.user.id;
+
+      if (!receiver || !type || !content) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const newMsg = new ChatMessage({
+        _id: new mongoose.Types.ObjectId().toString(),
+        sender: userId,
+        receiver,
+        type,
+        content,
+        timestamp: new Date(),
+      });
+
+      await newMsg.save();
+      console.log('POST /api/chat/send: Message saved and emitting');
+
+      io.to(receiver).emit('receiveMessage', newMsg);
+      io.to(userId).emit('receiveMessage', newMsg);
+
+      res.status(200).json({ success: true, message: newMsg });
+    } catch (err) {
+      console.error('POST /api/chat/send error:', err.message);
+      res.status(500).json({ error: 'Failed to send message: ' + err.message });
+    }
+  });
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
