@@ -1603,7 +1603,7 @@ app.get('/api/debug-auth', (req, res) => {
   });
 });
 
-app.get('/categories', async (req, res) => {
+app.get('/api/messages/admin', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     console.log('GET /api/messages/admin: Fetching messages for user:', userId);
