@@ -276,12 +276,14 @@ const authMiddleware = async (req, res, next) => {
   } catch (err) {
     console.log('--- AUTH ERROR START ---');
     console.error('authMiddleware error:', err.message);
-    console.log('Token received:', req.headers.authorization);
+    console.log('Token received:', req.headers.authorization ? 'EXISTS' : 'MISSING');
+    console.log('SECRET_KEY used:', SECRET_KEY);
     console.log('--- AUTH ERROR END ---');
     return res.status(401).json({
       message: 'Invalid token',
       error: err.message,
-      server_type: 'MEDICINE_BACKEND_LATEST'
+      server_type: 'MEDICINE_BACKEND_LATEST',
+      auth_error: true
     });
   }
 };
@@ -504,7 +506,8 @@ app.get('/categories', async (req, res) => {
     const categories = await Category.find();
     res.json(categories);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    console.error('API /categories error:', err);
+    res.status(500).json({ error: 'Server error fetching categories', details: err.message });
   }
 });
 
@@ -545,7 +548,7 @@ app.post('/medicines/:medicineId/like', authMiddleware, async (req, res) => {
     res.json({ liked, likesCount: medicine.likes.length });
   } catch (err) {
     console.error('Error toggling like:', err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error toggling like', details: err.message });
   }
 });
 

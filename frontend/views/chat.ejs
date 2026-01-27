@@ -730,7 +730,7 @@
         // Global selectUser function - available immediately
         window.selectUser = function (userId) {
           console.log('Global selectUser triggered for:', userId);
-          const token = '<%= token || '' %>';
+          const token = '<%= token || "" %>';
           if (!userId) return;
           // Direct redirection - most reliable method
           window.location.href = `/admin/chat?userId=${userId}&token=${token}`;
@@ -758,7 +758,7 @@
           let socket = null;
           if (typeof io !== 'undefined') {
             try {
-              socket = io('/?token=<%= token || '' %>&userId=admin');
+              socket = io('/?token=<%= token || "" %>&userId=admin');
               socket.on('connect', () => {
                 console.log('Socket connected:', socket.id);
                 socket.emit('join', 'admin');
@@ -767,14 +767,22 @@
                 console.error('Socket connection error:', err.message);
               });
 
-              // Handle real-time messages
-              socket.on('receiveMessage', (msg) => {
-                console.log('Received message:', msg);
-                const selectedUserId = '<%= selectedUserId || '' %>';
+              // Define appendMessage function
+              function appendMessage(msg) {
+                console.log('Appending message:', msg);
+                const selectedUserId = '<%= selectedUserId || "" %>';
                 if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
                   const messages = $('#messages');
                   if (messages.length) {
                     const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
+
+                    // Deduplicate
+                    if (messages.find(`[data-msg-id="${msg._id}"]`).length > 0) {
+                      console.log('Message already exists, skipping:', msg._id);
+                      return;
+                    }
+                    div.attr('data-msg-id', msg._id);
+
                     let content = '';
                     if (msg.type === 'text') {
                       content = `<div class="message-content">${msg.content}</div>`;
@@ -793,6 +801,11 @@
                     if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;
                   }
                 }
+              }
+
+              // Handle real-time messages
+              socket.on('receiveMessage', (msg) => {
+                appendMessage(msg);
               });
 
               socket.on('userOnline', (data) => {
@@ -896,7 +909,13 @@
                 $('#messageInput').val('');
                 $('#fileInput').val('');
                 $('#selectedFile').text('No file selected');
-                // Optional: Show temporary success message
+
+                // If socket is disconnected, we append the message manually
+                // The socket might still catch it, but GiftedChat-like behavior (immediate feedback) is better
+                // We'll deduplicate in the receiveMessage handler anyway
+                if (response.message) {
+                  appendMessage(response.message);
+                }
               },
               error: function (xhr, status, error) {
                 console.error('Error sending message:', xhr.responseText);
