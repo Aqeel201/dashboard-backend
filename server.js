@@ -18,7 +18,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 2000;
-const SECRET_KEY = process.env.SECRET_KEY || 'Mediapp_Shared_Secret_2026_Key_Sync_Fix'; // Standardized fallback
+const SECRET_KEY = 'Mediapp_Synced_Key_2026_Global'; // FORCED SYNC - DO NOT USE process.env
 
 // Create HTTP server and Socket.IO instance
 const server = http.createServer(app);
@@ -1599,12 +1599,11 @@ app.post('/chat/upload', authMiddleware, upload1.single('file'), async (req, res
 app.get('/api/debug-auth', (req, res) => {
   res.json({
     secret_length: SECRET_KEY.length,
-    secret_prefix: SECRET_KEY.substring(0, 3),
-    env_secret: process.env.SECRET_KEY ? 'SET' : 'NOT_SET'
+    secret_prefix: SECRET_KEY.substring(0, 3)
   });
 });
 
-app.get('/api/messages/admin', authMiddleware, async (req, res) => {
+app.get('/categories', async (req, res) => {
   try {
     const userId = req.user.id;
     console.log('GET /api/messages/admin: Fetching messages for user:', userId);
