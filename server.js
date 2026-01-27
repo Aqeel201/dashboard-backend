@@ -49,6 +49,11 @@ cloudinary.config({
 });
 
 // Multer setup for file uploads (general - medicines etc might still need local or separate setup)
+const uploadsPath = path.join(__dirname, 'Uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
 const storage1 = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsPath),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
@@ -78,8 +83,8 @@ const chatStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'mediapp/chat',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif', 'pdf', 'docx', 'doc', 'txt', 'm4a', 'mp3', 'wav'],
-    resource_type: 'auto', // Important for voice/documents
+    // Removed allowed_formats to avoid conflicts with resource_type: 'auto' (especially for voice)
+    resource_type: 'auto',
   },
 });
 
@@ -1635,6 +1640,7 @@ app.post('/chat/upload', authMiddleware, uploadChat.single('file'), async (req, 
 
     io.to(receiver).emit('receiveMessage', newMsg);
     io.to(userId).emit('receiveMessage', newMsg);
+    io.to('admin').emit('receiveMessage', newMsg); // Ensure admin dashboard sees it
 
     // If admin is sending to user, create notification
     if (userId === 'admin' && receiver !== 'admin') {
@@ -1759,7 +1765,7 @@ app.post('/admin/chat/send', authAdminPage, uploadChat.single('file'), async (re
     console.log('POST /admin/chat/send: Message saved to Cloudinary and MongoDB:', newMsg._id);
 
     io.to(userId).emit('receiveMessage', newMsg);
-    io.to('admin').emit('receiveMessage', newMsg);
+    io.to('admin').emit('receiveMessage', newMsg); // Explicitly emit to admin room
 
     // Create notification for user
     try {

@@ -677,8 +677,8 @@
                                               <% } %>
                               </div>
                               <div class="message-time">
-                                <%= new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'})
-                                  %>
+                                <%= new Date(msg.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Karachi' ,
+                                  hour: '2-digit' , minute: '2-digit' , hour12: true }) %>
                               </div>
                             </div>
                             <% }); %>
@@ -795,7 +795,7 @@
                     } else if (msg.type === 'document') {
                       content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
                     }
-                    div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>`);
+                    div.html(`${content}<div class="message-time">${new Date(msg.timestamp).toLocaleString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', hour12: true })}</div>`);
                     messages.append(div);
                     const msgDiv = messages[0];
                     if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;
