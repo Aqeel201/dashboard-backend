@@ -65,6 +65,14 @@ const profileStorage = new CloudinaryStorage({
   },
 });
 
+const medicineStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'mediapp/medicines',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif'],
+  },
+});
+
 // Multer setup for chat media uploads using Cloudinary
 const chatStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
