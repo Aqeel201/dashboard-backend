@@ -141,7 +141,7 @@ const SettingsSchema = new mongoose.Schema({
   apiKey: { type: String, default: '' },
   darkMode: { type: Boolean, default: false },
 });
-const Settings = mongoose.model('Settings', SettingsSchema);
+const Settings = mongoose.models.Settings || mongoose.model('Settings', SettingsSchema);
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -157,14 +157,16 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
   dob: { type: String, default: '' },
+  dob: { type: String, default: '' },
 });
-const User = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Category Schema
 const CategorySchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
+  name: { type: String, required: true, unique: true },
 });
-const Category = mongoose.model('Category', CategorySchema);
+const Category = mongoose.models.Category || mongoose.model('Category', CategorySchema);
 
 // Medicine Schema
 const MedicineSchema = new mongoose.Schema({
@@ -181,8 +183,9 @@ const MedicineSchema = new mongoose.Schema({
   remainingDoses: { type: Number, default: 0 },
   likes: { type: [String], default: [] },
   description: { type: String, default: '' }, // New field for description
+  description: { type: String, default: '' }, // New field for description
 });
-const Medicine = mongoose.model('Medicine', MedicineSchema);
+const Medicine = mongoose.models.Medicine || mongoose.model('Medicine', MedicineSchema);
 
 // Order Schema
 const OrderSchema = new mongoose.Schema({
@@ -202,15 +205,17 @@ const OrderSchema = new mongoose.Schema({
   transactionId: { type: String, default: null },
   paymentStatus: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
   statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }],
+  statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }],
 });
-const Order = mongoose.model('Order', OrderSchema);
+const Order = mongoose.models.Order || mongoose.model('Order', OrderSchema);
 
 // Cart Schema
 const CartSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   cart: { type: Array, default: [] },
+  cart: { type: Array, default: [] },
 });
-const Cart = mongoose.model('Cart', CartSchema);
+const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
 
 // In-Person Sale Schema
 const InPersonSaleSchema = new mongoose.Schema({
@@ -223,8 +228,10 @@ const InPersonSaleSchema = new mongoose.Schema({
   customerContact: { type: String },
   adminId: { type: String, required: true },
   totalAmount: { type: Number, required: true },
+  adminId: { type: String, required: true },
+  totalAmount: { type: Number, required: true },
 });
-const InPersonSale = mongoose.model('InPersonSale', InPersonSaleSchema);
+const InPersonSale = mongoose.models.InPersonSale || mongoose.model('InPersonSale', InPersonSaleSchema);
 
 // Transaction Schema
 const transactionSchema = new mongoose.Schema({
@@ -235,8 +242,9 @@ const transactionSchema = new mongoose.Schema({
   depositAmount: { type: Number, required: true },
   status: { type: String, enum: ['Accepted', 'Rejected', 'Pending'], default: 'Pending' },
   createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
 });
-const Transaction = mongoose.model('Transaction', transactionSchema);
+const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
 
 // Middleware to Fetch Settings
 app.use(async (req, res, next) => {
@@ -1467,7 +1475,7 @@ const chatMessageSchema = new mongoose.Schema({
   caption: { type: String, default: '' },
   timestamp: { type: Date, default: Date.now },
 });
-const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+const ChatMessage = mongoose.models.ChatMessage || mongoose.model('ChatMessage', chatMessageSchema);
 
 // Notification Schema
 const NotificationSchema = new mongoose.Schema({
@@ -1479,7 +1487,7 @@ const NotificationSchema = new mongoose.Schema({
   relatedId: { type: String },
   date: { type: Date, default: Date.now }
 });
-const Notification = mongoose.model('Notification', NotificationSchema);
+const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 
 // Multer upload routes for chat
 app.post('/upload/image', upload1.single('file'), (req, res) => {
@@ -1785,8 +1793,10 @@ const FeedbackSchema = new mongoose.Schema({
   rating: { type: Number, required: true, min: 1, max: 5 },
   comment: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
+  comment: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
-const Feedback = mongoose.model('Feedback', FeedbackSchema);
+const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
 
 // (Duplicate authMiddleware removed. The original definition above remains in use.)
 
