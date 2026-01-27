@@ -761,13 +761,20 @@
           let socket = null;
           if (typeof io !== 'undefined') {
             try {
-              socket = io('/?token=<%= token || "" %>&userId=admin');
+              // Socket.IO configuration for Vercel
+              const isVercel = window.location.hostname.includes('vercel.app');
+              socket = io({
+                query: { token: '<%= token || "" %>', userId: 'admin' },
+                transports: isVercel ? ['polling'] : ['websocket', 'polling'],
+                reconnection: true
+              });
+
               socket.on('connect', () => {
                 console.log('Socket connected:', socket.id);
                 socket.emit('join', 'admin');
               });
               socket.on('connect_error', (err) => {
-                console.error('Socket connection error:', err.message);
+                if (!isVercel) console.error('Socket connection error:', err.message);
               });
 
               // Define appendMessage function
@@ -808,10 +815,35 @@
                 }
               }
 
-              // Handle real-time messages
+              // Handle real-time messages via socket (fallback for local dev)
               socket.on('receiveMessage', (msg) => {
                 appendMessage(msg);
               });
+
+              // Dashboard Polling (Essential for Vercel)
+              const selectedUserId = '<%= selectedUserId || "" %>';
+              const token = '<%= token || "" %>';
+
+              async function fetchUpdates() {
+                if (!selectedUserId || !token) return;
+                try {
+                  const response = await $.ajax({
+                    url: `/api/messages/admin?userId=${selectedUserId}`,
+                    type: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (Array.isArray(response)) {
+                    response.forEach(msg => appendMessage(msg));
+                  }
+                } catch (err) {
+                  // Silent fail for polling errors
+                }
+              }
+
+              // Initial and periodic fetch
+              if (selectedUserId) {
+                setInterval(fetchUpdates, 3000); // Poll every 3 seconds
+              }
 
               socket.on('userOnline', (data) => {
                 const userStatusElements = $(`.user-status[data-user-id="${data.userId}"]`);

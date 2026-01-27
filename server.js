@@ -1680,7 +1680,14 @@ app.get('/api/debug-auth', (req, res) => {
 
 app.get('/api/messages/admin', authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.id;
+    let userId = req.user.id;
+    const targetUserId = req.query.userId;
+
+    // If caller is admin and targetUserId is provided, fetch for that user
+    if (req.user.role === 'admin' && targetUserId) {
+      userId = targetUserId;
+    }
+
     console.log('GET /api/messages/admin: Fetching messages for user:', userId);
     const messages = await ChatMessage.find({
       $or: [
