@@ -65,18 +65,19 @@ const profileStorage = new CloudinaryStorage({
   },
 });
 
-// Multer setup for medicine image uploads using Cloudinary
-const medicineStorage = new CloudinaryStorage({
+// Multer setup for chat media uploads using Cloudinary
+const chatStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'mediapp/medicines',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif'],
-    transformation: [{ width: 800, height: 800, crop: 'limit' }],
+    folder: 'mediapp/chat',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'jfif', 'pdf', 'docx', 'doc', 'txt', 'm4a', 'mp3', 'wav'],
+    resource_type: 'auto', // Important for voice/documents
   },
 });
 
 const uploadProfile = multer({ storage: profileStorage });
 const uploadMedicine = multer({ storage: medicineStorage });
+const uploadChat = multer({ storage: chatStorage });
 
 // MongoDB Connection
 
@@ -1463,9 +1464,22 @@ const chatMessageSchema = new mongoose.Schema({
   receiver: { type: String, required: true },
   type: { type: String, enum: ['text', 'image', 'voice', 'location', 'document'], required: true },
   content: { type: String, required: true },
+  caption: { type: String, default: '' },
   timestamp: { type: Date, default: Date.now },
 });
 const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
+
+// Notification Schema
+const NotificationSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  type: { type: String, default: 'general' },
+  read: { type: Boolean, default: false },
+  relatedId: { type: String },
+  date: { type: Date, default: Date.now }
+});
+const Notification = mongoose.model('Notification', NotificationSchema);
 
 // Multer upload routes for chat
 app.post('/upload/image', upload1.single('file'), (req, res) => {
@@ -1527,7 +1541,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log('User disconnected:', socket.id));
 });
 
-// MOVE THESE OUTSIDE io.on
 app.post('/api/chat/send', authMiddleware, async (req, res) => {
   try {
     const { receiver, type, content } = req.body;
@@ -1552,6 +1565,22 @@ app.post('/api/chat/send', authMiddleware, async (req, res) => {
     io.to(receiver).emit('receiveMessage', newMsg);
     io.to(userId).emit('receiveMessage', newMsg);
 
+    // If sending to admin, no notification needed for admin usually, 
+    // but if admin is sending to user, handle it.
+    if (userId === 'admin' && receiver !== 'admin') {
+      try {
+        const notification = new Notification({
+          userId: receiver,
+          title: 'New Message from Admin',
+          message: type === 'text' ? content : `Sent a ${type}`,
+          type: 'chat',
+          relatedId: newMsg._id,
+          date: new Date()
+        });
+        await notification.save();
+      } catch (err) { }
+    }
+
     res.status(200).json({ success: true, message: newMsg });
   } catch (err) {
     console.error('POST /api/chat/send error:', err.message);
@@ -1560,23 +1589,22 @@ app.post('/api/chat/send', authMiddleware, async (req, res) => {
 });
 
 // Chat Routes
-app.post('/chat/upload', authMiddleware, upload1.single('file'), async (req, res) => {
+app.post('/chat/upload', authMiddleware, uploadChat.single('file'), async (req, res) => {
   try {
     const { userId, type, receiver } = req.body;
     console.log('POST /chat/upload: Received data:', { userId, type, receiver, hasFile: !!req.file });
+
     if (!userId || !type || !receiver) {
-      console.error('POST /chat/upload: Missing required fields');
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    if (!['image', 'document', 'voice'].includes(type)) {
-      console.error('POST /chat/upload: Invalid message type:', type);
-      return res.status(400).json({ error: 'Invalid message type' });
-    }
+
     if (!req.file) {
-      console.error('POST /chat/upload: No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const messageContent = `/Uploads/${req.file.filename}`;
+
+    // Cloudinary URL is in req.file.path
+    const messageContent = req.file.path;
+
     const newMsg = new ChatMessage({
       _id: new mongoose.Types.ObjectId().toString(),
       sender: userId,
@@ -1585,10 +1613,31 @@ app.post('/chat/upload', authMiddleware, upload1.single('file'), async (req, res
       content: messageContent,
       timestamp: new Date(),
     });
+
     await newMsg.save();
-    console.log('POST /chat/upload: Message saved to MongoDB:', newMsg);
+    console.log('POST /chat/upload: Message saved to Cloudinary and MongoDB:', messageContent);
+
     io.to(receiver).emit('receiveMessage', newMsg);
     io.to(userId).emit('receiveMessage', newMsg);
+
+    // If admin is sending to user, create notification
+    if (userId === 'admin' && receiver !== 'admin') {
+      try {
+        const notification = new Notification({
+          userId: receiver,
+          title: 'New Message from Admin',
+          message: type === 'text' ? req.body.content : `Sent a ${type}`,
+          type: 'chat',
+          relatedId: newMsg._id,
+          date: new Date()
+        });
+        await notification.save();
+        console.log('Notification created for user:', receiver);
+      } catch (notifErr) {
+        console.error('Failed to create notification:', notifErr.message);
+      }
+    }
+
     res.status(200).json({ message: 'File uploaded and message sent successfully', url: messageContent });
   } catch (err) {
     console.error('POST /chat/upload: Error:', err.message);
@@ -1662,39 +1711,57 @@ app.get('/admin/chat', authAdminPage, async (req, res) => {
   }
 });
 
-app.post('/admin/chat/send', authAdminPage, upload1.single('file'), async (req, res) => {
+app.post('/admin/chat/send', authAdminPage, uploadChat.single('file'), async (req, res) => {
   try {
-    const { userId, type, content } = req.body;
+    const { userId, type, content, caption } = req.body;
     console.log('POST /admin/chat/send: Received data:', { userId, type, content, hasFile: !!req.file });
+
     if (!userId) {
-      console.error('POST /admin/chat/send: Missing userId');
       return res.status(400).json({ error: 'Missing userId' });
     }
-    if (!type || !['text', 'image', 'document', 'voice'].includes(type)) {
-      console.error('POST /admin/chat/send: Invalid message type:', type);
-      return res.status(400).json({ error: 'Invalid message type' });
-    }
+
     let messageContent = content;
-    if (req.file && ['image', 'document', 'voice'].includes(type)) {
-      messageContent = `/Uploads/${req.file.filename}`;
-      console.log('POST /admin/chat/send: File uploaded:', messageContent);
-    } else if (type === 'text' && !content) {
-      console.error('POST /admin/chat/send: Text message content is empty');
+    if (req.file) {
+      messageContent = req.file.path; // Cloudinary URL
+    }
+
+    if (!messageContent && type === 'text') {
       return res.status(400).json({ error: 'Text message cannot be empty' });
     }
+
     const newMsg = new ChatMessage({
       _id: new mongoose.Types.ObjectId().toString(),
       sender: 'admin',
       receiver: userId,
       type,
       content: messageContent,
+      caption: caption || '',
       timestamp: new Date(),
     });
+
     await newMsg.save();
-    console.log('POST /admin/chat/send: Message saved to MongoDB:', newMsg);
+    console.log('POST /admin/chat/send: Message saved to Cloudinary and MongoDB:', newMsg._id);
+
     io.to(userId).emit('receiveMessage', newMsg);
     io.to('admin').emit('receiveMessage', newMsg);
-    res.status(200).json({ message: 'Message sent successfully' });
+
+    // Create notification for user
+    try {
+      const notification = new Notification({
+        userId,
+        title: 'New Message from Admin',
+        message: type === 'text' ? messageContent : `Sent a ${type}`,
+        type: 'chat',
+        relatedId: newMsg._id,
+        date: new Date()
+      });
+      await notification.save();
+      console.log('Notification created for user:', userId);
+    } catch (notifErr) {
+      console.error('Failed to create notification:', notifErr.message);
+    }
+
+    res.status(200).json({ success: true, message: newMsg });
   } catch (err) {
     console.error('POST /admin/chat/send: Error:', err.message);
     res.status(500).json({ error: 'Failed to send message: ' + err.message });
