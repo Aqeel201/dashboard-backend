@@ -652,22 +652,17 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
     const previousStatus = order.status;
+    order.status = 'accepted';
+    order.paymentStatus = 'paid';
+    order.statusUpdateHistory = order.statusUpdateHistory || [];
+    order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
+
     if (order.transactionId && order.paymentMethod.toLowerCase() === 'easypaisa') {
       const transaction = await Transaction.findById(order.transactionId);
-      if (transaction && transaction.status === 'Accepted') {
-        order.status = 'accepted';
-        order.paymentStatus = 'paid';
-        order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
-      } else {
-        order.status = 'accepted';
-        order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
+      if (transaction && transaction.status !== 'Accepted') {
+        transaction.status = 'Accepted';
+        await transaction.save();
       }
-    } else {
-      order.status = 'accepted';
-      order.statusUpdateHistory = order.statusUpdateHistory || [];
-      order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
     }
 
     // Only deduct inventory if the order was NOT already accepted
