@@ -612,11 +612,13 @@ app.post('/api/cart', async (req, res) => {
 app.get('/api/order', async (req, res) => {
   try {
     const { userId } = req.query;
+    console.log(`[API] Fetching orders for userId: ${userId}`);
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
     const orders = await Order.find({ userId }).sort({ date: -1 });
+    console.log(`[API] Found ${orders.length} orders for ${userId}`);
     res.json({ orders });
   } catch (err) {
-    console.error(err);
+    console.error(`[API ERROR] GET /api/order:`, err);
     res.status(500).json({ error: 'Server error' });
   }
 });
