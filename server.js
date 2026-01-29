@@ -613,7 +613,7 @@ app.get('/api/order', async (req, res) => {
   try {
     const { userId } = req.query;
     console.log(`[API] Fetching orders for userId: ${userId}`);
-    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    if (!userId || userId === 'undefined') return res.status(400).json({ error: 'Missing or invalid userId' });
     const orders = await Order.find({ userId }).sort({ date: -1 });
     console.log(`[API] Found ${orders.length} orders for ${userId}`);
     res.json({ orders });
