@@ -2490,10 +2490,14 @@ app.put('/api/transactions/:id', async (req, res) => {
       }
 
       if (order) {
+        console.log(`[API] Updating order ${order._id} to rejected.`);
         order.status = 'rejected';
+        order.paymentStatus = 'unpaid'; // Explicitly unpaid if rejected
         order.statusUpdateHistory = order.statusUpdateHistory || [];
         order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
         await order.save();
+      } else {
+        console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
       }
     }
 
