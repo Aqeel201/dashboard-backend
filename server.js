@@ -224,7 +224,7 @@ const OrderSchema = new mongoose.Schema({
   shippingFee: { type: Number, required: true },
   orderTotal: { type: Number, required: true },
   location: { latitude: Number, longitude: Number },
-  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'accepted', 'rejected', 'shipped', 'delivered', 'cancelled', 'completed'], default: 'pending' },
   date: { type: Date, default: getPKTDate },
   transactionId: { type: String, default: null },
   paymentStatus: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
@@ -2454,11 +2454,11 @@ app.put('/api/transactions/:id', async (req, res) => {
       }
 
       if (order) {
-        console.log(`[API] Updating order ${order._id} to accepted and paid.`);
-        order.status = 'accepted';
+        console.log(`[API] Updating order ${order._id} to completed and paid.`);
+        order.status = 'completed';
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
 
         // Deduct inventory
         for (let item of order.cartItems) {
