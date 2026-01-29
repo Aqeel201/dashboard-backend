@@ -615,6 +615,10 @@
                                   <%= selectedUser.firstName %>
                                     <%= selectedUser.lastName %>
                                 </div>
+                                <div class="user-location small text-muted">
+                                  <i class="fas fa-map-marker-alt mr-1"></i>
+                                  <%= selectedUser.location || 'Location not set' %>
+                                </div>
                                 <div class="user-status" data-user-id="<%= selectedUser.id %>">
                                   <span
                                     class="status-dot <%= selectedUser.status === 'online' ? 'online' : 'offline' %>"></span>

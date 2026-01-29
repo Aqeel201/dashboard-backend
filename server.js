@@ -173,7 +173,7 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
-  dob: { type: String, default: '' },
+  location: { type: String, default: '' },
   dob: { type: String, default: '' },
 });
 const User = mongoose.models.User || mongoose.model('User', userSchema);
@@ -258,7 +258,7 @@ const transactionSchema = new mongoose.Schema({
   transactionID: { type: String, required: true },
   depositAmount: { type: Number, required: true },
   status: { type: String, enum: ['Accepted', 'Rejected', 'Pending'], default: 'Pending' },
-  createdAt: { type: Date, default: Date.now },
+  orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
   createdAt: { type: Date, default: Date.now },
 });
 const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
@@ -651,6 +651,7 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
+    const previousStatus = order.status;
     if (order.transactionId && order.paymentMethod.toLowerCase() === 'easypaisa') {
       const transaction = await Transaction.findById(order.transactionId);
       if (transaction && transaction.status === 'Accepted') {
@@ -669,11 +670,14 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
       order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
     }
 
-    for (let item of order.cartItems) {
-      const medicine = await Medicine.findById(item._id || item.id);
-      if (medicine) {
-        medicine.quantity -= item.cartQuantity;
-        await medicine.save();
+    // Only deduct inventory if the order was NOT already accepted
+    if (previousStatus === 'pending') {
+      for (let item of order.cartItems) {
+        const medicine = await Medicine.findById(item._id || item.id);
+        if (medicine) {
+          medicine.quantity -= item.cartQuantity;
+          await medicine.save();
+        }
       }
     }
 
@@ -2341,7 +2345,7 @@ app.get('/', (req, res) => res.send('Welcome to MediApp'));
 // Transaction Routes
 app.post('/api/transactions', async (req, res) => {
   try {
-    const { userId, walletNumber, walletName, transactionID, depositAmount } = req.body;
+    const { userId, walletNumber, walletName, transactionID, depositAmount, orderData } = req.body;
     if (!userId || !walletNumber || !walletName || !transactionID || !depositAmount) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -2352,9 +2356,16 @@ app.post('/api/transactions', async (req, res) => {
       walletName,
       transactionID,
       depositAmount: parseFloat(depositAmount),
+      orderId: orderData?._id || orderData?.id || null,
     });
 
     const savedTransaction = await newTransaction.save();
+
+    // If orderId is provided, link it back to the order
+    if (newTransaction.orderId) {
+      await Order.findByIdAndUpdate(newTransaction.orderId, { transactionId: savedTransaction._id });
+    }
+
     res.status(201).json(savedTransaction);
   } catch (error) {
     console.error('Error creating transaction:', error);
@@ -2382,10 +2393,51 @@ app.put('/api/transactions/:id', async (req, res) => {
     if (!['Accepted', 'Rejected', 'Pending'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
     }
-    const updatedTransaction = await Transaction.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!updatedTransaction) {
+
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
+
+    const previousStatus = transaction.status;
+    transaction.status = status;
+    const updatedTransaction = await transaction.save();
+
+    // If transaction is Accepted and was NOT already Accepted, update order and stock
+    if (status === 'Accepted' && previousStatus !== 'Accepted' && transaction.orderId) {
+      const order = await Order.findById(transaction.orderId);
+      if (order) {
+        order.status = 'accepted';
+        order.paymentStatus = 'paid';
+        order.statusUpdateHistory = order.statusUpdateHistory || [];
+        order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
+
+        // Deduct inventory
+        for (let item of order.cartItems) {
+          const medicine = await Medicine.findById(item._id || item.id);
+          if (medicine) {
+            medicine.quantity -= item.cartQuantity;
+            await medicine.save();
+          }
+        }
+        await order.save();
+
+        // Mark related notifications as read
+        await Notification.updateMany(
+          { userId: transaction.userId, relatedId: order._id.toString(), type: 'order' },
+          { $set: { read: true } }
+        );
+      }
+    } else if (status === 'Rejected' && transaction.orderId) {
+      const order = await Order.findById(transaction.orderId);
+      if (order) {
+        order.status = 'rejected';
+        order.statusUpdateHistory = order.statusUpdateHistory || [];
+        order.statusUpdateHistory.push({ status: 'rejected', timestamp: new Date() });
+        await order.save();
+      }
+    }
+
     res.json(updatedTransaction);
   } catch (error) {
     console.error('Error updating transaction:', error);
