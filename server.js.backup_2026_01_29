@@ -662,10 +662,7 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
 
     const previousStatus = order.status;
     order.status = 'accepted';
-    // For COD, payment is not paid upon acceptance (paid upon delivery)
-    if (order.paymentMethod !== 'Cash on Delivery') {
-      order.paymentStatus = 'paid';
-    }
+    order.paymentStatus = 'paid';
     order.statusUpdateHistory = order.statusUpdateHistory || [];
     order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
 
@@ -2462,11 +2459,11 @@ app.put('/api/transactions/:id', async (req, res) => {
       }
 
       if (order) {
-        console.log(`[API] Updating order ${order._id} to accepted and paid.`);
-        order.status = 'accepted';
+        console.log(`[API] Updating order ${order._id} to completed and paid.`);
+        order.status = 'completed';
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
 
         // Deduct inventory
         for (let item of order.cartItems) {
@@ -2576,28 +2573,15 @@ app.post('/api/orders/sync-transactions/:userId', async (req, res) => {
         order = await Order.findById(txn.orderId);
       }
 
-      // If order is still pending, update it to accepted
+      // If order is still pending, update it to completed
       if (order && order.status === 'pending') {
-        console.log(`[SYNC] Updating order ${order._id} from pending to accepted`);
-        order.status = 'accepted';
+        console.log(`[SYNC] Updating order ${order._id} from pending to completed`);
+        order.status = 'completed';
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
         await order.save();
         syncedCount++;
-      }
-    }
-
-    // Also handle Rejected transactions: unlink them so user can retry payment
-    const rejectedTransactions = await Transaction.find({ userId, status: 'Rejected' });
-    for (const txn of rejectedTransactions) {
-      if (txn.orderId) {
-        let order = await Order.findById(txn.orderId);
-        if (order && order.status === 'pending') {
-          console.log(`[SYNC] Unlinking rejected transaction ${txn._id} from order ${order._id}`);
-          order.transactionId = null; // Unlink so it shows as pending in UI
-          await order.save();
-        }
       }
     }
 
@@ -2611,11 +2595,11 @@ app.post('/api/orders/sync-transactions/:userId', async (req, res) => {
     for (const order of ordersWithTransactionId) {
       const transaction = await Transaction.findById(order.transactionId);
       if (transaction && transaction.status === 'Accepted') {
-        console.log(`[SYNC] Updating order ${order._id} (via transactionId lookup) from pending to accepted`);
-        order.status = 'accepted';
+        console.log(`[SYNC] Updating order ${order._id} (via transactionId lookup) from pending to completed`);
+        order.status = 'completed';
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
         await order.save();
         syncedCount++;
       }
