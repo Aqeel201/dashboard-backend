@@ -732,6 +732,7 @@ app.get('/admin/dashboard', authAdminPage, async (req, res) => {
           statusUpdateHistory: order.statusUpdateHistory || [],
           transactionId: order.transactionId || '',
           shippingFee: order.shippingFee || 0,
+          location: order.location || null,
         };
       })
       .filter((order) => order.orderTotal > 0);
