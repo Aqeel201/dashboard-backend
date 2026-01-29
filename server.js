@@ -2416,13 +2416,11 @@ app.get('/api/transactions', async (req, res) => {
     if (req.query.userId) {
       filter.userId = req.query.userId;
     }
-    // Support filtering by status - default to Pending if not specified
+    // Only filter by status if explicitly provided
     if (req.query.status) {
       filter.status = req.query.status;
-    } else {
-      // Default to Pending transactions
-      filter.status = 'Pending';
     }
+    // If no status filter provided, return all transactions for the user
     const transactions = await Transaction.find(filter).sort({ createdAt: -1 });
     res.json(transactions);
   } catch (error) {
@@ -2534,11 +2532,11 @@ app.get('/api/transactions/summary/:userId', async (req, res) => {
     const pendingCount = await Transaction.countDocuments({ userId, status: 'Pending' });
     const acceptedCount = await Transaction.countDocuments({ userId, status: 'Accepted' });
     const rejectedCount = await Transaction.countDocuments({ userId, status: 'Rejected' });
-    
+
     const pendingTransactions = await Transaction.find({ userId, status: 'Pending' }).sort({ createdAt: -1 });
     const acceptedTransactions = await Transaction.find({ userId, status: 'Accepted' }).sort({ createdAt: -1 });
     const rejectedTransactions = await Transaction.find({ userId, status: 'Rejected' }).sort({ createdAt: -1 });
-    
+
     res.json({
       counts: {
         pending: pendingCount,
@@ -2554,6 +2552,64 @@ app.get('/api/transactions/summary/:userId', async (req, res) => {
   } catch (error) {
     console.error('Error retrieving transaction summary:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Sync orders with accepted transactions - ensures order status matches transaction status
+app.post('/api/orders/sync-transactions/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log(`[SYNC] Starting order-transaction sync for user: ${userId}`);
+
+    // Find all accepted transactions for this user
+    const acceptedTransactions = await Transaction.find({ userId, status: 'Accepted' });
+    let syncedCount = 0;
+
+    for (const txn of acceptedTransactions) {
+      // Find orders linked to this transaction or by matching userId with pending status
+      let order = null;
+
+      if (txn.orderId) {
+        order = await Order.findById(txn.orderId);
+      }
+
+      // If order is still pending, update it to completed
+      if (order && order.status === 'pending') {
+        console.log(`[SYNC] Updating order ${order._id} from pending to completed`);
+        order.status = 'completed';
+        order.paymentStatus = 'paid';
+        order.statusUpdateHistory = order.statusUpdateHistory || [];
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
+        await order.save();
+        syncedCount++;
+      }
+    }
+
+    // Also find orders with transactionId that points to an accepted transaction
+    const ordersWithTransactionId = await Order.find({
+      userId,
+      status: 'pending',
+      transactionId: { $ne: null, $exists: true }
+    });
+
+    for (const order of ordersWithTransactionId) {
+      const transaction = await Transaction.findById(order.transactionId);
+      if (transaction && transaction.status === 'Accepted') {
+        console.log(`[SYNC] Updating order ${order._id} (via transactionId lookup) from pending to completed`);
+        order.status = 'completed';
+        order.paymentStatus = 'paid';
+        order.statusUpdateHistory = order.statusUpdateHistory || [];
+        order.statusUpdateHistory.push({ status: 'completed', timestamp: getPKTDate() });
+        await order.save();
+        syncedCount++;
+      }
+    }
+
+    console.log(`[SYNC] Completed sync for ${userId}. Synced ${syncedCount} orders.`);
+    res.json({ success: true, syncedCount, message: `Synced ${syncedCount} orders with accepted transactions` });
+  } catch (error) {
+    console.error('[SYNC] Error syncing orders:', error);
+    res.status(500).json({ error: 'Failed to sync orders with transactions' });
   }
 });
 
