@@ -15,6 +15,13 @@ const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+// Helper for Pakistan Standard Time (PKT)
+const getPKTDate = () => {
+  const now = new Date();
+  // Pakistan is UTC+5. 
+  return new Date(now.getTime() + (5 * 60 * 60 * 1000));
+};
+
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 2000;
@@ -170,7 +177,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   profileImage: { type: String, default: null },
   role: { type: String, default: 'user' },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: getPKTDate },
   phone: { type: String, default: '' },
   address: { type: String, default: '' },
   location: { type: String, default: '' },
@@ -218,10 +225,10 @@ const OrderSchema = new mongoose.Schema({
   orderTotal: { type: Number, required: true },
   location: { latitude: Number, longitude: Number },
   status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
-  date: { type: Date, default: Date.now },
+  date: { type: Date, default: getPKTDate },
   transactionId: { type: String, default: null },
   paymentStatus: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
-  statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }],
+  statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: getPKTDate } }],
   statusUpdateHistory: [{ status: String, timestamp: { type: Date, default: Date.now } }],
 });
 const Order = mongoose.models.Order || mongoose.model('Order', OrderSchema);
@@ -240,7 +247,7 @@ const InPersonSaleSchema = new mongoose.Schema({
   medicineName: { type: String, required: true },
   quantitySold: { type: Number, required: true },
   unitType: { type: String, required: true },
-  saleDate: { type: Date, default: Date.now },
+  saleDate: { type: Date, default: getPKTDate },
   customerName: { type: String },
   customerContact: { type: String },
   adminId: { type: String, required: true },
@@ -259,7 +266,7 @@ const transactionSchema = new mongoose.Schema({
   depositAmount: { type: Number, required: true },
   status: { type: String, enum: ['Accepted', 'Rejected', 'Pending'], default: 'Pending' },
   orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: getPKTDate },
 });
 const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
 
@@ -1819,9 +1826,7 @@ const FeedbackSchema = new mongoose.Schema({
   userProfileImage: { type: String, default: '' }, // Store profile image URL
   rating: { type: Number, required: true, min: 1, max: 5 },
   comment: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-  comment: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: getPKTDate },
 });
 const Feedback = mongoose.models.Feedback || mongoose.model('Feedback', FeedbackSchema);
 
@@ -2197,16 +2202,17 @@ app.get('/admin/sales-history', authAdminPage, async (req, res) => {
 // ------------------- Medicine Reminder Schema -------------------
 const medicineReminderSchema = new mongoose.Schema({
   userId: { type: String, required: true },
-  medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
+  medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: false },
   medicineName: { type: String, required: true },
   dosage: { type: String, required: true },
   time: { type: String, required: true }, // e.g., "08:00 AM"
   date: { type: Date, required: true },
-  repeat: { type: String, enum: ['None', 'Daily', 'Weekly'], default: 'None' },
+  repeat: { type: String, enum: ['None', 'Once', 'Daily', 'Weekly', 'Monthly', 'Custom'], default: 'None' },
   notes: { type: String, default: '' },
-  createdAt: { type: Date, default: Date.now }
+  expiryDate: { type: Date },
+  createdAt: { type: Date, default: getPKTDate }
 });
-const MedicineReminder = mongoose.model('MedicineReminder', medicineReminderSchema);
+const MedicineReminder = mongoose.models.MedicineReminder || mongoose.model('MedicineReminder', medicineReminderSchema);
 
 // ------------------- Medicine Reminder Routes -------------------
 
@@ -2223,7 +2229,7 @@ app.get('/api/medicines/list', authMiddleware, async (req, res) => {
 // Create reminder
 app.post('/api/reminders', authMiddleware, async (req, res) => {
   try {
-    const { medicineId, medicineName, dosage, time, date, repeat, notes } = req.body;
+    const { medicineId, medicineName, dosage, time, date, repeat, notes, customDays } = req.body;
     if ((!medicineId && !medicineName) || !dosage || !time || !date) {
       return res.status(400).json({ error: 'Required fields missing' });
     }
@@ -2235,6 +2241,31 @@ app.post('/api/reminders', authMiddleware, async (req, res) => {
       medName = medicine.name;
     }
 
+    // Calculate Expiry Date
+    const expiryDate = new Date(date);
+    const triggerTimeParts = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (triggerTimeParts) {
+      let hours = parseInt(triggerTimeParts[1]);
+      const minutes = parseInt(triggerTimeParts[2]);
+      const ampm = triggerTimeParts[3].toUpperCase();
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      expiryDate.setHours(hours, minutes, 0, 0);
+    }
+
+    if (repeat === 'Once' || repeat === 'None') {
+      // For one-time, it expires 1 minute after the time
+      expiryDate.setMinutes(expiryDate.getMinutes() + 1);
+    } else if (repeat === 'Daily') {
+      expiryDate.setFullYear(expiryDate.getFullYear() + 10);
+    } else if (repeat === 'Weekly') {
+      expiryDate.setDate(expiryDate.getDate() + 7);
+    } else if (repeat === 'Monthly') {
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+    } else if (repeat === 'Custom' && customDays) {
+      expiryDate.setDate(expiryDate.getDate() + parseInt(customDays));
+    }
+
     const reminder = new MedicineReminder({
       userId: req.user.id,
       medicineId: medicineId || null,
@@ -2243,11 +2274,13 @@ app.post('/api/reminders', authMiddleware, async (req, res) => {
       time,
       date,
       repeat,
-      notes
+      notes,
+      expiryDate
     });
     await reminder.save();
     res.status(201).json({ message: 'Reminder created successfully', reminder });
   } catch (err) {
+    console.error('Reminder Creation Error:', err);
     res.status(500).json({ error: 'Failed to create reminder', details: err.message });
   }
 });
@@ -2256,7 +2289,14 @@ app.post('/api/reminders', authMiddleware, async (req, res) => {
 // Get reminders for logged-in user
 app.get('/api/reminders', authMiddleware, async (req, res) => {
   try {
-    const reminders = await MedicineReminder.find({ userId: req.user.id }).sort({ date: 1, time: 1 });
+    const now = getPKTDate();
+    const reminders = await MedicineReminder.find({
+      userId: req.user.id,
+      $or: [
+        { expiryDate: { $gt: now } },
+        { expiryDate: { $exists: false } }
+      ]
+    }).sort({ date: 1 });
     res.json(reminders);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch reminders' });
@@ -2400,21 +2440,35 @@ app.put('/api/transactions/:id', async (req, res) => {
     transaction.status = status;
     const updatedTransaction = await transaction.save();
 
+    console.log(`[API] Transaction ${req.params.id} updated to ${status}. Previous status: ${previousStatus}`);
+
     // If transaction is Accepted and was NOT already Accepted, update order and stock
-    if (status === 'Accepted' && previousStatus !== 'Accepted' && transaction.orderId) {
-      const order = await Order.findById(transaction.orderId);
+    if (status === 'Accepted' && previousStatus !== 'Accepted') {
+      // Find order by ID or find the latest pending order for this user if orderId is missing
+      let order = null;
+      if (transaction.orderId) {
+        order = await Order.findById(transaction.orderId);
+      } else {
+        console.log(`[API] Transaction missing orderId, searching latest pending order for ${transaction.userId}`);
+        order = await Order.findOne({ userId: transaction.userId, status: 'pending' }).sort({ date: -1 });
+      }
+
       if (order) {
+        console.log(`[API] Updating order ${order._id} to accepted and paid.`);
         order.status = 'accepted';
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
+        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
 
         // Deduct inventory
         for (let item of order.cartItems) {
-          const medicine = await Medicine.findById(item._id || item.id);
-          if (medicine) {
-            medicine.quantity -= item.cartQuantity;
-            await medicine.save();
+          const medicineValue = item._id || item.id;
+          if (medicineValue) {
+            const medicine = await Medicine.findById(medicineValue);
+            if (medicine) {
+              medicine.quantity = Math.max(0, medicine.quantity - (item.cartQuantity || 1));
+              await medicine.save();
+            }
           }
         }
         await order.save();
@@ -2424,13 +2478,21 @@ app.put('/api/transactions/:id', async (req, res) => {
           { userId: transaction.userId, relatedId: order._id.toString(), type: 'order' },
           { $set: { read: true } }
         );
+      } else {
+        console.warn(`[API] No matching pending order found for transaction ${transaction._id}`);
       }
-    } else if (status === 'Rejected' && transaction.orderId) {
-      const order = await Order.findById(transaction.orderId);
+    } else if (status === 'Rejected' && previousStatus !== 'Rejected') {
+      let order = null;
+      if (transaction.orderId) {
+        order = await Order.findById(transaction.orderId);
+      } else {
+        order = await Order.findOne({ userId: transaction.userId, status: 'pending' }).sort({ date: -1 });
+      }
+
       if (order) {
         order.status = 'rejected';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'rejected', timestamp: new Date() });
+        order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
         await order.save();
       }
     }
