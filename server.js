@@ -2416,6 +2416,13 @@ app.get('/api/transactions', async (req, res) => {
     if (req.query.userId) {
       filter.userId = req.query.userId;
     }
+    // Support filtering by status - default to Pending if not specified
+    if (req.query.status) {
+      filter.status = req.query.status;
+    } else {
+      // Default to Pending transactions
+      filter.status = 'Pending';
+    }
     const transactions = await Transaction.find(filter).sort({ createdAt: -1 });
     res.json(transactions);
   } catch (error) {
@@ -2504,6 +2511,48 @@ app.put('/api/transactions/:id', async (req, res) => {
     res.json(updatedTransaction);
   } catch (error) {
     console.error('Error updating transaction:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get all transaction history (all statuses)
+app.get('/api/transactions/history/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const transactions = await Transaction.find({ userId }).sort({ createdAt: -1 });
+    res.json(transactions);
+  } catch (error) {
+    console.error('Error retrieving transaction history:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Get transaction summary (counts)
+app.get('/api/transactions/summary/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const pendingCount = await Transaction.countDocuments({ userId, status: 'Pending' });
+    const acceptedCount = await Transaction.countDocuments({ userId, status: 'Accepted' });
+    const rejectedCount = await Transaction.countDocuments({ userId, status: 'Rejected' });
+    
+    const pendingTransactions = await Transaction.find({ userId, status: 'Pending' }).sort({ createdAt: -1 });
+    const acceptedTransactions = await Transaction.find({ userId, status: 'Accepted' }).sort({ createdAt: -1 });
+    const rejectedTransactions = await Transaction.find({ userId, status: 'Rejected' }).sort({ createdAt: -1 });
+    
+    res.json({
+      counts: {
+        pending: pendingCount,
+        accepted: acceptedCount,
+        rejected: rejectedCount
+      },
+      transactions: {
+        pending: pendingTransactions,
+        accepted: acceptedTransactions,
+        rejected: rejectedTransactions
+      }
+    });
+  } catch (error) {
+    console.error('Error retrieving transaction summary:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
