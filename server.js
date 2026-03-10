@@ -1929,6 +1929,27 @@ app.get('/api/ai/chats/:id', authMiddleware, async (req, res) => {
   }
 });
 
+app.delete('/api/ai/chats/:id', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const deleted = await AIChatSession.findOneAndDelete({ _id: req.params.id, userId });
+    if (!deleted) return res.status(404).json({ error: 'Chat not found' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete AI chat: ' + err.message });
+  }
+});
+
+app.delete('/api/ai/chats', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    await AIChatSession.deleteMany({ userId });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete AI chats: ' + err.message });
+  }
+});
+
 app.post('/api/ai/respond', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.email;
