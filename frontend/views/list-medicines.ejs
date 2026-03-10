@@ -12,7 +12,7 @@
       align-items: center;
       justify-content: center;
       background: #ffffff;
-      border: 2px solid #e9ecef;
+      border: 2px solid var(--border-color);
       border-radius: 10px;
       text-decoration: none;
       color: #333;
@@ -23,14 +23,14 @@
     .category-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      border-color: #007bff;
+      border-color: var(--primary-color);
     }
 
     .category-card.active {
-      background: #007bff;
+      background: var(--primary-color);
       color: #fff;
-      border-color: #0056b3;
-      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+      border-color: var(--primary-600);
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
     }
 
     .category-card i {
@@ -44,7 +44,7 @@
       height: 60px;
       object-fit: cover;
       border-radius: 8px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
     }
 
     /* Toggle Button Styles */
@@ -70,7 +70,7 @@
     }
 
     .search-container .input-group {
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
       border-radius: 25px;
       overflow: hidden;
     }
@@ -84,26 +84,26 @@
     .search-container .btn {
       border: none;
       padding: 12px 20px;
-      background: #007bff;
+      background: var(--primary-color);
       color: #fff;
       border-radius: 0 25px 25px 0;
       transition: background 0.3s ease;
     }
 
     .search-container .btn:hover {
-      background: #0056b3;
+      background: var(--primary-600);
     }
 
     /* Table Styles */
     .table-card {
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
     }
 
     .table-card .card-header {
       padding: 15px 20px;
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-600));
     }
 
     .table-card .card-body {
@@ -116,7 +116,7 @@
 
     .table th {
       font-weight: 600;
-      background: #f8f9fa;
+      background: #f1f5f9;
       padding: 15px;
     }
 
