@@ -242,6 +242,64 @@ const CartSchema = new mongoose.Schema({
 });
 const Cart = mongoose.models.Cart || mongoose.model('Cart', CartSchema);
 
+const buildMedicineMap = (medicines) => {
+  const map = new Map();
+  for (const med of medicines) {
+    map.set(String(med._id), med);
+  }
+  return map;
+};
+
+const sanitizeCartItems = (cartItems, medMap) => {
+  const cleaned = [];
+  for (const item of cartItems || []) {
+    const id = String(item._id || item.id || '');
+    const med = medMap.get(id);
+    if (!med) continue;
+    const availableStock = Number(med.quantity || 0);
+    if (availableStock <= 0) continue;
+    const cartQty = Math.max(0, Number(item.cartQuantity || 0));
+    const finalQty = Math.min(cartQty, availableStock);
+    if (finalQty <= 0) continue;
+    cleaned.push({
+      ...item,
+      _id: item._id || med._id,
+      availableStock,
+      cartQuantity: finalQty,
+    });
+  }
+  return cleaned;
+};
+
+const refreshCartDocument = async (cartDoc) => {
+  if (!cartDoc || !Array.isArray(cartDoc.cart)) return;
+  const ids = cartDoc.cart.map((i) => i._id || i.id).filter(Boolean).map((id) => String(id));
+  const medicines = ids.length ? await Medicine.find({ _id: { $in: ids } }).select('quantity') : [];
+  const medMap = buildMedicineMap(medicines);
+  const cleaned = sanitizeCartItems(cartDoc.cart, medMap);
+  const changed =
+    cleaned.length !== cartDoc.cart.length ||
+    cleaned.some((c, idx) => c.cartQuantity !== cartDoc.cart[idx]?.cartQuantity || c.availableStock !== cartDoc.cart[idx]?.availableStock);
+  if (changed) {
+    cartDoc.cart = cleaned;
+    await cartDoc.save();
+  }
+};
+
+const pruneCartsForMedicines = async (medicineIds) => {
+  const ids = (medicineIds || []).map((id) => String(id)).filter(Boolean);
+  if (!ids.length) return;
+  const carts = await Cart.find({
+    $or: [
+      { 'cart._id': { $in: ids } },
+      { 'cart.id': { $in: ids } },
+    ],
+  });
+  for (const cart of carts) {
+    await refreshCartDocument(cart);
+  }
+};
+
 // In-Person Sale Schema
 const InPersonSaleSchema = new mongoose.Schema({
   medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
@@ -591,7 +649,18 @@ app.get('/api/cart', async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
     const cart = await Cart.findOne({ userId });
-    res.json({ cartItems: cart ? cart.cart : [] });
+    if (!cart || !Array.isArray(cart.cart)) {
+      return res.json({ cartItems: [] });
+    }
+    const ids = cart.cart.map((i) => i._id || i.id).filter(Boolean).map((id) => String(id));
+    const medicines = ids.length ? await Medicine.find({ _id: { $in: ids } }).select('quantity') : [];
+    const medMap = buildMedicineMap(medicines);
+    const cleaned = sanitizeCartItems(cart.cart, medMap);
+    if (cleaned.length !== cart.cart.length) {
+      cart.cart = cleaned;
+      await cart.save();
+    }
+    res.json({ cartItems: cleaned });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -602,12 +671,16 @@ app.post('/api/cart', async (req, res) => {
   try {
     const { userId, cart } = req.body;
     if (!userId || !Array.isArray(cart)) return res.status(400).json({ error: 'Invalid request data' });
+    const ids = cart.map((i) => i._id || i.id).filter(Boolean).map((id) => String(id));
+    const medicines = ids.length ? await Medicine.find({ _id: { $in: ids } }).select('quantity') : [];
+    const medMap = buildMedicineMap(medicines);
+    const cleaned = sanitizeCartItems(cart, medMap);
     let userCart = await Cart.findOne({ userId });
     if (userCart) {
-      userCart.cart = cart;
+      userCart.cart = cleaned;
       await userCart.save();
     } else {
-      userCart = new Cart({ userId, cart });
+      userCart = new Cart({ userId, cart: cleaned });
       await userCart.save();
     }
     res.json({ message: 'Cart saved successfully', cart: userCart.cart });
@@ -634,6 +707,43 @@ app.get('/api/order', async (req, res) => {
 app.post('/api/order', async (req, res) => {
   try {
     const { userId, shippingEmail, billingEmail, shippingAddress, billingAddress, shippingMethod, paymentMethod, cartItems, shippingFee, orderTotal, location } = req.body;
+    if (!userId || !Array.isArray(cartItems) || cartItems.length === 0) {
+      return res.status(400).json({ error: 'Invalid order data' });
+    }
+
+    // Validate stock before creating order
+    const ids = cartItems.map((i) => i._id || i.id).filter(Boolean).map((id) => String(id));
+    const medicines = ids.length ? await Medicine.find({ _id: { $in: ids } }) : [];
+    const medMap = buildMedicineMap(medicines);
+    const insufficient = [];
+    for (const item of cartItems) {
+      const id = String(item._id || item.id || '');
+      const med = medMap.get(id);
+      const requested = Number(item.cartQuantity || 0);
+      const available = Number(med?.quantity || 0);
+      if (!med || available <= 0 || requested > available) {
+        insufficient.push({
+          _id: item._id || item.id,
+          name: item.name,
+          requested,
+          available,
+        });
+      }
+    }
+    if (insufficient.length) {
+      // Also clean user's cart to prevent stale quantities
+      try {
+        const userCart = await Cart.findOne({ userId });
+        if (userCart) await refreshCartDocument(userCart);
+      } catch (cartErr) {
+        console.warn('Failed to clean cart after insufficient stock:', cartErr.message);
+      }
+      return res.status(409).json({
+        error: 'Insufficient stock for one or more items',
+        items: insufficient,
+      });
+    }
+
     const newOrder = new Order({
       userId,
       shippingEmail,
@@ -656,13 +766,30 @@ app.post('/api/order', async (req, res) => {
   }
 });
 
-app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ error: 'Order not found' });
+  app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
+    try {
+      const order = await Order.findById(req.params.id);
+      if (!order) return res.status(404).json({ error: 'Order not found' });
 
-    const previousStatus = order.status;
-    order.status = 'accepted';
+      // Stock validation before accepting
+      const shortages = [];
+      for (let item of order.cartItems) {
+        const medicine = await Medicine.findById(item._id || item.id);
+        if (!medicine || medicine.quantity < (item.cartQuantity || 0)) {
+          shortages.push({
+            _id: item._id || item.id,
+            name: item.name,
+            requested: item.cartQuantity || 0,
+            available: medicine ? medicine.quantity : 0,
+          });
+        }
+      }
+      if (shortages.length) {
+        return res.status(409).json({ error: 'Insufficient stock', items: shortages });
+      }
+
+      const previousStatus = order.status;
+      order.status = 'accepted';
     // For COD, payment is not paid upon acceptance (paid upon delivery)
     if (order.paymentMethod !== 'Cash on Delivery') {
       order.paymentStatus = 'paid';
@@ -678,18 +805,22 @@ app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
       }
     }
 
-    // Only deduct inventory if the order was NOT already accepted
-    if (previousStatus === 'pending') {
-      for (let item of order.cartItems) {
-        const medicine = await Medicine.findById(item._id || item.id);
-        if (medicine) {
-          medicine.quantity -= item.cartQuantity;
-          await medicine.save();
+      // Only deduct inventory if the order was NOT already accepted
+      if (previousStatus === 'pending') {
+        const affectedIds = [];
+        for (let item of order.cartItems) {
+          const medicine = await Medicine.findById(item._id || item.id);
+          if (medicine) {
+            const newQty = Math.max(0, medicine.quantity - (item.cartQuantity || 0));
+            medicine.quantity = newQty;
+            await medicine.save();
+            affectedIds.push(medicine._id);
+          }
         }
+        await pruneCartsForMedicines(affectedIds);
       }
-    }
 
-    await order.save();
+      await order.save();
     res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
@@ -2627,25 +2758,28 @@ app.put('/api/transactions/:id', async (req, res) => {
         order = await Order.findOne({ userId: transaction.userId, status: 'pending' }).sort({ date: -1 });
       }
 
-      if (order) {
-        console.log(`[API] Updating order ${order._id} to accepted and paid.`);
-        order.status = 'accepted';
-        order.paymentStatus = 'paid';
-        order.statusUpdateHistory = order.statusUpdateHistory || [];
-        order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        if (order) {
+          console.log(`[API] Updating order ${order._id} to accepted and paid.`);
+          order.status = 'accepted';
+          order.paymentStatus = 'paid';
+          order.statusUpdateHistory = order.statusUpdateHistory || [];
+          order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
 
-        // Deduct inventory
-        for (let item of order.cartItems) {
-          const medicineValue = item._id || item.id;
-          if (medicineValue) {
-            const medicine = await Medicine.findById(medicineValue);
-            if (medicine) {
-              medicine.quantity = Math.max(0, medicine.quantity - (item.cartQuantity || 1));
-              await medicine.save();
+          // Deduct inventory
+          const affectedIds = [];
+          for (let item of order.cartItems) {
+            const medicineValue = item._id || item.id;
+            if (medicineValue) {
+              const medicine = await Medicine.findById(medicineValue);
+              if (medicine) {
+                medicine.quantity = Math.max(0, medicine.quantity - (item.cartQuantity || 1));
+                await medicine.save();
+                affectedIds.push(medicine._id);
+              }
             }
           }
-        }
-        await order.save();
+          await order.save();
+          await pruneCartsForMedicines(affectedIds);
 
         // Mark related notifications as read
         await Notification.updateMany(
