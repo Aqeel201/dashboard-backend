@@ -1925,7 +1925,28 @@ const buildSystemPrompt = (storeNames) => {
 
 const findStoreMatches = (text, medicines) => {
   const t = (text || '').toLowerCase();
-  return medicines.filter((m) => t.includes((m.name || '').toLowerCase()));
+  return medicines.filter((m) => (m.name || '').toLowerCase() && t.includes((m.name || '').toLowerCase()) && Number(m.quantity || 0) > 0);
+};
+
+const classifyMedicalWithGroq = async (text, groqKey, model) => {
+  const payload = {
+    model,
+    temperature: 0,
+    max_tokens: 5,
+    messages: [
+      { role: 'system', content: 'You are a classifier. Reply with only "medical" or "non-medical".' },
+      { role: 'user', content: text },
+    ],
+  };
+  const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${groqKey}`,
+    },
+    timeout: 12000,
+  });
+  const label = (resp?.data?.choices?.[0]?.message?.content || '').trim().toLowerCase();
+  return label.includes('non') ? 'non-medical' : 'medical';
 };
 
 app.get('/api/ai/chats', authMiddleware, async (req, res) => {
@@ -2002,22 +2023,31 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     // Store user message
     session.messages.push({ role: 'user', content: text, createdAt: new Date() });
 
-    if (!isMedicalQuery(text)) {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
+      await session.save();
+      // Fallback to keyword rule if no Groq key
+      if (!isMedicalQuery(text)) {
+        const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
+        session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
+        await session.save();
+        return res.json({ sessionId: session._id, response: refusal, suggestions: [] });
+      }
+      return res.status(503).json({ error: 'GROQ_API_KEY is not configured on the server.', sessionId: session._id });
+    }
+
+    const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
+    // Classify medical vs non-medical using Groq (avoid keyword-only behavior)
+    const classification = await classifyMedicalWithGroq(text, groqKey, groqModel);
+    if (classification === 'non-medical') {
       const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
       session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
       await session.save();
       return res.json({ sessionId: session._id, response: refusal, suggestions: [] });
     }
 
-    const groqKey = process.env.GROQ_API_KEY;
-    if (!groqKey) {
-      await session.save();
-      return res.status(503).json({ error: 'GROQ_API_KEY is not configured on the server.', sessionId: session._id });
-    }
-
-    const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
-
-    const medicines = await Medicine.find().select('name price image dosage manufacturer medicineType').lean();
+    const medicines = await Medicine.find().select('name price image dosage manufacturer medicineType description category quantity').lean();
     const storeNames = medicines.map((m) => m.name).filter(Boolean).slice(0, 200);
     const systemPrompt = buildSystemPrompt(storeNames);
 
@@ -2042,7 +2072,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     const content = groqResp?.data?.choices?.[0]?.message?.content || 'No response received.';
     const storeMatches = findStoreMatches(content, medicines);
     const queryMatches = findRelevantMedicines(text, medicines);
-    const merged = [...storeMatches, ...queryMatches];
+    const merged = [...queryMatches, ...storeMatches];
     const uniqueById = new Map();
     for (const m of merged) {
       if (m && m._id) uniqueById.set(String(m._id), m);
