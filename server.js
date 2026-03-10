@@ -1880,6 +1880,35 @@ const isMedicalQuery = (text) => {
   return MEDICAL_KEYWORDS.some((k) => t.includes(k));
 };
 
+const normalizeText = (text) => (text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+const tokenize = (text) => normalizeText(text).split(/\s+/).filter(Boolean);
+
+const findRelevantMedicines = (query, medicines, limit = 8) => {
+  const qTokens = new Set(tokenize(query));
+  if (!qTokens.size) return [];
+  const scored = [];
+  for (const med of medicines) {
+    const fields = [
+      med.name,
+      med.description,
+      med.category,
+      med.manufacturer,
+      med.dosage,
+      med.medicineType,
+    ].filter(Boolean).join(' ');
+    const mTokens = tokenize(fields);
+    let score = 0;
+    for (const t of mTokens) {
+      if (qTokens.has(t)) score += 1;
+    }
+    if (score > 0 && Number(med.quantity || 0) > 0) {
+      scored.push({ med, score });
+    }
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.med);
+};
+
 const buildSystemPrompt = (storeNames) => {
   const storeText = storeNames.length
     ? `MediApp Store Medicines (prefer these first): ${storeNames.join(', ')}.`
@@ -1889,7 +1918,7 @@ const buildSystemPrompt = (storeNames) => {
     'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
     'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
-    'If the user writes in Urdu or Roman Urdu, respond in the same language.',
+    'If the user writes in Urdu or Roman Urdu, respond in the same language (Roman Urdu).',
     storeText,
   ].join(' ');
 };
@@ -2011,6 +2040,13 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
 
     const content = groqResp?.data?.choices?.[0]?.message?.content || 'No response received.';
     const storeMatches = findStoreMatches(content, medicines);
+    const queryMatches = findRelevantMedicines(text, medicines);
+    const merged = [...storeMatches, ...queryMatches];
+    const uniqueById = new Map();
+    for (const m of merged) {
+      if (m && m._id) uniqueById.set(String(m._id), m);
+    }
+    const suggestions = Array.from(uniqueById.values()).slice(0, 8);
 
     session.messages.push({ role: 'assistant', content, createdAt: new Date() });
     await session.save();
@@ -2018,7 +2054,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     res.json({
       sessionId: session._id,
       response: content,
-      suggestions: storeMatches.map((m) => ({
+      suggestions: suggestions.map((m) => ({
         _id: m._id,
         name: m.name,
         price: m.price,
