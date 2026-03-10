@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const http = require('http');
 const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
@@ -1506,6 +1507,20 @@ const chatMessageSchema = new mongoose.Schema({
 });
 const ChatMessage = mongoose.models.ChatMessage || mongoose.model('ChatMessage', chatMessageSchema);
 
+// AI Chat Session Schema
+const aiChatSessionSchema = new mongoose.Schema({
+  userId: { type: String, required: true, index: true },
+  title: { type: String, default: 'New Chat' },
+  messages: [
+    {
+      role: { type: String, enum: ['user', 'assistant'], required: true },
+      content: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+}, { timestamps: true });
+const AIChatSession = mongoose.models.AIChatSession || mongoose.model('AIChatSession', aiChatSessionSchema);
+
 // Notification Schema
 const NotificationSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -1712,6 +1727,157 @@ app.get('/api/messages/admin', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('GET /api/messages/admin: Error:', err.message);
     res.status(500).json({ error: 'Failed to fetch messages: ' + err.message });
+  }
+});
+
+// ------------------- MediApp AI Chat -------------------
+const MEDICAL_KEYWORDS = [
+  'symptom', 'symptoms', 'fever', 'pain', 'cough', 'cold', 'flu', 'headache',
+  'nausea', 'vomit', 'vomiting', 'diarrhea', 'dizzy', 'dizziness', 'allergy',
+  'infection', 'burn', 'injury', 'wound', 'rash', 'skin', 'itch', 'itching',
+  'stomach', 'abdomen', 'abdominal', 'blood pressure', 'bp', 'sugar', 'diabetes',
+  'asthma', 'heart', 'chest', 'pregnant', 'pregnancy', 'period', 'menstrual',
+  'doctor', 'clinic', 'medicine', 'medication', 'tablet', 'capsule', 'syrup',
+  'antibiotic', 'dose', 'dosage', 'mg', 'ml', 'ointment', 'cream', 'spray',
+  'vitamin', 'supplement', 'prescription', 'otc', 'painkiller', 'analgesic',
+  'health', 'healthcare', 'pharmacy',
+];
+
+const isMedicalQuery = (text) => {
+  const t = (text || '').toLowerCase();
+  if (!t.trim()) return false;
+  return MEDICAL_KEYWORDS.some((k) => t.includes(k));
+};
+
+const buildSystemPrompt = (storeNames) => {
+  const storeText = storeNames.length
+    ? `MediApp Store Medicines (prefer these first): ${storeNames.join(', ')}.`
+    : 'MediApp Store Medicines list is currently unavailable.';
+  return [
+    'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
+    'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
+    'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
+    'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
+    'If the user writes in Urdu or Roman Urdu, respond in the same language.',
+    storeText,
+  ].join(' ');
+};
+
+const findStoreMatches = (text, medicines) => {
+  const t = (text || '').toLowerCase();
+  return medicines.filter((m) => t.includes((m.name || '').toLowerCase()));
+};
+
+app.get('/api/ai/chats', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const sessions = await AIChatSession.find({ userId })
+      .sort({ updatedAt: -1 })
+      .select('_id title updatedAt messages')
+      .lean();
+    const result = sessions.map((s) => ({
+      _id: s._id,
+      title: s.title,
+      updatedAt: s.updatedAt,
+      lastMessage: s.messages?.length ? s.messages[s.messages.length - 1].content : '',
+    }));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch AI chats: ' + err.message });
+  }
+});
+
+app.get('/api/ai/chats/:id', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const session = await AIChatSession.findOne({ _id: req.params.id, userId }).lean();
+    if (!session) return res.status(404).json({ error: 'Chat not found' });
+    res.json(session);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch AI chat: ' + err.message });
+  }
+});
+
+app.post('/api/ai/respond', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const { sessionId, message } = req.body || {};
+    const text = (message || '').trim();
+    if (!text) return res.status(400).json({ error: 'Message is required' });
+
+    let session = null;
+    if (sessionId) {
+      session = await AIChatSession.findOne({ _id: sessionId, userId });
+    }
+
+    if (!session) {
+      session = new AIChatSession({
+        userId,
+        title: text.slice(0, 60),
+        messages: [],
+      });
+    }
+
+    // Store user message
+    session.messages.push({ role: 'user', content: text, createdAt: new Date() });
+
+    if (!isMedicalQuery(text)) {
+      const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
+      session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
+      await session.save();
+      return res.json({ sessionId: session._id, response: refusal, suggestions: [] });
+    }
+
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) {
+      return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' });
+    }
+
+    const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
+
+    const medicines = await Medicine.find().select('name price image dosage manufacturer medicineType').lean();
+    const storeNames = medicines.map((m) => m.name).filter(Boolean).slice(0, 200);
+    const systemPrompt = buildSystemPrompt(storeNames);
+
+    const payload = {
+      model: groqModel,
+      temperature: 0.4,
+      max_tokens: 512,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...session.messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+      ],
+    };
+
+    const groqResp = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${groqKey}`,
+      },
+      timeout: 20000,
+    });
+
+    const content = groqResp?.data?.choices?.[0]?.message?.content || 'No response received.';
+    const storeMatches = findStoreMatches(content, medicines);
+
+    session.messages.push({ role: 'assistant', content, createdAt: new Date() });
+    await session.save();
+
+    res.json({
+      sessionId: session._id,
+      response: content,
+      suggestions: storeMatches.map((m) => ({
+        _id: m._id,
+        name: m.name,
+        price: m.price,
+        image: m.image,
+        dosage: m.dosage,
+        manufacturer: m.manufacturer,
+        medicineType: m.medicineType,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'AI response failed: ' + err.message });
   }
 });
 
