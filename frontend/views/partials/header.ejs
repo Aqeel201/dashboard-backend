@@ -264,14 +264,16 @@
     }
 
     .user-panel {
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(255, 255, 255, 0.55);
       padding: 14px 12px;
       text-align: left;
-      background: #ffffff;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       width: calc(100% - 16px);
       margin: 10px auto 14px;
       border-radius: 14px;
-      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
       display: flex;
       flex-direction: row;
       align-items: center;
