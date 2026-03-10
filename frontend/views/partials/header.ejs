@@ -154,8 +154,12 @@
 
     .brand-link {
       background-color: #ffffff;
-      text-align: center;
       border-bottom: 1px solid var(--border-color) !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 10px;
     }
 
     .brand-link .brand-image {
@@ -165,9 +169,10 @@
     }
 
     .brand-link .brand-text {
-      font-size: 1.1rem !important;
-      letter-spacing: 0.5px;
+      font-size: 1.05rem !important;
+      letter-spacing: 0.4px;
       color: #0f172a;
+      font-weight: 800;
     }
 
     .nav-sidebar .nav-link p {
@@ -188,6 +193,18 @@
       gap: 10px;
       width: calc(100% - 12px);
       overflow: hidden;
+      position: relative;
+    }
+
+    .nav-sidebar .nav-link.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.85);
     }
 
     .nav-sidebar .nav-treeview .nav-link {
@@ -238,33 +255,47 @@
       font-weight: 600;
     }
 
+    .user-panel .info .text-white {
+      color: #0f172a !important;
+    }
+
+    .user-panel .info .text-muted {
+      color: #475569 !important;
+    }
+
     .user-panel {
-      border-bottom: 1px solid var(--border-color);
-      padding: 18px 14px;
-      text-align: center;
-      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      padding: 14px 12px;
+      text-align: left;
+      background: #ffffff;
       width: calc(100% - 16px);
-      margin: 8px auto 12px;
+      margin: 10px auto 14px;
       border-radius: 14px;
-      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
     }
 
     .user-panel .image {
       display: flex;
-      justify-content: center;
-      width: 100%;
+      align-items: center;
+      justify-content: flex-start;
+      width: auto;
+    }
+
+    .user-panel .info {
+      margin-top: 0 !important;
+      text-align: left;
     }
 
     .user-panel .image img {
-      width: 60px;
-      height: 60px;
+      width: 54px;
+      height: 54px;
       object-fit: cover;
       border: 2px solid #ffffff;
-      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 8px 14px rgba(15, 23, 42, 0.12);
     }
 
     /* General Fixes */
