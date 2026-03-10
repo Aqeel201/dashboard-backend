@@ -1884,8 +1884,9 @@ const normalizeText = (text) => (text || '').toLowerCase().replace(/[^a-z0-9\s]/
 const tokenize = (text) => normalizeText(text).split(/\s+/).filter(Boolean);
 
 const findRelevantMedicines = (query, medicines, limit = 8) => {
-  const qTokens = new Set(tokenize(query));
-  if (!qTokens.size) return [];
+  const qTokens = tokenize(query);
+  if (!qTokens.length) return [];
+  const qSet = new Set(qTokens);
   const scored = [];
   for (const med of medicines) {
     const fields = [
@@ -1896,17 +1897,91 @@ const findRelevantMedicines = (query, medicines, limit = 8) => {
       med.dosage,
       med.medicineType,
     ].filter(Boolean).join(' ');
+    const fieldsLower = normalizeText(fields);
     const mTokens = tokenize(fields);
     let score = 0;
     for (const t of mTokens) {
-      if (qTokens.has(t)) score += 1;
+      if (qSet.has(t)) score += 1;
     }
-    if (score > 0 && Number(med.quantity || 0) > 0) {
-      scored.push({ med, score });
+    const partialMatch = qTokens.some((t) => fieldsLower.includes(t));
+    if ((score > 0 || partialMatch) && Number(med.quantity || 0) > 0) {
+      scored.push({ med, score: score + (partialMatch ? 0.5 : 0) });
     }
   }
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit).map((s) => s.med);
+};
+
+const SYMPTOM_HINTS = [
+  {
+    keywords: ['fever', 'temperature', 'bukhar'],
+    hints: ['paracetamol', 'acetaminophen', 'panadol', 'calpol', 'ibuprofen', 'brufen'],
+  },
+  {
+    keywords: ['pain', 'dard', 'headache', 'migraine', 'body ache'],
+    hints: ['ibuprofen', 'paracetamol', 'diclofenac', 'naproxen', 'brufen'],
+  },
+  {
+    keywords: ['cough', 'khansi', 'sore throat', 'throat'],
+    hints: ['dextromethorphan', 'guaifenesin', 'ambroxol', 'bromhexine'],
+  },
+  {
+    keywords: ['allergy', 'rash', 'itch', 'itching', 'hives', 'naazla', 'nazla'],
+    hints: ['cetirizine', 'loratadine', 'fexofenadine'],
+  },
+  {
+    keywords: ['cold', 'flu', 'zukam', 'nazla'],
+    hints: ['chlorpheniramine', 'phenylephrine', 'paracetamol', 'ibuprofen'],
+  },
+  {
+    keywords: ['diarrhea', 'loose motion', 'dast'],
+    hints: ['loperamide', 'ors', 'oral rehydration'],
+  },
+  {
+    keywords: ['acidity', 'gas', 'heartburn', 'stomach', 'ulcer'],
+    hints: ['omeprazole', 'pantoprazole', 'antacid', 'ranitidine'],
+  },
+];
+
+const findSymptomBasedSuggestions = (text, medicines, limit = 6) => {
+  const t = (text || '').toLowerCase();
+  const hit = SYMPTOM_HINTS.find((h) => h.keywords.some((k) => t.includes(k)));
+  if (!hit) return [];
+  const result = medicines.filter((m) => {
+    if (Number(m.quantity || 0) <= 0) return false;
+    const name = (m.name || '').toLowerCase();
+    return hit.hints.some((h) => name.includes(h));
+  });
+  return result.slice(0, limit);
+};
+
+const getTopInStock = (medicines, limit = 6) => {
+  return (medicines || [])
+    .filter((m) => Number(m.quantity || 0) > 0)
+    .sort((a, b) => Number(b.quantity || 0) - Number(a.quantity || 0))
+    .slice(0, limit);
+};
+
+const buildClassificationPrompt = (messages, text) => {
+  const recent = (messages || []).slice(-6).map((m) => `${m.role}: ${m.content}`).join('\n');
+  return `Conversation so far:\n${recent}\nCurrent question: ${text}\nReply with only "medical" or "non-medical".`;
+};
+
+const hasRecentMedicalContext = (messages) => {
+  const recent = (messages || []).slice(-6);
+  return recent.some((m) => isMedicalQuery(m.content));
+};
+
+const isFollowUpQuestion = (text) => {
+  const t = (text || '').toLowerCase();
+  if (!t.trim()) return false;
+  const wordCount = t.split(/\s+/).filter(Boolean).length;
+  if (wordCount > 14) return false;
+  const pronouns = ['that', 'it', 'this', 'those', 'them', 'ye', 'wo', 'usse', 'is', 'us'];
+  const actions = ['prevent', 'avoid', 'manage', 'treat', 'cure', 'recover', 'after', 'again', 'bach', 'bachao', 'bacha', 'rok', 'rokna'];
+  const hasPronoun = pronouns.some((p) => t.includes(p));
+  const hasAction = actions.some((a) => t.includes(a));
+  return hasPronoun || hasAction;
 };
 
 const buildSystemPrompt = (storeNames) => {
@@ -1915,10 +1990,13 @@ const buildSystemPrompt = (storeNames) => {
     : 'MediApp Store Medicines list is currently unavailable.';
   return [
     'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
+    'Use the conversation context to answer follow-up questions.',
     'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
     'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
     'If the user writes in Urdu or Roman Urdu, respond in the same language (Roman Urdu).',
+    'If you mention any store medicines, add a final line exactly in this format: MEDIAPP_STORE: name1, name2.',
+    'Use exact store medicine names from the provided list. If none, write: MEDIAPP_STORE: none.',
     storeText,
   ].join(' ');
 };
@@ -1928,14 +2006,15 @@ const findStoreMatches = (text, medicines) => {
   return medicines.filter((m) => (m.name || '').toLowerCase() && t.includes((m.name || '').toLowerCase()) && Number(m.quantity || 0) > 0);
 };
 
-const classifyMedicalWithGroq = async (text, groqKey, model) => {
+const classifyMedicalWithGroq = async (text, groqKey, model, contextMessages = []) => {
+  const userContent = contextMessages.length ? buildClassificationPrompt(contextMessages, text) : text;
   const payload = {
     model,
     temperature: 0,
     max_tokens: 5,
     messages: [
       { role: 'system', content: 'You are a classifier. Reply with only "medical" or "non-medical".' },
-      { role: 'user', content: text },
+      { role: 'user', content: userContent },
     ],
   };
   const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
@@ -1947,6 +2026,38 @@ const classifyMedicalWithGroq = async (text, groqKey, model) => {
   });
   const label = (resp?.data?.choices?.[0]?.message?.content || '').trim().toLowerCase();
   return label.includes('non') ? 'non-medical' : 'medical';
+};
+
+const extractStoreSuggestions = (text) => {
+  if (!text) return { cleanedContent: '', names: [] };
+  const regex = /(?:^|\n)\s*MEDIAPP_STORE\s*:\s*(.+?)(?:\n|$)/i;
+  const match = text.match(regex);
+  if (!match) return { cleanedContent: text.trim(), names: [] };
+  const raw = (match[1] || '').trim();
+  const names = raw.toLowerCase() === 'none'
+    ? []
+    : raw.split(',').map((n) => n.trim()).filter(Boolean);
+  const cleanedContent = text.replace(match[0], '').replace(/\n{3,}/g, '\n\n').trim();
+  return { cleanedContent, names };
+};
+
+const matchStoreNames = (names, medicines) => {
+  if (!Array.isArray(names) || !names.length) return [];
+  const medMap = new Map();
+  const lowerMap = new Map(
+    medicines.map((m) => [String(m.name || '').toLowerCase(), m]).filter(([k]) => k)
+  );
+  for (const name of names) {
+    const key = String(name || '').toLowerCase();
+    const direct = lowerMap.get(key);
+    if (direct && Number(direct.quantity || 0) > 0) {
+      medMap.set(String(direct._id), direct);
+      continue;
+    }
+    const partial = medicines.find((m) => String(m.name || '').toLowerCase().includes(key) && Number(m.quantity || 0) > 0);
+    if (partial) medMap.set(String(partial._id), partial);
+  }
+  return Array.from(medMap.values());
 };
 
 app.get('/api/ai/chats', authMiddleware, async (req, res) => {
@@ -2027,7 +2138,9 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     if (!groqKey) {
       await session.save();
       // Fallback to keyword rule if no Groq key
-      if (!isMedicalQuery(text)) {
+      const hasContext = hasRecentMedicalContext(session.messages);
+      const allowFollowUp = hasContext && isFollowUpQuestion(text);
+      if (!isMedicalQuery(text) && !allowFollowUp) {
         const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
         session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
         await session.save();
@@ -2039,8 +2152,9 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
     // Classify medical vs non-medical using Groq (avoid keyword-only behavior)
-    const classification = await classifyMedicalWithGroq(text, groqKey, groqModel);
-    if (classification === 'non-medical') {
+    const classification = await classifyMedicalWithGroq(text, groqKey, groqModel, session.messages);
+    const allowFollowUp = hasRecentMedicalContext(session.messages) && isFollowUpQuestion(text);
+    if (classification === 'non-medical' && !allowFollowUp) {
       const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
       session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
       await session.save();
@@ -2057,7 +2171,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       max_tokens: 512,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...session.messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
+        ...session.messages.slice(-16).map((m) => ({ role: m.role, content: m.content })),
       ],
     };
 
@@ -2070,21 +2184,27 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     });
 
     const content = groqResp?.data?.choices?.[0]?.message?.content || 'No response received.';
-    const storeMatches = findStoreMatches(content, medicines);
+    const { cleanedContent, names } = extractStoreSuggestions(content);
+    const nameMatches = matchStoreNames(names, medicines);
+    const storeMatches = findStoreMatches(cleanedContent, medicines);
     const queryMatches = findRelevantMedicines(text, medicines);
-    const merged = [...queryMatches, ...storeMatches];
+    const symptomMatches = findSymptomBasedSuggestions(text, medicines);
+    let merged = [...nameMatches, ...queryMatches, ...symptomMatches, ...storeMatches];
     const uniqueById = new Map();
     for (const m of merged) {
       if (m && m._id) uniqueById.set(String(m._id), m);
     }
-    const suggestions = Array.from(uniqueById.values()).slice(0, 8);
+    let suggestions = Array.from(uniqueById.values()).slice(0, 8);
+    if (!suggestions.length) {
+      suggestions = getTopInStock(medicines, 6);
+    }
 
-    session.messages.push({ role: 'assistant', content, createdAt: new Date() });
+    session.messages.push({ role: 'assistant', content: cleanedContent, createdAt: new Date() });
     await session.save();
 
     res.json({
       sessionId: session._id,
-      response: content,
+      response: cleanedContent,
       suggestions: suggestions.map((m) => ({
         _id: m._id,
         name: m.name,

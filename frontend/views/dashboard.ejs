@@ -12,81 +12,170 @@
     []); %>
 
     <!-- Main Dashboard Container -->
-    <div class="container-fluid mt-4 p-0">
-      <!-- Header Section -->
-      <section class="content-header mb-4">
-        <div class="container-fluid">
-          <div class="row mb-2">
-            <div class="col-sm-6">
-              <h1 class="text-dark font-weight-bold">
-                <i class="fas fa-tachometer-alt mr-2"></i> Insights Dashboard
-              </h1>
+    <div class="container-fluid dashboard-wrap">
+      <section class="dashboard-hero">
+        <div class="hero-content">
+          <div class="hero-tag">Insights Dashboard</div>
+          <h1 class="hero-title">
+            Welcome back, <%= user && user.firstName ? user.firstName : 'Admin' %>
+          </h1>
+          <p class="hero-subtitle">
+            Track medicines, sales, and critical alerts in one clean view.
+          </p>
+          <div class="hero-meta">
+            <span><i class="far fa-calendar-alt"></i> <%= new Date().toLocaleDateString() %></span>
+            <span><i class="fas fa-shield-alt"></i> Admin Access</span>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat-card">
+            <p>Total Sales</p>
+            <h3>Rs <%= totalSales %></h3>
+            <span>Profit: Rs <%= totalProfit %></span>
+          </div>
+          <div class="hero-stat-card accent">
+            <p>Orders (This Month)</p>
+            <h3><%= monthlyTotals.orders %></h3>
+            <span>Sales: Rs <%= monthlyTotals.sales %></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <a class="stat-card bg-primary" href="/admin/medicines?token=<%= token %>">
+          <div class="stat-icon"><i class="fas fa-prescription-bottle"></i></div>
+          <div>
+            <p>Total Medicines</p>
+            <h3><%= medicineCount %></h3>
+          </div>
+        </a>
+        <a class="stat-card bg-success" href="/admin/users?token=<%= token %>">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div>
+            <p>Total Users</p>
+            <h3><%= userCount %></h3>
+          </div>
+        </a>
+        <a class="stat-card bg-danger" href="/admin/medicine-alerts?token=<%= token %>">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div>
+            <p>Medicine Alerts</p>
+            <h3><%= totalAlerts %></h3>
+          </div>
+        </a>
+        <div class="stat-card bg-warning">
+          <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+          <div>
+            <p>Total Sales</p>
+            <h3>Rs <%= totalSales %></h3>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Alerts</h3>
+            <a href="/admin/medicine-alerts?token=<%= token %>">View All</a>
+          </div>
+          <div class="panel-body">
+            <% if (totalAlerts === 0) { %>
+              <div class="empty-state">All good. No alerts right now.</div>
+            <% } %>
+            <% localExpiryMedicines.slice(0, 4).forEach(function(medicine) { %>
+              <div class="alert-item">
+                <span class="badge badge-warning">Expiry</span>
+                <div>
+                  <strong><%= medicine.name %></strong>
+                  <small>Expires on <%= new Date(medicine.expiryDate).toLocaleDateString() %></small>
+                </div>
+              </div>
+            <% }); %>
+            <% localLowStockMedicines.slice(0, 4).forEach(function(medicine) { %>
+              <div class="alert-item">
+                <span class="badge badge-danger">Low Stock</span>
+                <div>
+                  <strong><%= medicine.name %></strong>
+                  <small>Only <%= medicine.quantity %> left</small>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Sales Snapshot</h3>
+            <a href="/admin/orders?token=<%= token %>">Orders</a>
+          </div>
+          <div class="panel-body">
+            <div class="snapshot-row">
+              <div>
+                <p>Today</p>
+                <h4>Rs <%= dailyTotals.sales %></h4>
+                <small><%= dailyTotals.orders %> orders</small>
+              </div>
+              <div>
+                <p>This Week</p>
+                <h4>Rs <%= weeklyTotals.sales %></h4>
+                <small><%= weeklyTotals.orders %> orders</small>
+              </div>
+              <div>
+                <p>This Month</p>
+                <h4>Rs <%= monthlyTotals.sales %></h4>
+                <small><%= monthlyTotals.orders %> orders</small>
+              </div>
+              <div>
+                <p>This Year</p>
+                <h4>Rs <%= yearlyTotals.sales %></h4>
+                <small><%= yearlyTotals.orders %> orders</small>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Key Metrics Row -->
-      <div class="row mb-5">
-        <div class="col-md-6 col-lg-3 mb-4">
-          <div class="card shadow-md hover-card bg-primary rounded-lg border-none text-white">
-            <div class="card-body d-flex flex-column align-items-center text-center p-4">
-              <div class="metric-icon mb-3 bg-white-opacity">
-                <i class="fas fa-prescription-bottle fa-3x text-white"></i>
+      <section class="grid-two">
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Recent Online Orders</h3>
+            <a href="/admin/orders?token=<%= token %>">View All</a>
+          </div>
+          <div class="panel-body">
+            <% if (!localOnlineOrders.length) { %>
+              <div class="empty-state">No online orders yet.</div>
+            <% } %>
+            <% localOnlineOrders.slice(0, 5).forEach(function(order) { %>
+              <div class="list-item">
+                <div>
+                  <strong><%= order.shippingEmail %></strong>
+                  <small>Rs <%= order.orderTotal %> • <%= order.status %></small>
+                </div>
+                <span class="date"><%= order.date ? new Date(order.date).toLocaleDateString() : '' %></span>
               </div>
-              <h5 class="card-title mb-1">Total Medicines</h5>
-              <h3 class="card-text font-weight-bold mb-2">
-                <%= medicineCount %>
-              </h3>
-              <a href="/admin/medicines?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
-                  class="fas fa-arrow-right"></i></a>
-            </div>
+            <% }); %>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <div class="card shadow-md hover-card bg-success rounded-lg border-none text-white">
-            <div class="card-body d-flex flex-column align-items-center text-center p-4">
-              <div class="metric-icon mb-3 bg-white-opacity">
-                <i class="fas fa-users fa-3x text-white"></i>
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Recent In-Person Sales</h3>
+            <a href="/admin/inperson-sales?token=<%= token %>">View All</a>
+          </div>
+          <div class="panel-body">
+            <% if (!localInPersonSales.length) { %>
+              <div class="empty-state">No in-person sales yet.</div>
+            <% } %>
+            <% localInPersonSales.slice(0, 5).forEach(function(sale) { %>
+              <div class="list-item">
+                <div>
+                  <strong><%= sale.medicineName %></strong>
+                  <small><%= sale.quantitySold %> units • Rs <%= sale.totalAmount %></small>
+                </div>
+                <span class="date"><%= sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : '' %></span>
               </div>
-              <h5 class="card-title mb-1">Total Users</h5>
-              <h3 class="card-text font-weight-bold mb-2">
-                <%= userCount %>
-              </h3>
-              <a href="/admin/users?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
-                  class="fas fa-arrow-right"></i></a>
-            </div>
+            <% }); %>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <div class="card shadow-md hover-card bg-danger rounded-lg border-none text-white">
-            <div class="card-body d-flex flex-column align-items-center text-center p-4">
-              <div class="metric-icon mb-3 bg-white-opacity">
-                <i class="fas fa-exclamation-triangle fa-3x text-white"></i>
-              </div>
-              <h5 class="card-title mb-1">Medicine Alerts</h5>
-              <h3 class="card-text font-weight-bold mb-2">
-                <%= totalAlerts %>
-              </h3>
-              <a href="/admin/medicine-alerts?token=<%= token %>" class="btn btn-link text-white p-0 mt-auto">View <i
-                  class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <div class="card shadow-md hover-card bg-warning rounded-lg border-none text-white">
-            <div class="card-body d-flex flex-column align-items-center text-center p-4">
-              <div class="metric-icon mb-3 bg-white-opacity">
-                <i class="fas fa-dollar-sign fa-3x text-white"></i>
-              </div>
-              <h5 class="card-title mb-1">Total Sales</h5>
-              <h3 class="card-text font-weight-bold mb-2">Rs <%= totalSales %>
-              </h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      </section>
     </div>
 
 
@@ -95,16 +184,232 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
-      .hover-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        transition: 0.3s;
+      .dashboard-wrap {
+        padding: 26px 20px 40px;
       }
 
-      .bg-white-opacity {
+      .dashboard-hero {
+        background: linear-gradient(120deg, #1e40af, #0ea5e9);
+        color: #fff;
+        border-radius: 22px;
+        padding: 28px;
+        display: flex;
+        gap: 24px;
+        align-items: stretch;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+      }
+
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        padding: 15px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+
+      .hero-title {
+        margin: 16px 0 8px;
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .hero-subtitle {
+        margin: 0 0 18px;
+        max-width: 520px;
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .hero-meta {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        opacity: 0.9;
+      }
+
+      .hero-meta i {
+        margin-right: 6px;
+      }
+
+      .hero-stats {
+        display: grid;
+        gap: 14px;
+        min-width: 260px;
+      }
+
+      .hero-stat-card {
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .hero-stat-card.accent {
+        background: rgba(15, 23, 42, 0.25);
+      }
+
+      .hero-stat-card p {
+        margin: 0 0 6px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .hero-stat-card h3 {
+        margin: 0 0 4px;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .hero-stat-card span {
+        font-size: 12px;
+        opacity: 0.85;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 26px;
+      }
+
+      .stat-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px;
+        border-radius: 18px;
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 26px rgba(15, 23, 42, 0.18);
+        color: #fff;
+      }
+
+      .stat-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        font-size: 18px;
+      }
+
+      .stat-card p {
+        margin: 0 0 4px;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .stat-card h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .panel {
+        background: #fff;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+
+      .panel-header h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .panel-header a {
+        font-size: 12px;
+        color: #2563eb;
+        font-weight: 600;
+      }
+
+      .panel-body {
+        display: grid;
+        gap: 12px;
+      }
+
+      .alert-item,
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #eef2f7;
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+
+      .alert-item small,
+      .list-item small {
+        display: block;
+        color: #6b7280;
+      }
+
+      .snapshot-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+      }
+
+      .snapshot-row h4 {
+        margin: 4px 0 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .snapshot-row p {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+      }
+
+      .empty-state {
+        padding: 16px;
+        border-radius: 12px;
+        background: #f1f5f9;
+        color: #64748b;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .date {
+        font-size: 12px;
+        color: #64748b;
       }
     </style>
 
