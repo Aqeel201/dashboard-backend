@@ -64,7 +64,7 @@
 
     /* Fixed Sidebar */
     .main-sidebar {
-      background: var(--secondary-color) !important;
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
       width: var(--sidebar-width) !important;
       height: 100vh;
       position: fixed;
@@ -73,6 +73,7 @@
       z-index: 1038;
       transition: width var(--transition-speed) ease-in-out;
       overflow-x: hidden;
+      border-right: 1px solid var(--border-color);
     }
 
     .sidebar {
@@ -114,7 +115,7 @@
 
     /* Modern active states */
     .nav-pills .nav-link {
-      color: #cbd5e1 !important;
+      color: #0f172a !important;
       border-radius: 10px;
       margin: 4px 6px;
       transition: all 0.2s;
@@ -122,8 +123,8 @@
     }
 
     .nav-pills .nav-link:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff !important;
+      background: rgba(37, 99, 235, 0.08);
+      color: #0f172a !important;
     }
 
     .nav-pills .nav-link.active {
@@ -146,9 +147,9 @@
     }
 
     .brand-link {
-      background-color: rgba(0, 0, 0, 0.15);
+      background-color: #ffffff;
       text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-bottom: 1px solid var(--border-color) !important;
     }
 
     .brand-link .brand-image {
@@ -160,6 +161,7 @@
     .brand-link .brand-text {
       font-size: 1.1rem !important;
       letter-spacing: 0.5px;
+      color: #0f172a;
     }
 
     .nav-sidebar .nav-link p {
@@ -197,7 +199,7 @@
 
     .nav-sidebar .nav-treeview {
       margin-left: 6px;
-      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 1px solid var(--border-color);
       padding-left: 6px;
     }
 
@@ -211,7 +213,7 @@
     }
 
     .nav-sidebar .nav-item > .nav-link:hover {
-      border-color: rgba(255, 255, 255, 0.08);
+      border-color: rgba(37, 99, 235, 0.2);
     }
 
     .nav-sidebar .nav-item.has-treeview > .nav-link .right {
@@ -220,22 +222,27 @@
 
     .user-panel .info p {
       font-size: 13px;
+      color: #0f172a;
     }
 
     .user-panel .info small {
       font-size: 11px;
+      color: var(--muted-color);
     }
 
     .user-panel .image img {
-      width: 52px;
-      height: 52px;
+      width: 58px;
+      height: 58px;
       object-fit: cover;
+      border: 2px solid #ffffff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.15);
     }
 
     .user-panel {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 16px 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding: 18px 10px;
       text-align: center;
+      background: #ffffff;
     }
 
     /* General Fixes */
