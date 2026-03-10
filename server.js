@@ -2011,7 +2011,8 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
 
     const groqKey = process.env.GROQ_API_KEY;
     if (!groqKey) {
-      return res.status(500).json({ error: 'GROQ_API_KEY is not configured on the server.' });
+      await session.save();
+      return res.status(503).json({ error: 'GROQ_API_KEY is not configured on the server.', sessionId: session._id });
     }
 
     const groqModel = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
@@ -2066,6 +2067,26 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'AI response failed: ' + err.message });
+  }
+});
+
+app.post('/api/ai/append', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const { sessionId, role, content } = req.body || {};
+    if (!sessionId || !role || !content) {
+      return res.status(400).json({ error: 'sessionId, role, and content are required' });
+    }
+    if (!['user', 'assistant'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+    const session = await AIChatSession.findOne({ _id: sessionId, userId });
+    if (!session) return res.status(404).json({ error: 'Chat not found' });
+    session.messages.push({ role, content, createdAt: new Date() });
+    await session.save();
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to append message: ' + err.message });
   }
 });
 
