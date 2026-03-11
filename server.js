@@ -2205,11 +2205,15 @@ const isGreetingOnly = (text) => {
 };
 
 const ROMAN_URDU_HINTS = [
-  'kya', 'kyun', 'kyu', 'kaise', 'kaisa', 'kab', 'kahan', 'mujhe', 'mujhay',
-  'ap', 'aap', 'apko', 'aapko', 'mera', 'meri', 'mere', 'hum', 'ham',
-  'dard', 'bukhar', 'khansi', 'zukaam', 'nazla', 'gala', 'sir', 'pet',
+  'kya', 'ky', 'kyun', 'kyu', 'kaise', 'kaisay', 'kaisa', 'kab', 'kahan',
+  'mujhe', 'mujhay', 'ap', 'aap', 'apko', 'aapko', 'mera', 'meri', 'mere',
+  'hum', 'ham', 'dard', 'bukhar', 'khansi', 'zukaam', 'nazla', 'gala', 'sir', 'pet',
   'dawai', 'dawa', 'goli', 'tablet', 'syrup', 'nahi', 'haan', 'theek',
-  'madad', 'batao', 'bataiye', 'please', 'shukriya',
+  'madad', 'batao', 'bataiye', 'bata', 'please', 'shukriya',
+  'hai', 'hain', 'ho', 'hoga', 'hogi', 'tha', 'thi', 'thay',
+  'raha', 'rahi', 'rahay', 'jata', 'jaati', 'jae', 'jay', 'dein', 'de',
+  'mat', 'jalan', 'thakan', 'chakkar', 'ultee', 'ulti', 'garmi', 'sardi',
+  'saans', 'sanse', 'sansein', 'saansain', 'zakhm',
 ];
 
 const hasUrduScript = (text) => /[\u0600-\u06FF]/.test(text || '');
@@ -2338,12 +2342,13 @@ const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested, language
     ? `Avoid repeating these medicines unless clearly relevant: ${lastSuggested.join(', ')}.`
     : '';
   const languageLine = language === 'roman_urdu'
-    ? 'Respond in Roman Urdu. If the user writes in English, respond in English instead.'
-    : 'Respond in English. If the user writes in Roman Urdu or Urdu, respond in Roman Urdu.';
+    ? 'Respond in Roman Urdu. Always keep the same language as the user.'
+    : 'Respond in English. Always keep the same language as the user.';
   return [
     'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
-    'Use the conversation context to answer follow-up questions. Keep continuity across turns.',
+    'Use the conversation context and summary to answer follow-up questions. Keep continuity across turns.',
     'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
+    'Do not switch languages. Always reply in the same language as the user.',
     'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
     'If the user greets you (hi/hello/salam), respond politely and invite a medical question.',
