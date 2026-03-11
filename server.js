@@ -2524,6 +2524,10 @@ app.get('/api/ai/chats/:id', authMiddleware, async (req, res) => {
     const userId = req.user.id || req.user.email;
     const session = await AIChatSession.findOne({ _id: req.params.id, userId }).lean();
     if (!session) return res.status(404).json({ error: 'Chat not found' });
+    const limit = Math.max(1, Math.min(Number(req.query.limit || 200), 500));
+    if (Array.isArray(session.messages) && session.messages.length > limit) {
+      session.messages = session.messages.slice(-limit);
+    }
     res.json(session);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch AI chat: ' + err.message });
