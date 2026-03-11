@@ -1765,6 +1765,15 @@ const ChatMessage = mongoose.models.ChatMessage || mongoose.model('ChatMessage',
 const aiChatSessionSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true },
   title: { type: String, default: 'New Chat' },
+  summary: { type: String, default: '' },
+  summaryMessageCount: { type: Number, default: 0 },
+  facts: {
+    age: { type: String, default: '' },
+    conditions: { type: [String], default: [] },
+    allergies: { type: [String], default: [] },
+    medications: { type: [String], default: [] },
+  },
+  lastSuggested: { type: [String], default: [] },
   messages: [
     {
       role: { type: String, enum: ['user', 'assistant'], required: true },
@@ -2006,6 +2015,19 @@ const isMedicalQuery = (text) => {
 const normalizeText = (text) => (text || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
 const tokenize = (text) => normalizeText(text).split(/\s+/).filter(Boolean);
 
+const GREETING_WORDS = new Set([
+  'hi', 'hello', 'hey', 'salam', 'salaam', 'assalam', 'asalam', 'alaikum',
+  'aoa', 'hola', 'hi!', 'hello!', 'assalam-o-alaikum',
+]);
+
+const isGreetingOnly = (text) => {
+  const t = normalizeText(text).trim();
+  if (!t) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length > 4) return false;
+  return words.every((w) => GREETING_WORDS.has(w) || w === 'o');
+};
+
 const findRelevantMedicines = (query, medicines, limit = 8) => {
   const qTokens = tokenize(query);
   if (!qTokens.length) return [];
@@ -2107,19 +2129,34 @@ const isFollowUpQuestion = (text) => {
   return hasPronoun || hasAction;
 };
 
-const buildSystemPrompt = (storeNames) => {
+const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested }) => {
   const storeText = storeNames.length
     ? `MediApp Store Medicines (prefer these first): ${storeNames.join(', ')}.`
     : 'MediApp Store Medicines list is currently unavailable.';
+  const factParts = [];
+  if (facts?.age) factParts.push(`Age: ${facts.age}`);
+  if (facts?.conditions?.length) factParts.push(`Conditions: ${facts.conditions.join(', ')}`);
+  if (facts?.allergies?.length) factParts.push(`Allergies: ${facts.allergies.join(', ')}`);
+  if (facts?.medications?.length) factParts.push(`Medications: ${facts.medications.join(', ')}`);
+  const factsText = factParts.length ? `Known user facts: ${factParts.join(' | ')}.` : '';
+  const summaryText = summary ? `Conversation summary: ${summary}` : '';
+  const avoidRepeat = lastSuggested?.length
+    ? `Avoid repeating these medicines unless clearly relevant: ${lastSuggested.join(', ')}.`
+    : '';
   return [
     'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
     'Use the conversation context to answer follow-up questions. Keep continuity across turns.',
     'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
     'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
+    'If the user greets you (hi/hello/salam), respond politely and invite a medical question.',
+    'Mention availability inline when you suggest a medicine (e.g., "MediApp Store me available hai" or "available nahi"). Do not put availability only at the end.',
     'If the user writes in Urdu or Roman Urdu, respond in the same language (Roman Urdu).',
     'If you mention any store medicines, add a final line exactly in this format: MEDIAPP_STORE: name1, name2.',
     'Use exact store medicine names from the provided list. If none, write: MEDIAPP_STORE: none.',
+    summaryText,
+    factsText,
+    avoidRepeat,
     storeText,
   ].join(' ');
 };
@@ -2149,6 +2186,98 @@ const classifyMedicalWithGroq = async (text, groqKey, model, contextMessages = [
   });
   const label = (resp?.data?.choices?.[0]?.message?.content || '').trim().toLowerCase();
   return label.includes('non') ? 'non-medical' : 'medical';
+};
+
+const summarizeConversationWithGroq = async ({ messages, summary, groqKey, model }) => {
+  const recent = (messages || []).slice(-24).map((m) => `${m.role}: ${m.content}`).join('\n');
+  const payload = {
+    model,
+    temperature: 0.2,
+    max_tokens: 220,
+    messages: [
+      {
+        role: 'system',
+        content: 'Summarize the medical conversation for continuity. Keep it concise (3-6 sentences). Focus on symptoms, timeline, diagnoses, meds, advice, and open questions.',
+      },
+      {
+        role: 'user',
+        content: `Existing summary (if any): ${summary || 'none'}\nRecent conversation:\n${recent}`,
+      },
+    ],
+  };
+  const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${groqKey}`,
+    },
+    timeout: 15000,
+  });
+  return (resp?.data?.choices?.[0]?.message?.content || '').trim();
+};
+
+const extractFactsWithGroq = async ({ messages, summary, groqKey, model }) => {
+  const recent = (messages || []).slice(-20).map((m) => `${m.role}: ${m.content}`).join('\n');
+  const payload = {
+    model,
+    temperature: 0,
+    max_tokens: 180,
+    messages: [
+      {
+        role: 'system',
+        content: 'Extract patient facts from the conversation. Return only JSON with keys: age (string), conditions (array), allergies (array), medications (array). Use empty string/array if unknown.',
+      },
+      {
+        role: 'user',
+        content: `Summary: ${summary || 'none'}\nConversation:\n${recent}`,
+      },
+    ],
+  };
+  const resp = await axios.post('https://api.groq.com/openai/v1/chat/completions', payload, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${groqKey}`,
+    },
+    timeout: 15000,
+  });
+  const raw = (resp?.data?.choices?.[0]?.message?.content || '').trim();
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[0]);
+    } catch (err2) {
+      return null;
+    }
+  }
+};
+
+const mergeFacts = (current, incoming) => {
+  if (!incoming) return current;
+  const next = {
+    age: current?.age || '',
+    conditions: Array.isArray(current?.conditions) ? [...current.conditions] : [],
+    allergies: Array.isArray(current?.allergies) ? [...current.allergies] : [],
+    medications: Array.isArray(current?.medications) ? [...current.medications] : [],
+  };
+  if (!next.age && incoming.age) next.age = String(incoming.age);
+  const addUnique = (arr, items) => {
+    const set = new Set(arr.map((v) => String(v).toLowerCase()));
+    (items || []).forEach((v) => {
+      const val = String(v || '').trim();
+      if (!val) return;
+      const key = val.toLowerCase();
+      if (!set.has(key)) {
+        set.add(key);
+        arr.push(val);
+      }
+    });
+  };
+  addUnique(next.conditions, incoming.conditions);
+  addUnique(next.allergies, incoming.allergies);
+  addUnique(next.medications, incoming.medications);
+  return next;
 };
 
 const extractStoreSuggestions = (text) => {
@@ -2247,9 +2376,11 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     }
 
     if (!session) {
+      const lastSession = await AIChatSession.findOne({ userId }).sort({ updatedAt: -1 }).lean();
       session = new AIChatSession({
         userId,
         title: text.slice(0, 60),
+        facts: lastSession?.facts || undefined,
         messages: [],
       });
     }
@@ -2258,10 +2389,18 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     session.messages.push({ role: 'user', content: text, createdAt: new Date() });
 
     const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY || req.body?.groqKey || res.locals.settings?.apiKey || '';
+
+    if (isGreetingOnly(text)) {
+      const greeting = 'Assalam-o-Alaikum! Main MediApp AI hoon. Apni medical ya health concern batayein, main madad karunga.';
+      session.messages.push({ role: 'assistant', content: greeting, createdAt: new Date() });
+      await session.save();
+      return res.json({ sessionId: session._id, response: greeting, suggestions: [] });
+    }
+
     if (!groqKey) {
       await session.save();
       // Fallback to keyword rule if no Groq key
-      const hasContext = hasRecentMedicalContext(session.messages);
+      const hasContext = hasRecentMedicalContext(session.messages) || Boolean(session.summary);
       const allowFollowUp = hasContext && isFollowUpQuestion(text);
       if (!isMedicalQuery(text) && !allowFollowUp) {
         const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
@@ -2276,7 +2415,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
 
     // Classify medical vs non-medical using Groq (avoid keyword-only behavior)
     const classification = await classifyMedicalWithGroq(text, groqKey, groqModel, session.messages);
-    const allowFollowUp = hasRecentMedicalContext(session.messages) && isFollowUpQuestion(text);
+    const allowFollowUp = (hasRecentMedicalContext(session.messages) || Boolean(session.summary)) && isFollowUpQuestion(text);
     if (classification === 'non-medical' && !allowFollowUp) {
       const refusal = 'I can only answer medical and health-related questions. Please ask about symptoms, medicines, dosage, or health concerns.';
       session.messages.push({ role: 'assistant', content: refusal, createdAt: new Date() });
@@ -2286,7 +2425,12 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
 
     const medicines = await Medicine.find().select('name price image dosage manufacturer medicineType description category quantity').lean();
     const storeNames = medicines.map((m) => m.name).filter(Boolean).slice(0, 200);
-    const systemPrompt = buildSystemPrompt(storeNames);
+    const systemPrompt = buildSystemPrompt({
+      storeNames,
+      summary: session.summary,
+      facts: session.facts,
+      lastSuggested: session.lastSuggested,
+    });
 
     const payload = {
       model: groqModel,
@@ -2294,7 +2438,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       max_tokens: 512,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...session.messages.slice(-24).map((m) => ({ role: m.role, content: m.content })),
+        ...session.messages.slice(-40).map((m) => ({ role: m.role, content: m.content })),
       ],
     };
 
@@ -2318,16 +2462,56 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       if (m && m._id) uniqueById.set(String(m._id), m);
     }
     let suggestions = Array.from(uniqueById.values()).slice(0, 8);
-    if (!suggestions.length) {
-      suggestions = getTopInStock(medicines, 6);
+    if (session.lastSuggested?.length && suggestions.length) {
+      const lastSet = new Set(session.lastSuggested.map((n) => String(n).toLowerCase()));
+      const filtered = suggestions.filter((m) => !lastSet.has(String(m.name || '').toLowerCase()));
+      if (filtered.length) suggestions = filtered;
     }
 
-    session.messages.push({ role: 'assistant', content: cleanedContent, createdAt: new Date() });
+    let finalContent = cleanedContent;
+    if (!/mediapp store/i.test(finalContent)) {
+      const availableNames = suggestions.map((m) => m.name).filter(Boolean).slice(0, 4);
+      const availability = availableNames.length
+        ? `MediApp Store availability: ${availableNames.join(', ')}.`
+        : 'MediApp Store availability: none.';
+      const lines = finalContent.split('\n');
+      if (lines.length > 1) {
+        lines.splice(1, 0, availability);
+        finalContent = lines.join('\n');
+      } else {
+        finalContent = `${finalContent}\n${availability}`;
+      }
+    }
+
+    session.messages.push({ role: 'assistant', content: finalContent, createdAt: new Date() });
+
+    const messageCount = session.messages.length;
+    if (messageCount - (session.summaryMessageCount || 0) >= 10) {
+      const newSummary = await summarizeConversationWithGroq({
+        messages: session.messages,
+        summary: session.summary,
+        groqKey,
+        model: groqModel,
+      });
+      if (newSummary) {
+        session.summary = newSummary;
+        session.summaryMessageCount = messageCount;
+      }
+      const extracted = await extractFactsWithGroq({
+        messages: session.messages,
+        summary: session.summary,
+        groqKey,
+        model: groqModel,
+      });
+      session.facts = mergeFacts(session.facts, extracted);
+    }
+
+    session.lastSuggested = suggestions.map((m) => m.name).filter(Boolean).slice(0, 10);
     await session.save();
 
     res.json({
       sessionId: session._id,
-      response: cleanedContent,
+      response: finalContent,
       suggestions: suggestions.map((m) => ({
         _id: m._id,
         name: m.name,
