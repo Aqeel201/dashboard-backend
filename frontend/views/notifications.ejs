@@ -76,7 +76,7 @@
                         <td><%= n.title %></td>
                         <td><%= n.message %></td>
                         <td><span class="badge badge-info"><%= n.type || 'general' %></span></td>
-                        <td><%= n.date ? new Date(n.date).toLocaleString() : '' %></td>
+                        <td><%= n.date ? new Date(n.date).toLocaleString('en-PK', { timeZone: 'Asia/Karachi' }) : '' %></td>
                       </tr>
                     <% }) %>
                   <% } else { %>
