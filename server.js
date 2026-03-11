@@ -2576,7 +2576,22 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     // Store user message
     session.messages.push({ role: 'user', content: text, createdAt: new Date() });
 
-    const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY || req.body?.groqKey || res.locals.settings?.apiKey || '';
+    const incomingKey = req.body?.groqKey || '';
+    let groqKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY || incomingKey || res.locals.settings?.apiKey || '';
+    if (incomingKey && !res.locals.settings?.apiKey) {
+      try {
+        let settings = await Settings.findOne();
+        if (!settings) settings = new Settings();
+        if (!settings.apiKey) {
+          settings.apiKey = incomingKey;
+          await settings.save();
+          res.locals.settings.apiKey = incomingKey;
+        }
+      } catch (err) {
+        console.error('Failed to persist Groq key:', err.message);
+      }
+      groqKey = groqKey || incomingKey;
+    }
 
     if (isGreetingOnly(text)) {
       const greeting = 'Assalam-o-Alaikum! Main MediApp AI hoon. Apni medical ya health concern batayein, main madad karunga.';
