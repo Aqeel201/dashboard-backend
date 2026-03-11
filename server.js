@@ -2028,6 +2028,24 @@ const isGreetingOnly = (text) => {
   return words.every((w) => GREETING_WORDS.has(w) || w === 'o');
 };
 
+const ROMAN_URDU_HINTS = [
+  'kya', 'kyun', 'kyu', 'kaise', 'kaisa', 'kab', 'kahan', 'mujhe', 'mujhay',
+  'ap', 'aap', 'apko', 'aapko', 'mera', 'meri', 'mere', 'hum', 'ham',
+  'dard', 'bukhar', 'khansi', 'zukaam', 'nazla', 'gala', 'sir', 'pet',
+  'dawai', 'dawa', 'goli', 'tablet', 'syrup', 'nahi', 'haan', 'theek',
+  'madad', 'batao', 'bataiye', 'please', 'shukriya',
+];
+
+const hasUrduScript = (text) => /[\u0600-\u06FF]/.test(text || '');
+
+const detectLanguage = (text) => {
+  const t = (text || '').toLowerCase();
+  if (!t.trim()) return 'english';
+  if (hasUrduScript(t)) return 'roman_urdu';
+  const hasRomanUrdu = ROMAN_URDU_HINTS.some((w) => t.includes(w));
+  return hasRomanUrdu ? 'roman_urdu' : 'english';
+};
+
 const findRelevantMedicines = (query, medicines, limit = 8) => {
   const qTokens = tokenize(query);
   if (!qTokens.length) return [];
@@ -2129,7 +2147,7 @@ const isFollowUpQuestion = (text) => {
   return hasPronoun || hasAction;
 };
 
-const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested }) => {
+const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested, language }) => {
   const storeText = storeNames.length
     ? `MediApp Store Medicines (prefer these first): ${storeNames.join(', ')}.`
     : 'MediApp Store Medicines list is currently unavailable.';
@@ -2143,6 +2161,9 @@ const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested }) => {
   const avoidRepeat = lastSuggested?.length
     ? `Avoid repeating these medicines unless clearly relevant: ${lastSuggested.join(', ')}.`
     : '';
+  const languageLine = language === 'roman_urdu'
+    ? 'Respond in Roman Urdu. If the user writes in English, respond in English instead.'
+    : 'Respond in English. If the user writes in Roman Urdu or Urdu, respond in Roman Urdu.';
   return [
     'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
     'Use the conversation context to answer follow-up questions. Keep continuity across turns.',
@@ -2151,7 +2172,7 @@ const buildSystemPrompt = ({ storeNames, summary, facts, lastSuggested }) => {
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
     'If the user greets you (hi/hello/salam), respond politely and invite a medical question.',
     'Mention availability inline when you suggest a medicine (e.g., "MediApp Store me available hai" or "available nahi"). Do not put availability only at the end.',
-    'If the user writes in Urdu or Roman Urdu, respond in the same language (Roman Urdu).',
+    languageLine,
     'If you mention any store medicines, add a final line exactly in this format: MEDIAPP_STORE: name1, name2.',
     'Use exact store medicine names from the provided list. If none, write: MEDIAPP_STORE: none.',
     summaryText,
@@ -2449,6 +2470,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       summary: session.summary,
       facts: session.facts,
       lastSuggested: session.lastSuggested,
+      language: detectLanguage(text),
     });
 
     const payload = {
