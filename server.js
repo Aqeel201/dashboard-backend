@@ -2503,9 +2503,11 @@ const matchStoreNames = (names, medicines) => {
 app.get('/api/ai/chats', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.email;
+    const limit = Math.max(1, Math.min(Number(req.query.limit || 50), 200));
     const sessions = await AIChatSession.find({ userId })
       .sort({ updatedAt: -1 })
-      .select('_id title updatedAt messages')
+      .limit(limit)
+      .select({ _id: 1, title: 1, updatedAt: 1, messages: { $slice: -1 } })
       .lean();
     const result = sessions.map((s) => ({
       _id: s._id,
