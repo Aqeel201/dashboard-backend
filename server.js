@@ -1834,6 +1834,7 @@ const Notification = mongoose.models.Notification || mongoose.model('Notificatio
 
 const notificationTokenSchema = new mongoose.Schema({
   userId: { type: String, required: true, index: true },
+  userEmail: { type: String, default: '' },
   token: { type: String, required: true, unique: true },
   platform: { type: String, default: 'android' },
   updatedAt: { type: Date, default: Date.now },
@@ -1878,14 +1879,40 @@ const sendPushNotifications = async (tokens, { title, body, data = {} }) => {
   }
 };
 
-const getUserPushTokens = async (userId) => {
-  const tokens = await NotificationToken.find({ userId }).lean();
+const resolveUserId = async (userIdentifier) => {
+  if (!userIdentifier) return null;
+  const raw = String(userIdentifier).trim();
+  if (!raw) return null;
+  let user = null;
+  if (raw.includes('@')) {
+    user = await User.findOne({ email: raw.toLowerCase() });
+  } else {
+    user = await User.findOne({ id: raw });
+    if (!user) user = await User.findOne({ email: raw.toLowerCase() });
+  }
+  return user?.id || raw;
+};
+
+const getUserPushTokens = async (userIdentifier) => {
+  if (!userIdentifier) return [];
+  const raw = String(userIdentifier).trim();
+  const query = raw.includes('@')
+    ? { userEmail: raw.toLowerCase() }
+    : { userId: raw };
+  let tokens = await NotificationToken.find(query).lean();
+  if (!tokens.length && !raw.includes('@')) {
+    const user = await User.findOne({ id: raw });
+    if (user?.email) {
+      tokens = await NotificationToken.find({ userEmail: user.email.toLowerCase() }).lean();
+    }
+  }
   return tokens.map((t) => t.token).filter(Boolean);
 };
 
 const sendPushToUser = async (userId, { title, body, data }) => {
   if (!userId) return;
-  const tokens = await getUserPushTokens(userId);
+  const canonical = await resolveUserId(userId);
+  const tokens = await getUserPushTokens(canonical || userId);
   await sendPushNotifications(tokens, { title, body, data });
 };
 
@@ -1919,8 +1946,9 @@ const ENGAGEMENT_MESSAGES = [
 
 const createNotification = async ({ userId, title, message, type = 'general', relatedId = null }) => {
   if (!userId || !title || !message) return null;
+  const canonicalUserId = await resolveUserId(userId);
   const notification = new Notification({
-    userId,
+    userId: canonicalUserId || userId,
     title,
     message,
     type,
@@ -2755,8 +2783,11 @@ app.post('/api/ai/append', authMiddleware, async (req, res) => {
 app.get('/api/notifications', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.email;
+    const userEmail = req.user.email?.toLowerCase();
     await maybeCreateEngagementNotification(userId);
-    const notifications = await Notification.find({ userId })
+    const notifications = await Notification.find({
+      userId: { $in: [userId, userEmail].filter(Boolean) },
+    })
       .sort({ date: -1 })
       .limit(100)
       .lean();
@@ -2769,7 +2800,11 @@ app.get('/api/notifications', authMiddleware, async (req, res) => {
 app.put('/api/notifications/read', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.email;
-    await Notification.updateMany({ userId, read: false }, { $set: { read: true } });
+    const userEmail = req.user.email?.toLowerCase();
+    await Notification.updateMany(
+      { userId: { $in: [userId, userEmail].filter(Boolean) }, read: false },
+      { $set: { read: true } }
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to mark notifications as read: ' + err.message });
@@ -2779,11 +2814,12 @@ app.put('/api/notifications/read', authMiddleware, async (req, res) => {
 app.post('/api/notifications/register', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id || req.user.email;
+    const userEmail = req.user.email?.toLowerCase() || '';
     const { token, platform } = req.body || {};
     if (!token) return res.status(400).json({ error: 'Token is required' });
     await NotificationToken.findOneAndUpdate(
       { token },
-      { userId, platform: platform || 'android', updatedAt: new Date() },
+      { userId, userEmail, platform: platform || 'android', updatedAt: new Date() },
       { upsert: true, new: true }
     );
     res.json({ success: true });

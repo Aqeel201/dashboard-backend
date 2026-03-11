@@ -1,5 +1,8 @@
 <%- include('partials/header') %>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
   <!-- Content Header -->
   <section class="content-header">
     <div class="container-fluid">
@@ -157,8 +160,7 @@
                                       </li>
                                       <li><strong>City:</strong> Skardu</li>
                                       <li><strong>Location:</strong>
-                                        <%= order.location ? order.location.latitude + ', ' + order.location.longitude
-                                          : 'Not Provided' %>
+                                        <%= order.location ? order.location.latitude + ', ' + order.location.longitude : 'Not Provided' %>
                                       </li>
                                       <% } %>
                                   </ul>
@@ -225,6 +227,25 @@
                                         <% }) %>
                                           <% } %>
                                   </ul>
+                                </div>
+                                <div class="col-md-12 mt-3">
+                                  <div class="location-card">
+                                    <div class="location-card__header">
+                                      <span><i class="fas fa-map-marker-alt mr-2"></i>Delivery Location</span>
+                                      <% if(order.location) { %>
+                                        <small class="text-muted"><%= order.location.latitude %>, <%= order.location.longitude %></small>
+                                      <% } %>
+                                    </div>
+                                    <% if(order.location) { %>
+                                      <div class="order-map"
+                                           id="map-<%= order._id %>"
+                                           data-lat="<%= order.location.latitude %>"
+                                           data-lng="<%= order.location.longitude %>">
+                                      </div>
+                                    <% } else { %>
+                                      <div class="text-muted small">Location not provided by user.</div>
+                                    <% } %>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -371,9 +392,37 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
+    .location-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .location-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .order-map {
+      width: 100%;
+      height: 220px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      background: #f1f5f9;
+    }
   </style>
 
   <!-- JavaScript Functions -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof $ === 'undefined') {
@@ -543,6 +592,41 @@
           btn.querySelector('i').classList.remove('fa-chevron-up');
           btn.querySelector('i').classList.add('fa-chevron-down');
         });
+      });
+
+      const mapInstances = new Map();
+      const initMap = (container) => {
+        if (!container || mapInstances.has(container.id)) return;
+        const lat = Number(container.dataset.lat);
+        const lng = Number(container.dataset.lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+        const map = L.map(container, {
+          zoomControl: true,
+          attributionControl: false,
+        }).setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+        }).addTo(map);
+        L.marker([lat, lng]).addTo(map);
+        mapInstances.set(container.id, map);
+      };
+
+      document.querySelectorAll('.collapse').forEach((collapseElement) => {
+        collapseElement.addEventListener('shown.bs.collapse', () => {
+          const mapEl = collapseElement.querySelector('.order-map');
+          if (mapEl) {
+            initMap(mapEl);
+          }
+        });
+      });
+
+      // Initialize any map already visible on page load
+      document.querySelectorAll('.order-map').forEach((el) => {
+        const parent = el.closest('.collapse');
+        if (!parent || parent.classList.contains('show')) {
+          initMap(el);
+        }
       });
     });
   </script>
