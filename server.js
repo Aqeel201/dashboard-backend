@@ -2280,6 +2280,25 @@ const mergeFacts = (current, incoming) => {
   return next;
 };
 
+const containsAnySuggestion = (text, suggestions) => {
+  if (!text || !Array.isArray(suggestions) || !suggestions.length) return false;
+  const t = String(text).toLowerCase();
+  return suggestions.some((m) => t.includes(String(m.name || '').toLowerCase()));
+};
+
+const insertInlineAfterFirstSentence = (text, inline) => {
+  const base = String(text || '').trim();
+  if (!base) return inline;
+  const match = base.match(/[.!?]/);
+  if (match && match.index !== undefined) {
+    const idx = match.index + 1;
+    const head = base.slice(0, idx).trim();
+    const tail = base.slice(idx).trim();
+    return tail ? `${head} ${inline} ${tail}` : `${head} ${inline}`;
+  }
+  return `${base} ${inline}`.trim();
+};
+
 const extractStoreSuggestions = (text) => {
   if (!text) return { cleanedContent: '', names: [] };
   const regex = /(?:^|\n)\s*MEDIAPP_STORE\s*:\s*(.+?)(?:\n|$)/i;
@@ -2469,17 +2488,11 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     }
 
     let finalContent = cleanedContent;
-    if (!/mediapp store/i.test(finalContent)) {
-      const availableNames = suggestions.map((m) => m.name).filter(Boolean).slice(0, 4);
-      const availability = availableNames.length
-        ? `MediApp Store availability: ${availableNames.join(', ')}.`
-        : 'MediApp Store availability: none.';
-      const lines = finalContent.split('\n');
-      if (lines.length > 1) {
-        lines.splice(1, 0, availability);
-        finalContent = lines.join('\n');
-      } else {
-        finalContent = `${finalContent}\n${availability}`;
+    if (suggestions.length && !containsAnySuggestion(finalContent, suggestions)) {
+      const inlineNames = suggestions.map((m) => m.name).filter(Boolean).slice(0, 4);
+      if (inlineNames.length) {
+        const inline = `Recommended (MediApp Store, available): ${inlineNames.join(', ')}.`;
+        finalContent = insertInlineAfterFirstSentence(finalContent, inline);
       }
     }
 
