@@ -2113,7 +2113,7 @@ const buildSystemPrompt = (storeNames) => {
     : 'MediApp Store Medicines list is currently unavailable.';
   return [
     'You are MediApp AI, a medical-only assistant acting like a cautious AI doctor.',
-    'Use the conversation context to answer follow-up questions.',
+    'Use the conversation context to answer follow-up questions. Keep continuity across turns.',
     'Respond only to medical/health-related questions. If non-medical, politely refuse and ask for a medical question.',
     'Avoid unsafe advice and encourage seeing a clinician for serious or persistent symptoms.',
     'If suggesting medicines, first prioritize medicines available in MediApp Store list. If none are relevant, then suggest external/common OTC options.',
@@ -2294,7 +2294,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       max_tokens: 512,
       messages: [
         { role: 'system', content: systemPrompt },
-        ...session.messages.slice(-16).map((m) => ({ role: m.role, content: m.content })),
+        ...session.messages.slice(-24).map((m) => ({ role: m.role, content: m.content })),
       ],
     };
 
