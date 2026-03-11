@@ -318,6 +318,54 @@ const releaseReservedStock = async (order) => {
   return affectedIds;
 };
 
+const rejectOrderWithReason = async (order, reason = 'rejected') => {
+  if (!order) return [];
+  const affectedIds = await releaseReservedStock(order);
+  order.status = 'rejected';
+  order.paymentStatus = 'unpaid';
+  order.statusUpdateHistory = order.statusUpdateHistory || [];
+  order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate(), reason });
+  await order.save();
+  return affectedIds;
+};
+
+const autoRejectConflictingOrders = async (acceptedOrder) => {
+  if (!acceptedOrder) return;
+  const otherOrders = await Order.find({
+    _id: { $ne: acceptedOrder._id },
+    status: 'pending',
+  }).lean();
+
+  if (!otherOrders.length) return;
+
+  const affectedIds = new Set();
+  for (const order of otherOrders) {
+    let hasShortage = false;
+    for (const item of order.cartItems || []) {
+      const medicineValue = item._id || item.id;
+      if (!medicineValue) continue;
+      const medicine = await Medicine.findById(medicineValue).select('quantity');
+      const available = Number(medicine?.quantity || 0);
+      const requested = Number(item.cartQuantity || 0);
+      if (available < requested) {
+        hasShortage = true;
+        break;
+      }
+    }
+    if (hasShortage) {
+      const orderDoc = await Order.findById(order._id);
+      if (orderDoc) {
+        const released = await rejectOrderWithReason(orderDoc, 'auto_reject_no_stock');
+        released.forEach((id) => affectedIds.add(String(id)));
+      }
+    }
+  }
+
+  if (affectedIds.size) {
+    await pruneCartsForMedicines(Array.from(affectedIds));
+  }
+};
+
 // In-Person Sale Schema
 const InPersonSaleSchema = new mongoose.Schema({
   medicineId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medicine', required: true },
@@ -832,21 +880,24 @@ app.post('/api/order', async (req, res) => {
       const order = await Order.findById(req.params.id);
       if (!order) return res.status(404).json({ error: 'Order not found' });
 
-      // Stock validation before accepting
-      const shortages = [];
-      for (let item of order.cartItems) {
-        const medicine = await Medicine.findById(item._id || item.id);
-        if (!medicine || medicine.quantity < (item.cartQuantity || 0)) {
-          shortages.push({
-            _id: item._id || item.id,
-            name: item.name,
-            requested: item.cartQuantity || 0,
-            available: medicine ? medicine.quantity : 0,
-          });
+      // Stock validation before accepting (skip if already reserved)
+      if (!order.stockReserved) {
+        const shortages = [];
+        for (let item of order.cartItems) {
+          const medicine = await Medicine.findById(item._id || item.id);
+          if (!medicine || medicine.quantity < (item.cartQuantity || 0)) {
+            shortages.push({
+              _id: item._id || item.id,
+              name: item.name,
+              requested: item.cartQuantity || 0,
+              available: medicine ? medicine.quantity : 0,
+            });
+          }
         }
-      }
-      if (shortages.length) {
-        return res.status(409).json({ error: 'Insufficient stock', items: shortages });
+        if (shortages.length) {
+          await rejectOrderWithReason(order, 'no_stock_on_accept');
+          return res.status(409).json({ error: 'Insufficient stock', items: shortages });
+        }
       }
 
       const previousStatus = order.status;
@@ -884,6 +935,7 @@ app.post('/api/order', async (req, res) => {
       }
 
       await order.save();
+      await autoRejectConflictingOrders(order);
     res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
