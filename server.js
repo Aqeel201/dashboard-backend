@@ -226,6 +226,7 @@ const OrderSchema = new mongoose.Schema({
   orderTotal: { type: Number, required: true },
   location: { latitude: Number, longitude: Number },
   status: { type: String, enum: ['pending', 'accepted', 'rejected', 'shipped', 'delivered', 'cancelled', 'completed'], default: 'pending' },
+  stockReserved: { type: Boolean, default: false },
   date: { type: Date, default: getPKTDate },
   transactionId: { type: String, default: null },
   paymentStatus: { type: String, enum: ['paid', 'unpaid'], default: 'unpaid' },
@@ -298,6 +299,23 @@ const pruneCartsForMedicines = async (medicineIds) => {
   for (const cart of carts) {
     await refreshCartDocument(cart);
   }
+};
+
+const releaseReservedStock = async (order) => {
+  if (!order || !order.stockReserved) return [];
+  const affectedIds = [];
+  for (const item of order.cartItems || []) {
+    const medicineValue = item._id || item.id;
+    if (!medicineValue) continue;
+    const medicine = await Medicine.findById(medicineValue);
+    if (!medicine) continue;
+    const qty = Number(item.cartQuantity || 0);
+    medicine.quantity = Math.max(0, Number(medicine.quantity || 0) + qty);
+    await medicine.save();
+    affectedIds.push(medicine._id);
+  }
+  order.stockReserved = false;
+  return affectedIds;
 };
 
 // In-Person Sale Schema
@@ -704,6 +722,33 @@ app.get('/api/order', async (req, res) => {
   }
 });
 
+app.post('/api/order/:id/cancel', async (req, res) => {
+  try {
+    const { userId } = req.body || {};
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (userId && order.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to cancel this order' });
+    }
+    if (order.status !== 'pending') {
+      return res.status(400).json({ error: 'Only pending orders can be cancelled' });
+    }
+
+    const affectedIds = await releaseReservedStock(order);
+    order.status = 'cancelled';
+    order.paymentStatus = 'unpaid';
+    order.statusUpdateHistory = order.statusUpdateHistory || [];
+    order.statusUpdateHistory.push({ status: 'cancelled', timestamp: getPKTDate() });
+    await order.save();
+    if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+
+    res.json({ message: 'Order cancelled', order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to cancel order' });
+  }
+});
+
 app.post('/api/order', async (req, res) => {
   try {
     const { userId, shippingEmail, billingEmail, shippingAddress, billingAddress, shippingMethod, paymentMethod, cartItems, shippingFee, orderTotal, location } = req.body;
@@ -744,6 +789,21 @@ app.post('/api/order', async (req, res) => {
       });
     }
 
+    // Reserve stock immediately (POS-style) so other carts update
+    const affectedIds = [];
+    for (const item of cartItems) {
+      const id = String(item._id || item.id || '');
+      const medicine = medMap.get(id);
+      if (medicine) {
+        medicine.quantity = Math.max(0, Number(medicine.quantity || 0) - Number(item.cartQuantity || 0));
+        await medicine.save();
+        affectedIds.push(medicine._id);
+      }
+    }
+    if (affectedIds.length) {
+      await pruneCartsForMedicines(affectedIds);
+    }
+
     const newOrder = new Order({
       userId,
       shippingEmail,
@@ -757,6 +817,7 @@ app.post('/api/order', async (req, res) => {
       orderTotal,
       location,
       status: 'pending',
+      stockReserved: true,
     });
     await newOrder.save();
     res.json({ message: 'Order placed successfully', order: newOrder });
@@ -791,7 +852,8 @@ app.post('/api/order', async (req, res) => {
       const previousStatus = order.status;
       order.status = 'accepted';
     // For COD, payment is not paid upon acceptance (paid upon delivery)
-    if (order.paymentMethod !== 'Cash on Delivery') {
+    const pm = (order.paymentMethod || '').toLowerCase();
+    if (pm !== 'cash on delivery' && pm !== 'cod') {
       order.paymentStatus = 'paid';
     }
     order.statusUpdateHistory = order.statusUpdateHistory || [];
@@ -805,8 +867,8 @@ app.post('/api/order', async (req, res) => {
       }
     }
 
-      // Only deduct inventory if the order was NOT already accepted
-      if (previousStatus === 'pending') {
+      // Only deduct inventory if the order was NOT already accepted and not reserved
+      if (previousStatus === 'pending' && !order.stockReserved) {
         const affectedIds = [];
         for (let item of order.cartItems) {
           const medicine = await Medicine.findById(item._id || item.id);
@@ -817,6 +879,7 @@ app.post('/api/order', async (req, res) => {
             affectedIds.push(medicine._id);
           }
         }
+        order.stockReserved = true;
         await pruneCartsForMedicines(affectedIds);
       }
 
@@ -832,8 +895,16 @@ app.post('/admin/orders/:id/reject', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.status === 'accepted' || order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') {
+      return res.status(400).json({ error: 'Cannot reject an already processed order' });
+    }
+    const affectedIds = await releaseReservedStock(order);
     order.status = 'rejected';
+    order.paymentStatus = 'unpaid';
+    order.statusUpdateHistory = order.statusUpdateHistory || [];
+    order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
     await order.save();
+    if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
     res.json({ message: 'Order rejected', order });
   } catch (err) {
     console.error(err);
@@ -2134,7 +2205,7 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     // Store user message
     session.messages.push({ role: 'user', content: text, createdAt: new Date() });
 
-    const groqKey = process.env.GROQ_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY || req.body?.groqKey || res.locals.settings?.apiKey || '';
     if (!groqKey) {
       await session.save();
       // Fallback to keyword rule if no Groq key
@@ -2993,21 +3064,24 @@ app.put('/api/transactions/:id', async (req, res) => {
           order.statusUpdateHistory = order.statusUpdateHistory || [];
           order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
 
-          // Deduct inventory
+          // Deduct inventory only if not already reserved
           const affectedIds = [];
-          for (let item of order.cartItems) {
-            const medicineValue = item._id || item.id;
-            if (medicineValue) {
-              const medicine = await Medicine.findById(medicineValue);
-              if (medicine) {
-                medicine.quantity = Math.max(0, medicine.quantity - (item.cartQuantity || 1));
-                await medicine.save();
-                affectedIds.push(medicine._id);
+          if (!order.stockReserved) {
+            for (let item of order.cartItems) {
+              const medicineValue = item._id || item.id;
+              if (medicineValue) {
+                const medicine = await Medicine.findById(medicineValue);
+                if (medicine) {
+                  medicine.quantity = Math.max(0, medicine.quantity - (item.cartQuantity || 1));
+                  await medicine.save();
+                  affectedIds.push(medicine._id);
+                }
               }
             }
+            order.stockReserved = true;
           }
           await order.save();
-          await pruneCartsForMedicines(affectedIds);
+          if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
 
         // Mark related notifications as read
         await Notification.updateMany(
@@ -3027,11 +3101,13 @@ app.put('/api/transactions/:id', async (req, res) => {
 
       if (order) {
         console.log(`[API] Updating order ${order._id} to rejected.`);
+        const affectedIds = await releaseReservedStock(order);
         order.status = 'rejected';
         order.paymentStatus = 'unpaid'; // Explicitly unpaid if rejected
         order.statusUpdateHistory = order.statusUpdateHistory || [];
         order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
         await order.save();
+        if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
       } else {
         console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
       }
@@ -3111,20 +3187,41 @@ app.post('/api/orders/sync-transactions/:userId', async (req, res) => {
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
         order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        if (!order.stockReserved) {
+          const affectedIds = [];
+          for (const item of order.cartItems || []) {
+            const medicineValue = item._id || item.id;
+            if (!medicineValue) continue;
+            const medicine = await Medicine.findById(medicineValue);
+            if (medicine) {
+              medicine.quantity = Math.max(0, Number(medicine.quantity || 0) - Number(item.cartQuantity || 0));
+              await medicine.save();
+              affectedIds.push(medicine._id);
+            }
+          }
+          order.stockReserved = true;
+          if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+        }
         await order.save();
         syncedCount++;
       }
     }
 
-    // Also handle Rejected transactions: unlink them so user can retry payment
+    // Also handle Rejected transactions: unlink and restore stock
     const rejectedTransactions = await Transaction.find({ userId, status: 'Rejected' });
     for (const txn of rejectedTransactions) {
       if (txn.orderId) {
         let order = await Order.findById(txn.orderId);
         if (order && order.status === 'pending') {
           console.log(`[SYNC] Unlinking rejected transaction ${txn._id} from order ${order._id}`);
+          const affectedIds = await releaseReservedStock(order);
           order.transactionId = null; // Unlink so it shows as pending in UI
+          order.status = 'rejected';
+          order.paymentStatus = 'unpaid';
+          order.statusUpdateHistory = order.statusUpdateHistory || [];
+          order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
           await order.save();
+          if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
         }
       }
     }
@@ -3144,6 +3241,21 @@ app.post('/api/orders/sync-transactions/:userId', async (req, res) => {
         order.paymentStatus = 'paid';
         order.statusUpdateHistory = order.statusUpdateHistory || [];
         order.statusUpdateHistory.push({ status: 'accepted', timestamp: getPKTDate() });
+        if (!order.stockReserved) {
+          const affectedIds = [];
+          for (const item of order.cartItems || []) {
+            const medicineValue = item._id || item.id;
+            if (!medicineValue) continue;
+            const medicine = await Medicine.findById(medicineValue);
+            if (medicine) {
+              medicine.quantity = Math.max(0, Number(medicine.quantity || 0) - Number(item.cartQuantity || 0));
+              await medicine.save();
+              affectedIds.push(medicine._id);
+            }
+          }
+          order.stockReserved = true;
+          if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+        }
         await order.save();
         syncedCount++;
       }
@@ -3169,6 +3281,19 @@ setInterval(async () => {
         txn.status = 'Rejected';
         await txn.save();
         console.log(`Transaction ${txn._id} automatically rejected due to timeout.`);
+
+        if (txn.orderId) {
+          const order = await Order.findById(txn.orderId);
+          if (order && order.status === 'pending') {
+            const affectedIds = await releaseReservedStock(order);
+            order.status = 'rejected';
+            order.paymentStatus = 'unpaid';
+            order.statusUpdateHistory = order.statusUpdateHistory || [];
+            order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
+            await order.save();
+            if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+          }
+        }
       }
     }
   } catch (error) {
