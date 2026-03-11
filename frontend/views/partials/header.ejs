@@ -499,7 +499,8 @@
             (currentPath==='/admin/inperson-sales' ) screenName="In-Person Sales" ; else if
             (currentPath==='/admin/transactions' ) screenName="Transactions" ; else if
             (currentPath==='/admin/purchase-history' ) screenName="Purchase History" ; else if
-            (currentPath==='/admin/users' ) screenName="User" ; else if (currentPath==='/admin/settings' )
+            (currentPath==='/admin/users' ) screenName="User" ; else if (currentPath==='/admin/notifications' )
+            screenName="Notifications" ; else if (currentPath==='/admin/settings' )
             screenName="Settings" ; else if (currentPath==='/admin/feedback' ) screenName="User Feedback" ; else if
             (currentPath==='/admin/chat' ) screenName="Chat" ; } %>
             <a href="<%= typeof currentPath !== 'undefined' && currentPath ? currentPath + '?token=' + token : '/admin/dashboard?token=' + token %>"
@@ -712,6 +713,14 @@
                 class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/chat' ? 'active' : '' %>">
                 <i class="nav-icon fas fa-comments"></i>
                 <p>Chat</p>
+              </a>
+            </li>
+            <!-- Notifications -->
+            <li class="nav-item">
+              <a href="/admin/notifications?token=<%= token %>"
+                class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/notifications' ? 'active' : '' %>">
+                <i class="nav-icon fas fa-bell"></i>
+                <p>Notifications</p>
               </a>
             </li>
             <!-- User Feedback -->

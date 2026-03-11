@@ -789,6 +789,13 @@ app.post('/api/order/:id/cancel', async (req, res) => {
     order.statusUpdateHistory.push({ status: 'cancelled', timestamp: getPKTDate() });
     await order.save();
     if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+    await createNotification({
+      userId: order.userId,
+      title: 'Order Cancelled',
+      message: `Your order ${order._id} has been cancelled.`,
+      type: 'order',
+      relatedId: order._id,
+    });
 
     res.json({ message: 'Order cancelled', order });
   } catch (err) {
@@ -936,6 +943,13 @@ app.post('/api/order', async (req, res) => {
 
       await order.save();
       await autoRejectConflictingOrders(order);
+      await createNotification({
+        userId: order.userId,
+        title: 'Order Accepted',
+        message: `Your order ${order._id} has been accepted.`,
+        type: 'order',
+        relatedId: order._id,
+      });
     res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
@@ -957,6 +971,13 @@ app.post('/admin/orders/:id/reject', async (req, res) => {
     order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
     await order.save();
     if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+    await createNotification({
+      userId: order.userId,
+      title: 'Order Rejected',
+      message: `Your order ${order._id} was rejected by admin.`,
+      type: 'order',
+      relatedId: order._id,
+    });
     res.json({ message: 'Order rejected', order });
   } catch (err) {
     console.error(err);
@@ -1796,6 +1817,56 @@ const NotificationSchema = new mongoose.Schema({
 });
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
 
+const ENGAGEMENT_MESSAGES = [
+  {
+    title: 'Daily Health Tip',
+    message: 'Stay hydrated today. Aim for 6–8 glasses of water and avoid sugary drinks.',
+  },
+  {
+    title: 'Wellness Reminder',
+    message: 'A 20-minute walk can improve mood and blood sugar control. Try to take one today.',
+  },
+  {
+    title: 'Sleep Check',
+    message: 'Try to get 7–8 hours of sleep tonight. Consistent sleep improves immunity and focus.',
+  },
+  {
+    title: 'Nutrition Tip',
+    message: 'Include a source of protein and fiber in each meal to stay full and balanced.',
+  },
+  {
+    title: 'Medication Safety',
+    message: 'Avoid doubling doses. If you miss a dose, consult your doctor or pharmacist.',
+  },
+];
+
+const createNotification = async ({ userId, title, message, type = 'general', relatedId = null }) => {
+  if (!userId || !title || !message) return null;
+  const notification = new Notification({
+    userId,
+    title,
+    message,
+    type,
+    relatedId: relatedId || null,
+    date: new Date(),
+  });
+  await notification.save();
+  return notification;
+};
+
+const maybeCreateEngagementNotification = async (userId) => {
+  const last = await Notification.findOne({ userId, type: 'engagement' }).sort({ date: -1 });
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  if (last && last.date && last.date > dayAgo) return;
+  const pick = ENGAGEMENT_MESSAGES[Math.floor(Math.random() * ENGAGEMENT_MESSAGES.length)];
+  await createNotification({
+    userId,
+    title: pick.title,
+    message: pick.message,
+    type: 'engagement',
+  });
+};
+
 // Multer upload routes for chat
 app.post('/upload/image', upload1.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -2582,6 +2653,31 @@ app.post('/api/ai/append', authMiddleware, async (req, res) => {
   }
 });
 
+// ------------------- Notifications API -------------------
+app.get('/api/notifications', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    await maybeCreateEngagementNotification(userId);
+    const notifications = await Notification.find({ userId })
+      .sort({ date: -1 })
+      .limit(100)
+      .lean();
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch notifications: ' + err.message });
+  }
+});
+
+app.put('/api/notifications/read', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    await Notification.updateMany({ userId, read: false }, { $set: { read: true } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to mark notifications as read: ' + err.message });
+  }
+});
+
 app.get('/admin/chat', authAdminPage, async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('id firstName lastName email profileImage');
@@ -3196,6 +3292,56 @@ app.get('/admin/settings', authAdminPage, (req, res) => {
   });
 });
 
+// Admin Notifications (broadcast)
+app.get('/admin/notifications', authAdminPage, async (req, res) => {
+  try {
+    const notifications = await Notification.find().sort({ date: -1 }).limit(50).lean();
+    res.render('notifications', {
+      user: req.user,
+      token: req.query.token,
+      currentPath: '/admin/notifications',
+      notifications: notifications || [],
+      message: req.query.message || null,
+      error: req.query.error || null,
+    });
+  } catch (err) {
+    res.render('notifications', {
+      user: req.user,
+      token: req.query.token,
+      currentPath: '/admin/notifications',
+      notifications: [],
+      message: null,
+      error: 'Failed to load notifications: ' + err.message,
+    });
+  }
+});
+
+app.post('/admin/notifications/send', authAdminPage, async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    if (!title || !message) {
+      return res.redirect('/admin/notifications?error=Title and message are required&token=' + req.query.token);
+    }
+    const users = await User.find({ role: 'user' }).select('id').lean();
+    const now = new Date();
+    const docs = users.map((u) => ({
+      userId: u.id,
+      title,
+      message,
+      type: 'broadcast',
+      relatedId: null,
+      date: now,
+      read: false,
+    }));
+    if (docs.length) {
+      await Notification.insertMany(docs);
+    }
+    res.redirect('/admin/notifications?message=Notification sent to all users&token=' + req.query.token);
+  } catch (err) {
+    res.redirect('/admin/notifications?error=Failed to send notification&token=' + req.query.token);
+  }
+});
+
 app.post('/admin/settings', authAdminPage, async (req, res) => {
   try {
     const { lowStockThreshold, expiryAlertDays, emailNotifications, inAppNotifications, defaultUserRole, currency, dateFormat, apiKey, darkMode } = req.body;
@@ -3353,6 +3499,13 @@ app.put('/api/transactions/:id', async (req, res) => {
           }
           await order.save();
           if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+          await createNotification({
+            userId: transaction.userId,
+            title: 'Payment Accepted',
+            message: `Your payment for order ${order._id} has been accepted.`,
+            type: 'transaction',
+            relatedId: order._id,
+          });
 
         // Mark related notifications as read
         await Notification.updateMany(
@@ -3379,6 +3532,13 @@ app.put('/api/transactions/:id', async (req, res) => {
         order.statusUpdateHistory.push({ status: 'rejected', timestamp: getPKTDate() });
         await order.save();
         if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+        await createNotification({
+          userId: transaction.userId,
+          title: 'Payment Rejected',
+          message: `Your payment for order ${order._id} was rejected.`,
+          type: 'transaction',
+          relatedId: order._id,
+        });
       } else {
         console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
       }
