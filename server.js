@@ -796,6 +796,11 @@ app.post('/api/order/:id/cancel', async (req, res) => {
       type: 'order',
       relatedId: order._id,
     });
+    await sendPushToUser(order.userId, {
+      title: 'Order Cancelled',
+      body: `Your order ${order._id} has been cancelled.`,
+      data: { type: 'order', orderId: String(order._id) },
+    });
 
     res.json({ message: 'Order cancelled', order });
   } catch (err) {
@@ -950,6 +955,11 @@ app.post('/api/order', async (req, res) => {
         type: 'order',
         relatedId: order._id,
       });
+      await sendPushToUser(order.userId, {
+        title: 'Order Accepted',
+        body: `Your order ${order._id} has been accepted.`,
+        data: { type: 'order', orderId: String(order._id) },
+      });
     res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
@@ -977,6 +987,11 @@ app.post('/admin/orders/:id/reject', async (req, res) => {
       message: `Your order ${order._id} was rejected by admin.`,
       type: 'order',
       relatedId: order._id,
+    });
+    await sendPushToUser(order.userId, {
+      title: 'Order Rejected',
+      body: `Your order ${order._id} was rejected by admin.`,
+      data: { type: 'order', orderId: String(order._id) },
     });
     res.json({ message: 'Order rejected', order });
   } catch (err) {
@@ -1816,6 +1831,68 @@ const NotificationSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 });
 const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
+
+const notificationTokenSchema = new mongoose.Schema({
+  userId: { type: String, required: true, index: true },
+  token: { type: String, required: true, unique: true },
+  platform: { type: String, default: 'android' },
+  updatedAt: { type: Date, default: Date.now },
+});
+const NotificationToken = mongoose.models.NotificationToken || mongoose.model('NotificationToken', notificationTokenSchema);
+
+const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+const chunkArray = (arr, size = 100) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
+const sendPushNotifications = async (tokens, { title, body, data = {} }) => {
+  const validTokens = (tokens || [])
+    .filter((t) => typeof t === 'string' && t.startsWith('ExponentPushToken'));
+  if (!validTokens.length) return;
+  const messages = validTokens.map((token) => ({
+    to: token,
+    sound: 'default',
+    title,
+    body,
+    data,
+    priority: 'high',
+  }));
+  const chunks = chunkArray(messages, 100);
+  for (const chunk of chunks) {
+    try {
+      await axios.post(EXPO_PUSH_URL, chunk, {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        timeout: 15000,
+      });
+    } catch (err) {
+      console.error('Push send failed:', err?.response?.data || err?.message || err);
+    }
+  }
+};
+
+const getUserPushTokens = async (userId) => {
+  const tokens = await NotificationToken.find({ userId }).lean();
+  return tokens.map((t) => t.token).filter(Boolean);
+};
+
+const sendPushToUser = async (userId, { title, body, data }) => {
+  if (!userId) return;
+  const tokens = await getUserPushTokens(userId);
+  await sendPushNotifications(tokens, { title, body, data });
+};
+
+const sendPushToAllUsers = async ({ title, body, data }) => {
+  const tokens = await NotificationToken.find().lean();
+  await sendPushNotifications(tokens.map((t) => t.token), { title, body, data });
+};
 
 const ENGAGEMENT_MESSAGES = [
   {
@@ -2678,6 +2755,22 @@ app.put('/api/notifications/read', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/api/notifications/register', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.email;
+    const { token, platform } = req.body || {};
+    if (!token) return res.status(400).json({ error: 'Token is required' });
+    await NotificationToken.findOneAndUpdate(
+      { token },
+      { userId, platform: platform || 'android', updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to register token: ' + err.message });
+  }
+});
+
 app.get('/admin/chat', authAdminPage, async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('id firstName lastName email profileImage');
@@ -3336,6 +3429,11 @@ app.post('/admin/notifications/send', authAdminPage, async (req, res) => {
     if (docs.length) {
       await Notification.insertMany(docs);
     }
+    await sendPushToAllUsers({
+      title,
+      body: message,
+      data: { type: 'broadcast' },
+    });
     res.redirect('/admin/notifications?message=Notification sent to all users&token=' + req.query.token);
   } catch (err) {
     res.redirect('/admin/notifications?error=Failed to send notification&token=' + req.query.token);
@@ -3506,6 +3604,11 @@ app.put('/api/transactions/:id', async (req, res) => {
             type: 'transaction',
             relatedId: order._id,
           });
+          await sendPushToUser(transaction.userId, {
+            title: 'Payment Accepted',
+            body: `Your payment for order ${order._id} has been accepted.`,
+            data: { type: 'transaction', orderId: String(order._id) },
+          });
 
         // Mark related notifications as read
         await Notification.updateMany(
@@ -3538,6 +3641,11 @@ app.put('/api/transactions/:id', async (req, res) => {
           message: `Your payment for order ${order._id} was rejected.`,
           type: 'transaction',
           relatedId: order._id,
+        });
+        await sendPushToUser(transaction.userId, {
+          title: 'Payment Rejected',
+          body: `Your payment for order ${order._id} was rejected.`,
+          data: { type: 'transaction', orderId: String(order._id) },
         });
       } else {
         console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
