@@ -382,6 +382,68 @@ const InPersonSaleSchema = new mongoose.Schema({
 });
 const InPersonSale = mongoose.models.InPersonSale || mongoose.model('InPersonSale', InPersonSaleSchema);
 
+const PROMO_TEMPLATES = [
+  {
+    subject: 'MediApp: Simple habits, stronger health',
+    headline: 'A small routine can make a big difference',
+    body: [
+      'Drink water first thing in the morning.',
+      'Add 10–20 minutes of light movement.',
+      'Keep medicines organized and on time.',
+    ],
+    cta: 'Open MediApp',
+  },
+  {
+    subject: 'MediApp Care: Feeling under the weather?',
+    headline: 'Get guidance and medicine options faster',
+    body: [
+      'Check symptoms and safe self‑care tips.',
+      'See medicines available in your local store.',
+      'Order quickly with delivery tracking.',
+    ],
+    cta: 'Check Symptoms',
+  },
+  {
+    subject: 'MediApp Wellness: Your health, simplified',
+    headline: 'Stay consistent with daily health basics',
+    body: [
+      'Sleep 7–8 hours for better recovery.',
+      'Eat balanced meals with protein + fiber.',
+      'Set medicine reminders in one place.',
+    ],
+    cta: 'Explore MediApp',
+  },
+];
+
+const getNextPromoDate = (fromDate = new Date()) => {
+  const minMs = 48 * 60 * 60 * 1000;
+  const maxMs = 72 * 60 * 60 * 1000;
+  const delta = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+  return new Date(fromDate.getTime() + delta);
+};
+
+const buildPromoEmail = (user, template) => {
+  const appUrl = process.env.PROMO_APP_URL || process.env.APP_PUBLIC_URL || 'https://mediapp.app';
+  const name = user?.firstName || 'there';
+  const listItems = template.body.map((line) => `<li style="margin-bottom:8px;">${line}</li>`).join('');
+  const html = `
+  <div style="font-family:Arial,sans-serif;color:#0f172a;background:#f8fafc;padding:24px;">
+    <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;padding:24px;border:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 8px 0;color:#1d4ed8;">${template.headline}</h2>
+      <p style="margin:0 0 16px 0;color:#334155;">Hi ${name},</p>
+      <ul style="padding-left:18px;margin:0 0 16px 0;color:#334155;">${listItems}</ul>
+      <a href="${appUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:bold;">
+        ${template.cta}
+      </a>
+      <p style="margin-top:18px;color:#64748b;font-size:12px;">
+        You received this because you’re a MediApp user.
+      </p>
+    </div>
+  </div>`;
+  const text = `Hi ${name},\n\n${template.body.join('\n')}\n\n${template.cta}: ${appUrl}\n\n— MediApp`;
+  return { subject: template.subject, html, text };
+};
+
 // Transaction Schema
 const transactionSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -3484,6 +3546,22 @@ app.get('/admin/notifications', authAdminPage, async (req, res) => {
       message: null,
       error: 'Failed to load notifications: ' + err.message,
     });
+  }
+});
+
+app.post('/admin/promotions/send', authAdminPage, async (req, res) => {
+  try {
+    const authBackendUrl = process.env.AUTH_BACKEND_URL || '';
+    const promoSecret = process.env.PROMO_CRON_SECRET || '';
+    if (!authBackendUrl || !promoSecret) {
+      return res.status(500).json({ error: 'Missing AUTH_BACKEND_URL or PROMO_CRON_SECRET' });
+    }
+
+    const targetUrl = `${authBackendUrl.replace(/\/$/, '')}/api/promotions/run?secret=${encodeURIComponent(promoSecret)}`;
+    const resp = await axios.post(targetUrl, {}, { timeout: 20000 });
+    res.json({ success: true, data: resp.data });
+  } catch (err) {
+    res.status(500).json({ error: err?.response?.data?.message || err.message || 'Failed to trigger promotions' });
   }
 });
 
