@@ -997,10 +997,93 @@ app.post('/api/order', async (req, res) => {
   }
 });
 
+const createPendingOrderFromPayload = async (orderData) => {
+  const {
+    userId,
+    shippingEmail,
+    billingEmail,
+    shippingAddress,
+    billingAddress,
+    shippingMethod,
+    paymentMethod,
+    cartItems,
+    shippingFee,
+    orderTotal,
+    location,
+  } = orderData || {};
+
+  if (!userId || !Array.isArray(cartItems) || cartItems.length === 0) {
+    throw new Error('Invalid order data');
+  }
+
+  const ids = cartItems.map((i) => i._id || i.id).filter(Boolean).map((id) => String(id));
+  const medicines = ids.length ? await Medicine.find({ _id: { $in: ids } }) : [];
+  const medMap = buildMedicineMap(medicines);
+  const insufficient = [];
+  for (const item of cartItems) {
+    const id = String(item._id || item.id || '');
+    const med = medMap.get(id);
+    const requested = Number(item.cartQuantity || 0);
+    const available = Number(med?.quantity || 0);
+    if (!med || available <= 0 || requested > available) {
+      insufficient.push({
+        _id: item._id || item.id,
+        name: item.name,
+        requested,
+        available,
+      });
+    }
+  }
+  if (insufficient.length) {
+    throw new Error('Insufficient stock for one or more items');
+  }
+
+  const affectedIds = [];
+  for (const item of cartItems) {
+    const id = String(item._id || item.id || '');
+    const medicine = medMap.get(id);
+    if (medicine) {
+      medicine.quantity = Math.max(0, Number(medicine.quantity || 0) - Number(item.cartQuantity || 0));
+      await medicine.save();
+      affectedIds.push(medicine._id);
+    }
+  }
+  if (affectedIds.length) {
+    await pruneCartsForMedicines(affectedIds);
+  }
+
+  const newOrder = new Order({
+    userId,
+    shippingEmail,
+    billingEmail,
+    shippingAddress,
+    billingAddress,
+    shippingMethod,
+    paymentMethod,
+    cartItems,
+    shippingFee,
+    orderTotal,
+    location,
+    status: 'pending',
+    stockReserved: true,
+  });
+  await newOrder.save();
+  return newOrder;
+};
+
   app.post('/admin/orders/:id/accept', authAdminPage, async (req, res) => {
     try {
       const order = await Order.findById(req.params.id);
       if (!order) return res.status(404).json({ error: 'Order not found' });
+      if ((order.paymentMethod || '').toLowerCase() === 'easypaisa') {
+        if (!order.transactionId) {
+          return res.status(409).json({ error: 'Transaction not linked yet. Approve transaction first.' });
+        }
+        const txn = await Transaction.findById(order.transactionId);
+        if (!txn || txn.status !== 'Accepted') {
+          return res.status(409).json({ error: 'Transaction not accepted yet. Approve transaction first.' });
+        }
+      }
 
       // Stock validation before accepting (skip if already reserved)
       if (!order.stockReserved) {
@@ -3837,20 +3920,30 @@ app.post('/api/transactions', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    let orderId = orderData?._id || orderData?.id || null;
+    if (!orderId && orderData) {
+      try {
+        const createdOrder = await createPendingOrderFromPayload({ ...orderData, paymentMethod: orderData.paymentMethod || 'easypaisa' });
+        orderId = createdOrder._id;
+      } catch (orderErr) {
+        return res.status(409).json({ error: orderErr.message || 'Failed to create order' });
+      }
+    }
+
     const newTransaction = new Transaction({
       userId,
       walletNumber,
       walletName,
       transactionID,
       depositAmount: parseFloat(depositAmount),
-      orderId: orderData?._id || orderData?.id || null,
+      orderId: orderId || null,
     });
 
     const savedTransaction = await newTransaction.save();
 
     // If orderId is provided, link it back to the order
-    if (newTransaction.orderId) {
-      await Order.findByIdAndUpdate(newTransaction.orderId, { transactionId: savedTransaction._id });
+    if (savedTransaction.orderId) {
+      await Order.findByIdAndUpdate(savedTransaction.orderId, { transactionId: savedTransaction._id });
     }
 
     res.status(201).json(savedTransaction);
@@ -3945,6 +4038,18 @@ app.put('/api/transactions/:id', async (req, res) => {
             body: `Your payment for order ${order._id} has been accepted.`,
             data: { type: 'transaction', orderId: String(order._id) },
           });
+          await createNotification({
+            userId: transaction.userId,
+            title: 'Order Accepted',
+            message: `Your order ${order._id} has been accepted.`,
+            type: 'order',
+            relatedId: order._id,
+          });
+          await sendPushToUser(transaction.userId, {
+            title: 'Order Accepted',
+            body: `Your order ${order._id} has been accepted.`,
+            data: { type: 'order', orderId: String(order._id) },
+          });
 
         // Mark related notifications as read
         await Notification.updateMany(
@@ -3982,6 +4087,18 @@ app.put('/api/transactions/:id', async (req, res) => {
           title: 'Payment Rejected',
           body: `Your payment for order ${order._id} was rejected.`,
           data: { type: 'transaction', orderId: String(order._id) },
+        });
+        await createNotification({
+          userId: transaction.userId,
+          title: 'Order Rejected',
+          message: `Your order ${order._id} was rejected.`,
+          type: 'order',
+          relatedId: order._id,
+        });
+        await sendPushToUser(transaction.userId, {
+          title: 'Order Rejected',
+          body: `Your order ${order._id} was rejected.`,
+          data: { type: 'order', orderId: String(order._id) },
         });
       } else {
         console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
