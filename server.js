@@ -2616,7 +2616,14 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
     session.messages.push({ role: 'user', content: text, createdAt: new Date() });
 
     const incomingKey = req.body?.groqKey || '';
-    let groqKey = process.env.GROQ_API_KEY || process.env.GROQ_KEY || incomingKey || res.locals.settings?.apiKey || '';
+    let groqKey =
+      process.env.GROQ_API_KEY ||
+      process.env.GROQ_KEY ||
+      process.env.GROQ_APIKEY ||
+      process.env.GROQ ||
+      incomingKey ||
+      res.locals.settings?.apiKey ||
+      '';
     if (incomingKey && !res.locals.settings?.apiKey) {
       try {
         let settings = await Settings.findOne();
@@ -2637,6 +2644,15 @@ app.post('/api/ai/respond', authMiddleware, async (req, res) => {
       session.messages.push({ role: 'assistant', content: greeting, createdAt: new Date() });
       await session.save();
       return res.json({ sessionId: session._id, response: greeting, suggestions: [] });
+    }
+
+    if (!groqKey) {
+      try {
+        const settings = await Settings.findOne();
+        groqKey = settings?.apiKey || '';
+      } catch (err) {
+        console.error('Failed to load Groq key from settings:', err.message);
+      }
     }
 
     if (!groqKey) {
