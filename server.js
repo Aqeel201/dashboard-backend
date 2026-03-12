@@ -995,6 +995,25 @@ app.post('/api/order/:id/cancel', async (req, res) => {
     order.statusUpdateHistory.push({ status: 'cancelled', timestamp: getPKTDate() });
     await order.save();
     if (affectedIds.length) await pruneCartsForMedicines(affectedIds);
+    if ((order.paymentMethod || '').toLowerCase() === 'easypaisa' && order.transactionId) {
+      const txn = await Transaction.findById(order.transactionId);
+      if (txn && txn.status === 'Pending') {
+        txn.status = 'Rejected';
+        await txn.save();
+        await createNotification({
+          userId: order.userId,
+          title: 'Payment Cancelled',
+          message: `Your payment for order ${order._id} has been cancelled.`,
+          type: 'transaction',
+          relatedId: order._id,
+        });
+        await sendPushToUser(order.userId, {
+          title: 'Payment Cancelled',
+          body: `Your payment for order ${order._id} has been cancelled.`,
+          data: { type: 'transaction', orderId: String(order._id) },
+        });
+      }
+    }
     await createNotification({
       userId: order.userId,
       title: 'Order Cancelled',
