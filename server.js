@@ -522,6 +522,102 @@ const buildPromoEmail = (user, template) => {
   return { subject: template.subject, html, text };
 };
 
+const isValidEmail = (value) => typeof value === 'string' && value.includes('@');
+
+const getOrderRecipients = (order) => {
+  const recipients = new Set();
+  if (isValidEmail(order?.userId)) recipients.add(order.userId);
+  if (isValidEmail(order?.shippingEmail)) recipients.add(order.shippingEmail);
+  return Array.from(recipients);
+};
+
+const formatMoney = (amount) => {
+  const n = Number(amount || 0);
+  if (!Number.isFinite(n)) return 'Rs. 0.00';
+  return `Rs. ${n.toFixed(2)}`;
+};
+
+const renderOrderItemsHtml = (order) => {
+  const rows = (order?.cartItems || []).map((item) => `
+    <tr>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;">${item.name || 'Item'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">${item.cartQuantity || 1}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:right;">${formatMoney((item.price || 0) * (item.cartQuantity || 1))}</td>
+    </tr>
+  `).join('');
+  return `
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr>
+        <th style="text-align:left;padding:6px 8px;border-bottom:1px solid #e2e8f0;">Item</th>
+        <th style="text-align:center;padding:6px 8px;border-bottom:1px solid #e2e8f0;">Qty</th>
+        <th style="text-align:right;padding:6px 8px;border-bottom:1px solid #e2e8f0;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>${rows || ''}</tbody>
+  </table>`;
+};
+
+const buildStatusEmail = ({ title, subtitle, order, transaction }) => {
+  const appUrl = process.env.APP_PUBLIC_URL || 'https://mediapp.app';
+  const orderId = order?._id ? String(order._id) : 'N/A';
+  const itemsHtml = renderOrderItemsHtml(order);
+  const shippingAddress = order?.shippingAddress
+    ? `${order.shippingAddress.streetAddress || ''} ${order.shippingAddress.city || ''}`.trim()
+    : 'N/A';
+  const txnId = transaction?.transactionID || transaction?._id || 'N/A';
+  const html = `
+  <div style="font-family:Arial,sans-serif;color:#0f172a;background:#f8fafc;padding:24px;">
+    <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:14px;padding:24px;border:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 6px 0;color:#1d4ed8;">${title}</h2>
+      <p style="margin:0 0 16px 0;color:#475569;">${subtitle}</p>
+
+      <div style="margin-bottom:16px;">
+        <strong>Order ID:</strong> ${orderId}<br/>
+        <strong>Status:</strong> ${order?.status || 'N/A'}<br/>
+        <strong>Total:</strong> ${formatMoney(order?.orderTotal)}<br/>
+        <strong>Shipping:</strong> ${shippingAddress || 'N/A'}
+      </div>
+
+      <div style="margin-bottom:16px;">
+        ${itemsHtml}
+      </div>
+
+      ${transaction ? `
+      <div style="margin-bottom:16px;">
+        <strong>Transaction ID:</strong> ${txnId}<br/>
+        <strong>Wallet Name:</strong> ${transaction.walletName || 'N/A'}<br/>
+        <strong>Wallet Number:</strong> ${transaction.walletNumber || 'N/A'}<br/>
+        <strong>Amount:</strong> ${formatMoney(transaction.depositAmount)}<br/>
+        <strong>Transaction Status:</strong> ${transaction.status || 'N/A'}
+      </div>` : ''}
+
+      <a href="${appUrl}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:bold;">
+        Open MediApp
+      </a>
+      <p style="margin-top:18px;color:#64748b;font-size:12px;">
+        This is an automated update from MediApp.
+      </p>
+    </div>
+  </div>`;
+  const text = `${title}\n${subtitle}\n\nOrder ID: ${orderId}\nStatus: ${order?.status || 'N/A'}\nTotal: ${formatMoney(order?.orderTotal)}\nShipping: ${shippingAddress}\nTransaction: ${txnId}\n\nOpen MediApp: ${appUrl}`;
+  return { subject: title, html, text };
+};
+
+const sendStatusEmail = async ({ title, subtitle, order, transaction }) => {
+  if (!promoTransporter) return;
+  const recipients = getOrderRecipients(order);
+  if (!recipients.length) return;
+  const { subject, html, text } = buildStatusEmail({ title, subtitle, order, transaction });
+  await promoTransporter.sendMail({
+    from: `"MediApp" <${process.env.EMAIL_USER}>`,
+    to: recipients.join(','),
+    subject,
+    text,
+    html,
+  });
+};
+
 const isPromoAuthorized = (req) => {
   const configuredSecret = process.env.PROMO_CRON_SECRET || '';
   const incomingSecret = req.headers['x-cron-secret'] || req.query.secret || '';
@@ -1239,8 +1335,9 @@ const createPendingOrderFromPayload = async (orderData) => {
     order.statusUpdateHistory = order.statusUpdateHistory || [];
     order.statusUpdateHistory.push({ status: 'accepted', timestamp: new Date() });
 
+    let transaction = null;
     if (order.transactionId && order.paymentMethod.toLowerCase() === 'easypaisa') {
-      const transaction = await Transaction.findById(order.transactionId);
+      transaction = await Transaction.findById(order.transactionId);
       if (transaction && transaction.status !== 'Accepted') {
         transaction.status = 'Accepted';
         await transaction.save();
@@ -1277,6 +1374,16 @@ const createPendingOrderFromPayload = async (orderData) => {
         body: `Your order ${order._id} has been accepted.`,
         data: { type: 'order', orderId: String(order._id) },
       });
+      try {
+        await sendStatusEmail({
+          title: 'Order Accepted',
+          subtitle: 'Your order has been accepted and is being processed.',
+          order,
+          transaction,
+        });
+      } catch (mailErr) {
+        console.warn('Order accepted email failed:', mailErr.message);
+      }
     res.json({ message: 'Order accepted', order });
   } catch (err) {
     console.error(err);
@@ -1310,6 +1417,15 @@ app.post('/admin/orders/:id/reject', async (req, res) => {
       body: `Your order ${order._id} was rejected by admin.`,
       data: { type: 'order', orderId: String(order._id) },
     });
+    try {
+      await sendStatusEmail({
+        title: 'Order Rejected',
+        subtitle: 'Unfortunately, your order was rejected.',
+        order,
+      });
+    } catch (mailErr) {
+      console.warn('Order rejected email failed:', mailErr.message);
+    }
     res.json({ message: 'Order rejected', order });
   } catch (err) {
     console.error(err);
@@ -4209,6 +4325,16 @@ app.put('/api/transactions/:id', async (req, res) => {
             body: `Your order ${order._id} has been accepted.`,
             data: { type: 'order', orderId: String(order._id) },
           });
+          try {
+            await sendStatusEmail({
+              title: 'Payment Accepted',
+              subtitle: 'Your payment has been accepted and your order is being processed.',
+              order,
+              transaction,
+            });
+          } catch (mailErr) {
+            console.warn('Payment accepted email failed:', mailErr.message);
+          }
 
         // Mark related notifications as read
         await Notification.updateMany(
@@ -4259,6 +4385,16 @@ app.put('/api/transactions/:id', async (req, res) => {
           body: `Your order ${order._id} was rejected.`,
           data: { type: 'order', orderId: String(order._id) },
         });
+        try {
+          await sendStatusEmail({
+            title: 'Payment Rejected',
+            subtitle: 'Your payment was rejected. Please review your details and try again.',
+            order,
+            transaction,
+          });
+        } catch (mailErr) {
+          console.warn('Payment rejected email failed:', mailErr.message);
+        }
       } else {
         console.warn(`[API] No matching order found for rejected transaction ${transaction._id}`);
       }
