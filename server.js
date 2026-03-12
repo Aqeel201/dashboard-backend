@@ -2157,6 +2157,11 @@ app.post('/api/chat/send', authMiddleware, async (req, res) => {
           date: new Date()
         });
         await notification.save();
+        await sendPushToUser(receiver, {
+          title: 'New Message from Admin',
+          body: type === 'text' ? content : `Sent a ${type}`,
+          data: { type: 'chat', chatId: newMsg._id }
+        });
       } catch (err) { }
     }
 
@@ -2213,6 +2218,11 @@ app.post('/chat/upload', authMiddleware, uploadChat.single('file'), async (req, 
         });
         await notification.save();
         console.log('Notification created for user:', receiver);
+        await sendPushToUser(receiver, {
+          title: 'New Message from Admin',
+          body: type === 'text' ? req.body.content : `Sent a ${type}`,
+          data: { type: 'chat', chatId: newMsg._id }
+        });
       } catch (notifErr) {
         console.error('Failed to create notification:', notifErr.message);
       }
@@ -3024,6 +3034,11 @@ app.post('/admin/chat/send', authAdminPage, uploadChat.single('file'), async (re
       });
       await notification.save();
       console.log('Notification created for user:', userId);
+      await sendPushToUser(userId, {
+        title: 'New Message from Admin',
+        body: type === 'text' ? messageContent : `Sent a ${type}`,
+        data: { type: 'chat', chatId: newMsg._id }
+      });
     } catch (notifErr) {
       console.error('Failed to create notification:', notifErr.message);
     }
