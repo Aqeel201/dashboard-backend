@@ -11,6 +11,7 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const axios = require('axios');
+const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
@@ -55,6 +56,19 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const promoEmailEnabled = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+const promoTransporter = promoEmailEnabled
+  ? nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  })
+  : null;
 
 // Multer setup for file uploads (general - medicines etc might still need local or separate setup)
 const uploadsPath = process.env.VERCEL ? path.join('/tmp', 'Uploads') : path.join(__dirname, 'Uploads');
@@ -183,6 +197,9 @@ const userSchema = new mongoose.Schema({
   address: { type: String, default: '' },
   location: { type: String, default: '' },
   dob: { type: String, default: '' },
+  promoOptIn: { type: Boolean, default: true },
+  promoLastSentAt: { type: Date, default: null },
+  promoNextAt: { type: Date, default: null },
 });
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
@@ -442,6 +459,15 @@ const buildPromoEmail = (user, template) => {
   </div>`;
   const text = `Hi ${name},\n\n${template.body.join('\n')}\n\n${template.cta}: ${appUrl}\n\n— MediApp`;
   return { subject: template.subject, html, text };
+};
+
+const isPromoAuthorized = (req) => {
+  const configuredSecret = process.env.PROMO_CRON_SECRET || '';
+  const incomingSecret = req.headers['x-cron-secret'] || req.query.secret || '';
+  const vercelCronHeader = req.headers['x-vercel-cron'];
+  const isVercelCron = String(vercelCronHeader || '').toLowerCase() === '1' || String(vercelCronHeader || '').toLowerCase() === 'true';
+  if (!configuredSecret) return isVercelCron;
+  return incomingSecret === configuredSecret || isVercelCron;
 };
 
 // Transaction Schema
@@ -3554,18 +3580,20 @@ app.get('/admin/promotions', authAdminPage, async (req, res) => {
   let users = [];
   let error = null;
   try {
-    const authBackendUrl = process.env.AUTH_BACKEND_URL || '';
-    const promoSecret = process.env.PROMO_CRON_SECRET || '';
-    if (!authBackendUrl || !promoSecret) {
-      error = 'Missing AUTH_BACKEND_URL or PROMO_CRON_SECRET';
-    } else {
-      const base = authBackendUrl.replace(/\/$/, '');
-      const [templatesResp, usersResp] = await Promise.all([
-        axios.get(`${base}/api/promotions/templates?secret=${encodeURIComponent(promoSecret)}`),
-        axios.get(`${base}/api/promotions/users?secret=${encodeURIComponent(promoSecret)}`),
-      ]);
-      templates = templatesResp?.data?.templates || [];
-      users = usersResp?.data?.users || [];
+    templates = PROMO_TEMPLATES.map((t, idx) => ({
+      id: idx,
+      subject: t.subject,
+      headline: t.headline,
+      body: t.body,
+      cta: t.cta,
+    }));
+    users = await User.find({
+      role: 'user',
+      promoOptIn: { $ne: false },
+      email: { $exists: true, $ne: '' },
+    }).select('id firstName lastName email').lean();
+    if (!promoEmailEnabled) {
+      error = 'Email not configured (EMAIL_USER / EMAIL_PASS missing).';
     }
   } catch (err) {
     error = err?.response?.data?.message || err.message || 'Failed to load promotions data';
@@ -3583,18 +3611,100 @@ app.get('/admin/promotions', authAdminPage, async (req, res) => {
 
 app.post('/admin/promotions/send', authAdminPage, async (req, res) => {
   try {
-    const authBackendUrl = process.env.AUTH_BACKEND_URL || '';
-    const promoSecret = process.env.PROMO_CRON_SECRET || '';
-    if (!authBackendUrl || !promoSecret) {
-      return res.status(500).json({ error: 'Missing AUTH_BACKEND_URL or PROMO_CRON_SECRET' });
+    if (!promoEmailEnabled || !promoTransporter) {
+      return res.status(500).json({ error: 'Email not configured (EMAIL_USER / EMAIL_PASS missing).' });
     }
 
-    const payload = req.body || {};
-    const targetUrl = `${authBackendUrl.replace(/\/$/, '')}/api/promotions/send?secret=${encodeURIComponent(promoSecret)}`;
-    const resp = await axios.post(targetUrl, payload, { timeout: 20000 });
-    res.json({ success: true, data: resp.data });
+    const { mode, emails, templateId } = req.body || {};
+    const template = PROMO_TEMPLATES[Number(templateId) || 0] || PROMO_TEMPLATES[0];
+    const now = new Date();
+
+    let targetUsers = [];
+    if (mode === 'selected') {
+      const list = Array.isArray(emails) ? emails : [];
+      const normalized = list.map((e) => String(e || '').toLowerCase().trim()).filter(Boolean);
+      targetUsers = await User.find({ email: { $in: normalized }, role: 'user' }).select('email firstName promoOptIn');
+    } else {
+      targetUsers = await User.find({
+        role: 'user',
+        promoOptIn: { $ne: false },
+      }).select('email firstName promoOptIn');
+    }
+
+    let sent = 0;
+    let failed = 0;
+    for (const user of targetUsers) {
+      if (!user?.email) continue;
+      if (user.promoOptIn === false) continue;
+      const { subject, text, html } = buildPromoEmail(user, template);
+      try {
+        await promoTransporter.sendMail({
+          from: `"MediApp" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject,
+          text,
+          html,
+        });
+        user.promoLastSentAt = now;
+        user.promoNextAt = getNextPromoDate(now);
+        await user.save();
+        sent += 1;
+      } catch (mailErr) {
+        failed += 1;
+        console.error('Promo email failed for', user.email, mailErr.message);
+      }
+    }
+
+    res.json({ success: true, data: { sent, failed, total: targetUsers.length } });
   } catch (err) {
     res.status(500).json({ error: err?.response?.data?.message || err.message || 'Failed to trigger promotions' });
+  }
+});
+
+app.post('/api/promotions/run', async (req, res) => {
+  try {
+    if (!isPromoAuthorized(req)) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    if (!promoEmailEnabled || !promoTransporter) {
+      return res.status(500).json({ message: 'Email not configured' });
+    }
+
+    const now = new Date();
+    const dueUsers = await User.find({
+      role: 'user',
+      promoOptIn: { $ne: false },
+      $or: [{ promoNextAt: { $exists: false } }, { promoNextAt: { $lte: now } }],
+    }).select('email firstName promoNextAt promoLastSentAt');
+
+    let sent = 0;
+    let failed = 0;
+    for (const user of dueUsers) {
+      if (!user?.email) continue;
+      const template = PROMO_TEMPLATES[Math.floor(Math.random() * PROMO_TEMPLATES.length)];
+      const { subject, text, html } = buildPromoEmail(user, template);
+      try {
+        await promoTransporter.sendMail({
+          from: `"MediApp" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject,
+          text,
+          html,
+        });
+        user.promoLastSentAt = now;
+        user.promoNextAt = getNextPromoDate(now);
+        await user.save();
+        sent += 1;
+      } catch (mailErr) {
+        failed += 1;
+        console.error('Promo email failed for', user.email, mailErr.message);
+      }
+    }
+
+    res.json({ message: 'Promotions processed', sent, failed, total: dueUsers.length });
+  } catch (err) {
+    console.error('Promotions run failed:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 
