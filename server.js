@@ -647,6 +647,28 @@ app.put('/api/auth/update', authMiddleware, uploadProfile.single('profileImage')
   }
 });
 
+app.put('/api/promotions/opt-in', authMiddleware, async (req, res) => {
+  try {
+    const raw = req.body?.promoOptIn ?? req.body?.optIn;
+    if (raw === undefined) {
+      return res.status(400).json({ message: 'promoOptIn is required' });
+    }
+    const flag = String(raw).toLowerCase() === 'true';
+    req.user.promoOptIn = flag;
+    if (flag && !req.user.promoNextAt) {
+      req.user.promoNextAt = getNextPromoDate(new Date());
+    }
+    if (!flag) {
+      req.user.promoNextAt = null;
+    }
+    await req.user.save();
+    const { password, ...userWithoutPassword } = req.user.toObject();
+    res.json({ message: 'Promo preference updated', user: userWithoutPassword });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 app.get('/api/users', authMiddleware, async (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
   try {
