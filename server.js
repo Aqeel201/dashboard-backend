@@ -3549,6 +3549,38 @@ app.get('/admin/notifications', authAdminPage, async (req, res) => {
   }
 });
 
+app.get('/admin/promotions', authAdminPage, async (req, res) => {
+  let templates = [];
+  let users = [];
+  let error = null;
+  try {
+    const authBackendUrl = process.env.AUTH_BACKEND_URL || '';
+    const promoSecret = process.env.PROMO_CRON_SECRET || '';
+    if (!authBackendUrl || !promoSecret) {
+      error = 'Missing AUTH_BACKEND_URL or PROMO_CRON_SECRET';
+    } else {
+      const base = authBackendUrl.replace(/\/$/, '');
+      const [templatesResp, usersResp] = await Promise.all([
+        axios.get(`${base}/api/promotions/templates?secret=${encodeURIComponent(promoSecret)}`),
+        axios.get(`${base}/api/promotions/users?secret=${encodeURIComponent(promoSecret)}`),
+      ]);
+      templates = templatesResp?.data?.templates || [];
+      users = usersResp?.data?.users || [];
+    }
+  } catch (err) {
+    error = err?.response?.data?.message || err.message || 'Failed to load promotions data';
+  }
+  res.render('promotions', {
+    user: req.user,
+    token: req.query.token,
+    currentPath: '/admin/promotions',
+    templates,
+    users,
+    error,
+    message: req.query.message || null,
+  });
+});
+
 app.post('/admin/promotions/send', authAdminPage, async (req, res) => {
   try {
     const authBackendUrl = process.env.AUTH_BACKEND_URL || '';
@@ -3557,8 +3589,9 @@ app.post('/admin/promotions/send', authAdminPage, async (req, res) => {
       return res.status(500).json({ error: 'Missing AUTH_BACKEND_URL or PROMO_CRON_SECRET' });
     }
 
-    const targetUrl = `${authBackendUrl.replace(/\/$/, '')}/api/promotions/run?secret=${encodeURIComponent(promoSecret)}`;
-    const resp = await axios.post(targetUrl, {}, { timeout: 20000 });
+    const payload = req.body || {};
+    const targetUrl = `${authBackendUrl.replace(/\/$/, '')}/api/promotions/send?secret=${encodeURIComponent(promoSecret)}`;
+    const resp = await axios.post(targetUrl, payload, { timeout: 20000 });
     res.json({ success: true, data: resp.data });
   } catch (err) {
     res.status(500).json({ error: err?.response?.data?.message || err.message || 'Failed to trigger promotions' });

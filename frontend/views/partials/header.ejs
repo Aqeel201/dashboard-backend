@@ -502,7 +502,8 @@
             (currentPath==='/admin/users' ) screenName="User" ; else if (currentPath==='/admin/notifications' )
             screenName="Notifications" ; else if (currentPath==='/admin/settings' )
             screenName="Settings" ; else if (currentPath==='/admin/feedback' ) screenName="User Feedback" ; else if
-            (currentPath==='/admin/chat' ) screenName="Chat" ; } %>
+            (currentPath==='/admin/chat' ) screenName="Chat" ; else if (currentPath==='/admin/promotions' )
+            screenName="Promotions" ; } %>
             <a href="<%= typeof currentPath !== 'undefined' && currentPath ? currentPath + '?token=' + token : '/admin/dashboard?token=' + token %>"
               class="nav-link">
               <%= screenName %>
@@ -721,6 +722,14 @@
                 class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/notifications' ? 'active' : '' %>">
                 <i class="nav-icon fas fa-bell"></i>
                 <p>Notifications</p>
+              </a>
+            </li>
+            <!-- Promotions -->
+            <li class="nav-item">
+              <a href="/admin/promotions?token=<%= token %>"
+                class="nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/promotions' ? 'active' : '' %>">
+                <i class="nav-icon fas fa-bullhorn"></i>
+                <p>Promotions</p>
               </a>
             </li>
             <!-- User Feedback -->

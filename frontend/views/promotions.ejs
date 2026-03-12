@@ -1,0 +1,201 @@
+<%- include('partials/header') %>
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Promotions</h1>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <% if (message) { %>
+      <div class="alert alert-success"><%= message %></div>
+    <% } %>
+
+    <div class="row">
+      <div class="col-lg-5">
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Email Templates</h3>
+          </div>
+          <div class="card-body">
+            <% if (!templates.length) { %>
+              <div class="text-muted">No templates available.</div>
+            <% } %>
+            <% templates.forEach(function(t, idx) { %>
+              <label class="template-card">
+                <input type="radio" name="templateId" value="<%= t.id %>" <%= idx === 0 ? 'checked' : '' %> />
+                <div class="template-content">
+                  <div class="template-title"><%= t.subject %></div>
+                  <div class="template-headline"><%= t.headline %></div>
+                  <ul>
+                    <% (t.body || []).forEach(function(line) { %>
+                      <li><%= line %></li>
+                    <% }); %>
+                  </ul>
+                  <div class="template-cta">CTA: <%= t.cta %></div>
+                </div>
+              </label>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="card card-outline card-success">
+          <div class="card-header">
+            <h3 class="card-title">Recipients</h3>
+            <div class="card-tools">
+              <button class="btn btn-sm btn-outline-secondary" id="selectAllBtn">Select All</button>
+              <button class="btn btn-sm btn-outline-secondary ml-2" id="clearAllBtn">Clear</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="recipient-actions">
+              <button class="btn btn-primary" id="sendAllBtn">Send To All Users</button>
+              <button class="btn btn-outline-primary ml-2" id="sendSelectedBtn">Send To Selected</button>
+              <span class="text-muted ml-3" id="sendStatus"></span>
+            </div>
+            <div class="recipient-list">
+              <% if (!users.length) { %>
+                <div class="text-muted">No users found.</div>
+              <% } %>
+              <% users.forEach(function(u) { %>
+                <label class="recipient-row">
+                  <input type="checkbox" class="recipient-checkbox" value="<%= u.email %>" />
+                  <span><%= u.firstName %> <%= u.lastName || '' %></span>
+                  <small><%= u.email %></small>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const token = '<%= token %>';
+  const statusEl = document.getElementById('sendStatus');
+  const sendAllBtn = document.getElementById('sendAllBtn');
+  const sendSelectedBtn = document.getElementById('sendSelectedBtn');
+  const selectAllBtn = document.getElementById('selectAllBtn');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const checkboxes = Array.from(document.querySelectorAll('.recipient-checkbox'));
+
+  const getTemplateId = () => {
+    const selected = document.querySelector('input[name="templateId"]:checked');
+    return selected ? Number(selected.value) : 0;
+  };
+
+  const postSend = async (payload) => {
+    statusEl.textContent = 'Sending...';
+    sendAllBtn.disabled = true;
+    sendSelectedBtn.disabled = true;
+    try {
+      const resp = await fetch(`/admin/promotions/send?token=${encodeURIComponent(token)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed');
+      statusEl.textContent = `Sent: ${data.data.sent || 0}, Failed: ${data.data.failed || 0}`;
+    } catch (err) {
+      statusEl.textContent = err.message || 'Failed';
+    } finally {
+      sendAllBtn.disabled = false;
+      sendSelectedBtn.disabled = false;
+    }
+  };
+
+  sendAllBtn.addEventListener('click', () => {
+    postSend({ mode: 'all', templateId: getTemplateId() });
+  });
+
+  sendSelectedBtn.addEventListener('click', () => {
+    const emails = checkboxes.filter((c) => c.checked).map((c) => c.value);
+    if (!emails.length) {
+      statusEl.textContent = 'Select at least one user.';
+      return;
+    }
+    postSend({ mode: 'selected', emails, templateId: getTemplateId() });
+  });
+
+  selectAllBtn.addEventListener('click', () => {
+    checkboxes.forEach((c) => (c.checked = true));
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    checkboxes.forEach((c) => (c.checked = false));
+  });
+</script>
+
+<style>
+  .template-card {
+    display: block;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    background: #f8fafc;
+  }
+  .template-card input {
+    margin-right: 8px;
+  }
+  .template-content {
+    margin-top: 6px;
+  }
+  .template-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+  }
+  .template-headline {
+    color: #334155;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .template-cta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .recipient-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .recipient-list {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px;
+    background: #fff;
+  }
+  .recipient-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .recipient-row small {
+    margin-left: auto;
+    color: #64748b;
+  }
+</style>
+
+<%- include('partials/footer') %>
