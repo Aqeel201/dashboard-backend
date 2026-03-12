@@ -761,6 +761,44 @@
             }
           });
 
+          // Define appendMessage function (used by socket + AJAX)
+          function appendMessage(msg) {
+            console.log('Appending message:', msg);
+            const selectedUserId = '<%= selectedUserId || "" %>';
+            if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
+              const messages = $('#messages');
+              if (messages.length) {
+                const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
+
+                // Deduplicate
+                if (messages.find(`[data-msg-id="${msg._id}"]`).length > 0) {
+                  console.log('Message already exists, skipping:', msg._id);
+                  return;
+                }
+                div.attr('data-msg-id', msg._id);
+
+                let content = '';
+                if (msg.type === 'text') {
+                  content = `<div class="message-content">${msg.content}</div>`;
+                } else if (msg.type === 'image') {
+                  content = `<div class="message-content"><div>${msg.caption || 'Image'}</div><img src="${msg.content}" class="message-image" /></div>`;
+                } else if (msg.type === 'voice') {
+                  content = `<div class="message-content"><div>${msg.caption || 'Voice message'}</div><div class="message-audio"><audio controls><source src="${msg.content}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>`;
+                } else if (msg.type === 'location') {
+                  content = `<div class="message-content">Location: ${msg.content}</div>`;
+                } else if (msg.type === 'document') {
+                  content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
+                }
+                const msgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
+                const pktTime = new Date(msgDate.getTime() + (5 * 60 * 60 * 1000)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                div.html(`${content}<div class="message-time">${pktTime}</div>`);
+                messages.append(div);
+                const msgDiv = messages[0];
+                if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;
+              }
+            }
+          }
+
           // Socket.IO setup - Wrapped in check to prevent breaking JS if library fails to load
           let socket = null;
           if (typeof io !== 'undefined') {
@@ -780,44 +818,6 @@
               socket.on('connect_error', (err) => {
                 if (!isVercel) console.error('Socket connection error:', err.message);
               });
-
-              // Define appendMessage function
-              function appendMessage(msg) {
-                console.log('Appending message:', msg);
-                const selectedUserId = '<%= selectedUserId || "" %>';
-                if (selectedUserId && (msg.sender === selectedUserId || msg.receiver === selectedUserId)) {
-                  const messages = $('#messages');
-                  if (messages.length) {
-                    const div = $('<div>').addClass(`message ${msg.sender === 'admin' ? 'sent' : 'received'}`);
-
-                    // Deduplicate
-                    if (messages.find(`[data-msg-id="${msg._id}"]`).length > 0) {
-                      console.log('Message already exists, skipping:', msg._id);
-                      return;
-                    }
-                    div.attr('data-msg-id', msg._id);
-
-                    let content = '';
-                    if (msg.type === 'text') {
-                      content = `<div class="message-content">${msg.content}</div>`;
-                    } else if (msg.type === 'image') {
-                      content = `<div class="message-content"><div>${msg.caption || 'Image'}</div><img src="${msg.content}" class="message-image" /></div>`;
-                    } else if (msg.type === 'voice') {
-                      content = `<div class="message-content"><div>${msg.caption || 'Voice message'}</div><div class="message-audio"><audio controls><source src="${msg.content}" type="audio/mpeg">Your browser does not support the audio element.</audio></div></div>`;
-                    } else if (msg.type === 'location') {
-                      content = `<div class="message-content">Location: ${msg.content}</div>`;
-                    } else if (msg.type === 'document') {
-                      content = `<div class="message-content"><div>${msg.caption || 'File'}</div><div class="message-file"><i class="fas fa-file-alt"></i><a href="${msg.content}" target="_blank" download>${msg.content.split('/').pop()}</a></div></div>`;
-                    }
-                    const msgDate = msg.timestamp ? new Date(msg.timestamp) : new Date();
-                    const pktTime = new Date(msgDate.getTime() + (5 * 60 * 60 * 1000)).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-                    div.html(`${content}<div class="message-time">${pktTime}</div>`);
-                    messages.append(div);
-                    const msgDiv = messages[0];
-                    if (msgDiv) msgDiv.scrollTop = msgDiv.scrollHeight;
-                  }
-                }
-              }
 
               // Handle real-time messages via socket (fallback for local dev)
               socket.on('receiveMessage', (msg) => {
