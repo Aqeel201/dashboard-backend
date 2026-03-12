@@ -17,6 +17,61 @@ const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+const ONLINE_GRACE_MS = 5 * 60 * 1000;
+const onlineUsers = new Map(); // userId -> { count, lastSeen, offlineTimer }
+
+const markUserOnline = async (userId) => {
+  if (!userId || userId === 'admin') return;
+  const now = Date.now();
+  const entry = onlineUsers.get(userId) || { count: 0, lastSeen: now, offlineTimer: null };
+  entry.count += 1;
+  entry.lastSeen = now;
+  if (entry.offlineTimer) {
+    clearTimeout(entry.offlineTimer);
+    entry.offlineTimer = null;
+  }
+  onlineUsers.set(userId, entry);
+  try {
+    await User.updateOne({ id: userId }, { $set: { lastSeenAt: new Date() } });
+  } catch (err) {
+    // no-op
+  }
+  io.to('admin').emit('userOnline', { userId });
+};
+
+const markUserOffline = async (userId) => {
+  if (!userId || userId === 'admin') return;
+  const entry = onlineUsers.get(userId);
+  if (!entry) return;
+  entry.count = Math.max(0, entry.count - 1);
+  entry.lastSeen = Date.now();
+  if (entry.count <= 0) {
+    if (entry.offlineTimer) clearTimeout(entry.offlineTimer);
+    entry.offlineTimer = setTimeout(() => {
+      const current = onlineUsers.get(userId);
+      if (current && current.count <= 0) {
+        io.to('admin').emit('userOffline', { userId });
+      }
+    }, ONLINE_GRACE_MS);
+  }
+  onlineUsers.set(userId, entry);
+  try {
+    await User.updateOne({ id: userId }, { $set: { lastSeenAt: new Date() } });
+  } catch (err) {
+    // no-op
+  }
+};
+
+const isUserOnline = (userDoc) => {
+  const userId = userDoc?.id;
+  if (!userId) return false;
+  const entry = onlineUsers.get(userId);
+  if (entry?.count > 0) return true;
+  const lastSeen = userDoc?.lastSeenAt ? new Date(userDoc.lastSeenAt).getTime() : (entry?.lastSeen || 0);
+  if (!lastSeen) return false;
+  return Date.now() - lastSeen < ONLINE_GRACE_MS;
+};
+
 // Helper for Pakistan Standard Time (PKT)
 const getPKTDate = () => {
   const now = new Date();
@@ -197,6 +252,7 @@ const userSchema = new mongoose.Schema({
   address: { type: String, default: '' },
   location: { type: String, default: '' },
   dob: { type: String, default: '' },
+  lastSeenAt: { type: Date, default: null },
   promoOptIn: { type: Boolean, default: true },
   promoLastSentAt: { type: Date, default: null },
   promoNextAt: { type: Date, default: null },
@@ -2187,7 +2243,8 @@ io.on('connection', (socket) => {
   socket.on('join', async (userId) => {
     console.log('User joined chat:', userId, 'Socket ID:', socket.id);
     socket.join(userId);
-
+    socket.data.userId = userId;
+    await markUserOnline(userId);
 
     try {
       const messages = await ChatMessage.find({
@@ -2222,7 +2279,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => console.log('User disconnected:', socket.id));
+  socket.on('disconnect', async () => {
+    console.log('User disconnected:', socket.id);
+    if (socket.data?.userId) {
+      await markUserOffline(socket.data.userId);
+    }
+  });
 });
 
 app.post('/api/chat/send', authMiddleware, async (req, res) => {
@@ -3052,9 +3114,25 @@ app.post('/api/notifications/register', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/api/presence/ping', authMiddleware, async (req, res) => {
+  try {
+    if (req.user?.id) {
+      await User.updateOne({ id: req.user.id }, { $set: { lastSeenAt: new Date() } });
+      await markUserOnline(req.user.id);
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update presence: ' + err.message });
+  }
+});
+
 app.get('/admin/chat', authAdminPage, async (req, res) => {
   try {
-    const users = await User.find({ role: 'user' }).select('id firstName lastName email profileImage');
+    const rawUsers = await User.find({ role: 'user' }).select('id firstName lastName email profileImage location lastSeenAt');
+    const users = rawUsers.map((u) => {
+      const obj = u.toObject();
+      return { ...obj, status: isUserOnline(u) ? 'online' : 'offline' };
+    });
     const selectedUserId = req.query.userId || null;
     let messages = [];
     if (selectedUserId) {
