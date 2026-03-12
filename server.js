@@ -374,6 +374,11 @@ const pruneCartsForMedicines = async (medicineIds) => {
   }
 };
 
+const clearUserCart = async (userId) => {
+  if (!userId) return;
+  await Cart.findOneAndUpdate({ userId }, { cart: [] });
+};
+
 const releaseReservedStock = async (order) => {
   if (!order || !order.stockReserved) return [];
   const affectedIds = [];
@@ -538,6 +543,41 @@ const transactionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: getPKTDate },
 });
 const Transaction = mongoose.models.Transaction || mongoose.model('Transaction', transactionSchema);
+
+const ensurePendingTransactionForOrder = async (order) => {
+  if (!order?._id) return null;
+  const existing = await Transaction.findOne({ orderId: order._id });
+  if (existing) return existing;
+  const amount = Number(order.orderTotal || 0);
+  const pendingTxn = new Transaction({
+    userId: order.userId,
+    walletNumber: 'PENDING',
+    walletName: 'PENDING',
+    transactionID: `PENDING-${order._id}`,
+    depositAmount: Number.isFinite(amount) ? amount : 0,
+    status: 'Pending',
+    orderId: order._id,
+  });
+  const saved = await pendingTxn.save();
+  await Order.findByIdAndUpdate(order._id, { transactionId: saved._id });
+  return saved;
+};
+
+const notifyPendingPayment = async (order) => {
+  if (!order?._id) return;
+  await createNotification({
+    userId: order.userId,
+    title: 'Payment Pending',
+    message: `Your order ${order._id} is pending payment. Please complete your Easypaisa transaction.`,
+    type: 'transaction',
+    relatedId: order._id,
+  });
+  await sendPushToUser(order.userId, {
+    title: 'Payment Pending',
+    body: `Your order ${order._id} is pending payment. Please complete your Easypaisa transaction.`,
+    data: { type: 'transaction', orderId: String(order._id) },
+  });
+};
 
 // Middleware to Fetch Settings
 app.use(async (req, res, next) => {
@@ -1046,6 +1086,11 @@ app.post('/api/order', async (req, res) => {
       stockReserved: true,
     });
     await newOrder.save();
+    await clearUserCart(userId);
+    if (String(paymentMethod || '').toLowerCase() === 'easypaisa') {
+      await ensurePendingTransactionForOrder(newOrder);
+      await notifyPendingPayment(newOrder);
+    }
     res.json({ message: 'Order placed successfully', order: newOrder });
   } catch (err) {
     console.error(err);
@@ -1124,6 +1169,10 @@ const createPendingOrderFromPayload = async (orderData) => {
     stockReserved: true,
   });
   await newOrder.save();
+  await clearUserCart(userId);
+  if (String(paymentMethod || '').toLowerCase() === 'easypaisa') {
+    await notifyPendingPayment(newOrder);
+  }
   return newOrder;
 };
 
@@ -4005,6 +4054,19 @@ app.post('/api/transactions', async (req, res) => {
         orderId = createdOrder._id;
       } catch (orderErr) {
         return res.status(409).json({ error: orderErr.message || 'Failed to create order' });
+      }
+    }
+
+    if (orderId) {
+      const existingTxn = await Transaction.findOne({ orderId, status: 'Pending' });
+      if (existingTxn) {
+        existingTxn.walletNumber = walletNumber;
+        existingTxn.walletName = walletName;
+        existingTxn.transactionID = transactionID;
+        existingTxn.depositAmount = parseFloat(depositAmount);
+        const updatedTxn = await existingTxn.save();
+        await Order.findByIdAndUpdate(orderId, { transactionId: updatedTxn._id });
+        return res.status(200).json(updatedTxn);
       }
     }
 
